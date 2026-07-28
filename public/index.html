@@ -7,7 +7,9 @@
     <meta name="description" content="Sprint bilingue per il colloquio AI Digital Transformation Lead">
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./styles.css?v=5">
+    <link rel="alternate" hreflang="it" href="./">
+    <link rel="alternate" hreflang="en" href="./">
     <title>AI Transformation Sprint</title>
   </head>
   <body>
@@ -17,7 +19,10 @@
         <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
         <span><strong>AI Transformation</strong><small>Interview Sprint</small></span>
       </a>
-      <a class="sync-pill" href="/login" data-link><span class="sync-dot"></span><span data-sync-label>Solo dispositivo</span></a>
+      <div class="topbar-actions">
+        <div data-locale-switch></div>
+        <a class="sync-pill" href="/login" data-link><span class="sync-dot"></span><span data-sync-label>Solo dispositivo</span></a>
+      </div>
     </header>
     <main id="main" tabindex="-1"></main>
     <nav class="bottom-nav" aria-label="Navigazione principale">
@@ -27,7 +32,7 @@
       <a href="/interview" data-link data-nav="interview"><span aria-hidden="true">◉</span>Interview</a>
     </nav>
     <div id="toast" role="status" aria-live="polite"></div>
-    <script src="./config.js?v=4"></script>
-    <script type="module" src="./app.js?v=4"></script>
+    <script src="./config.js?v=5"></script>
+    <script type="module" src="./app.js?v=5"></script>
   </body>
 </html>

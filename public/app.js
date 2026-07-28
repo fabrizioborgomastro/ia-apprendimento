@@ -1,15 +1,20 @@
-import { allGlossary, interviewQuestions, lessons } from './content.js?v=4'
-import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=4'
-import { getDashboardState, normalizeAppHref, parseRoute, quizFeedback } from './ui.js?v=4'
-import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=4'
+import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=5'
+import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=5'
+import {
+  getDashboardState, getUnitState, normalizeAppHref, parseRoute, quizFeedback,
+  readLocale, selectLocale, unitPath, writeLocale
+} from './ui.js?v=5'
+import { renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView } from './render.js?v=5'
+import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=5'
 
 const main = document.querySelector('#main')
 const toast = document.querySelector('#toast')
 const BASE_PATH = new URL('.', import.meta.url).pathname
 let progress = readProgress()
 let quizAnswers = {}
+let locale = readLocale()
+let unitInteractions = {}
 let interviewTimer = null
-let blockObserver = null
 let syncDelay = null
 
 restoreRedirectedRoute()
@@ -35,17 +40,19 @@ function navigate(path) {
 }
 
 function render() {
-  blockObserver?.disconnect()
-  const route = parseRoute(toAppPath(location.pathname))
+  const route = parseRoute(toAppPath(location.pathname), location.search)
+  document.documentElement.lang = locale
   document.querySelectorAll('[data-nav]').forEach((item) => item.classList.toggle('active', item.dataset.nav === route.name))
+  renderLocaleControl()
   if (route.name === 'sprint') main.innerHTML = renderSprint()
-  else if (route.name === 'lesson') main.innerHTML = renderLesson(route.slug)
+  else if (route.name === 'lesson') main.innerHTML = renderLesson(route.slug, route.unitId)
   else if (route.name === 'review') main.innerHTML = renderReview()
   else if (route.name === 'interview') main.innerHTML = renderInterview()
   else if (route.name === 'login') main.innerHTML = renderLogin()
   else main.innerHTML = renderDashboard()
   bindPageEvents(route)
   normalizeLinks()
+  bindLocaleControl()
   main.focus({ preventScroll: true })
   updateSyncLabel()
 }
@@ -133,42 +140,63 @@ function renderSprint() {
     }).join('')}</section>`
 }
 
-function renderLesson(slug) {
-  const lesson = lessons.find((item) => item.slug === slug)
+function renderLesson(slug, unitId) {
+  const lesson = curriculum.find((item) => item.slug === slug)
   if (!lesson) return renderNotFound()
-  progress = updateLessonProgress(progress, lesson.id, { status: progress[lesson.id]?.status || 'in_progress', cursor: progress[lesson.id]?.cursor || 0 })
+  const stored = progress[lesson.id]
+  progress = updateLessonProgress(progress, lesson.id, {
+    status: stored?.status || 'in_progress',
+    cursor: stored?.cursor || 0
+  })
   saveProgress(progress)
-  return `<article class="lesson shell">
-    <header class="lesson-head"><a href="/sprint" data-link class="back-link">← Tutti i moduli</a><div class="lesson-kicker"><span>MODULE ${String(lesson.order).padStart(2, '0')}</span><span>${lesson.durationMinutes} MIN</span></div><h1>${lesson.title}</h1><p class="english-title">${lesson.englishTitle}</p>
-      <div class="objective-strip"><b>Al termine saprai</b>${lesson.objectives.map((item) => `<span>✓ ${item}</span>`).join('')}</div></header>
-    <div class="lesson-layout"><aside class="lesson-rail" aria-label="Indice della lezione">${lesson.blocks.map((block, index) => `<a href="#${block.id}"><i>${index + 1}</i>${block.title}</a>`).join('')}<a href="#quiz"><i>Q</i>Checkpoint</a></aside>
-      <div class="lesson-content">${lesson.blocks.map(renderBlock).join('')}${renderLessonGlossary(lesson)}${renderQuiz(lesson)}${renderInterviewAnswer(lesson)}</div></div>
-  </article>`
+
+  const state = getUnitState(lesson, unitId, progress[lesson.id])
+  const interaction = readInteraction(lesson.id, state.unit.id)
+  return renderUnitView({
+    lesson,
+    state,
+    locale,
+    revealed: interaction.revealed,
+    checkpointChoice: interaction.checkpointChoice,
+    activityMarked: interaction.activityMarked
+  }) + renderFinalCheckpoint(lesson, state)
 }
 
-function renderBlock(block) {
-  return `<section class="content-block" id="${block.id}"><p class="eyebrow">${block.eyebrow}</p><h2>${block.title}</h2>${block.body.map((paragraph) => `<p>${paragraph}</p>`).join('')}
-    ${block.formula ? `<div class="formula">${block.formula}</div>` : ''}${block.diagram ? renderDiagram(block.diagram) : ''}
-    <ul class="key-points">${block.keyPoints.map((point) => `<li>${point}</li>`).join('')}</ul>
-    ${block.activity ? `<div class="activity"><span class="activity-label">THINK ON THE FLOOR</span><h3>${block.activity.prompt}</h3><details><summary>Mostra un indizio</summary><p>${block.activity.hint}</p></details></div>` : ''}</section>`
+function interactionKey(lessonId, unitId) {
+  return `${lessonId}:${unitId}`
 }
 
-function renderDiagram(nodes) {
-  return `<div class="process-diagram" role="img" aria-label="${nodes.join(' fino a ')}">${nodes.map((node, index) => `<div class="process-node"><b>${String(index + 1).padStart(2, '0')}</b><span>${node}</span></div>${index < nodes.length - 1 ? '<i>→</i>' : ''}`).join('')}</div>`
+function readInteraction(lessonId, unitId) {
+  const key = interactionKey(lessonId, unitId)
+  unitInteractions[key] ||= { revealed: {}, checkpointChoice: null, activityMarked: false }
+  return unitInteractions[key]
 }
 
-function renderLessonGlossary(lesson) {
-  return `<section class="lesson-glossary"><p class="eyebrow">LANGUAGE LAYER</p><h2>Termini da possedere</h2><div class="term-grid">${lesson.glossary.map((item) => `<article><code>${item.english}</code><b>${item.italian}</b><p>${item.definition}</p></article>`).join('')}</div></section>`
+function renderFinalCheckpoint(lesson, state) {
+  if (!state.isLast) return ''
+  const projected = lessons.find((item) => item.id === lesson.id)
+  const heading = locale === 'en' ? 'Final checkpoint' : 'Checkpoint finale'
+  const helper = locale === 'en'
+    ? 'Answer without returning to the text. Every miss enters your review queue.'
+    : 'Rispondi senza tornare al testo. Ogni errore entra nella coda di ripasso.'
+  return `<section class="quiz-section shell" id="final-checkpoint"><p class="eyebrow">${heading}</p><h2>${selectLocale(lesson.title, locale)}</h2><p>${helper}</p>
+    <div class="quiz-list">${projected.quiz.map((question, questionIndex) => `<fieldset class="quiz-card" data-question="${question.id}"><legend><span>Q${questionIndex + 1}</span>${question.prompt}</legend><div class="quiz-options">${question.options.map((option, optionIndex) => `<button type="button" data-quiz-option="${optionIndex}" data-lesson="${lesson.id}" data-question-id="${question.id}">${option}</button>`).join('')}</div><div class="feedback" data-feedback aria-live="polite"></div></fieldset>`).join('')}</div>
+    <div class="quiz-summary" data-quiz-summary><span>${locale === 'en' ? `Answer all ${projected.quiz.length} questions to see your score.` : `Completa le ${projected.quiz.length} domande per vedere il risultato.`}</span></div>
+    ${renderLessonInterviewAnswers(lesson, locale)}</section>`
 }
 
-function renderQuiz(lesson) {
-  return `<section class="quiz-section" id="quiz"><p class="eyebrow">KNOWLEDGE CHECK</p><h2>Verifica subito</h2><p>Rispondi senza tornare al testo. Ogni errore entra nel ripasso.</p>
-    <div class="quiz-list">${lesson.quiz.map((question, questionIndex) => `<fieldset class="quiz-card" data-question="${question.id}"><legend><span>Q${questionIndex + 1}</span>${question.prompt}</legend><div class="quiz-options">${question.options.map((option, optionIndex) => `<button type="button" data-quiz-option="${optionIndex}" data-lesson="${lesson.id}" data-question-id="${question.id}">${option}</button>`).join('')}</div><div class="feedback" data-feedback aria-live="polite"></div></fieldset>`).join('')}</div>
-    <div class="quiz-summary" data-quiz-summary><span>Completa le ${lesson.quiz.length} domande per vedere il risultato.</span></div></section>`
+function renderLocaleControl() {
+  const host = document.querySelector('[data-locale-switch]')
+  if (host) host.innerHTML = renderLocaleSwitch(locale)
 }
 
-function renderInterviewAnswer(lesson) {
-  return `<section class="answer-lab"><p class="eyebrow">SAY IT IN ENGLISH</p><h2>${lesson.interview.prompt}</h2><div class="answer-actions"><button class="button secondary" type="button" data-reveal="short">Reveal 30-sec answer</button><button class="button secondary" type="button" data-reveal="long">Reveal 2-min answer</button></div><div class="model-answer" data-answer="short" hidden><span>30 SECONDS</span><p>${lesson.interview.short}</p></div><div class="model-answer" data-answer="long" hidden><span>2 MINUTES</span><p>${lesson.interview.long}</p></div></section>`
+function bindLocaleControl() {
+  document.querySelectorAll('[data-locale]').forEach((button) => button.addEventListener('click', () => {
+    const requested = button.dataset.locale
+    if (requested === locale) return
+    locale = writeLocale(requested)
+    render()
+  }))
 }
 
 function renderReview() {
@@ -199,36 +227,62 @@ function renderNotFound() {
 }
 
 function bindPageEvents(route) {
-  if (route.name === 'lesson') bindLessonEvents(route.slug)
+  if (route.name === 'lesson') bindLessonEvents(route.slug, route.unitId)
   if (route.name === 'review') document.querySelector('#term-search')?.addEventListener('input', filterTerms)
   if (route.name === 'interview') bindInterviewEvents()
   if (route.name === 'login') bindLoginEvents()
 }
 
-function bindLessonEvents(slug) {
-  const lesson = lessons.find((item) => item.slug === slug)
-  document.querySelectorAll('[data-quiz-option]').forEach((button) => button.addEventListener('click', () => answerQuestion(lesson, button)))
-  document.querySelectorAll('[data-reveal]').forEach((button) => button.addEventListener('click', () => {
-    const answer = document.querySelector(`[data-answer="${button.dataset.reveal}"]`)
-    answer.hidden = !answer.hidden
-    button.setAttribute('aria-expanded', String(!answer.hidden))
+function bindLessonEvents(slug, unitId) {
+  const lesson = curriculum.find((item) => item.slug === slug)
+  if (!lesson) return
+  const projected = lessons.find((item) => item.id === lesson.id)
+  const state = getUnitState(lesson, unitId, progress[lesson.id])
+  const interaction = readInteraction(lesson.id, state.unit.id)
+
+  if (state.requestedUnitFound === false && state.unit) {
+    history.replaceState({}, '', normalizeAppHref(unitPath(lesson.slug, state.unit.id), BASE_PATH))
+  }
+
+  document.querySelectorAll('[data-reveal-toggle]').forEach((button) => button.addEventListener('click', () => {
+    const panel = button.dataset.revealToggle
+    interaction.revealed = { ...interaction.revealed, [panel]: !interaction.revealed[panel] }
+    render()
   }))
-  const saved = progress[lesson.id]
-  if (saved?.status === 'in_progress' && saved.cursor > 0 && saved.cursor < lesson.blocks.length) {
-    requestAnimationFrame(() => document.querySelector(`#${lesson.blocks[saved.cursor].id}`)?.scrollIntoView())
-  }
-  if ('IntersectionObserver' in window) {
-    blockObserver = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-      if (!visible) return
-      const cursor = lesson.blocks.findIndex((block) => block.id === visible.target.id)
-      if (cursor < 0 || progress[lesson.id]?.cursor === cursor) return
-      progress = updateLessonProgress(progress, lesson.id, { status: progress[lesson.id]?.status === 'completed' ? 'completed' : 'in_progress', cursor })
-      saveProgress(progress)
-      scheduleProgressSync()
-    }, { rootMargin: '-18% 0px -55% 0px', threshold: [0.2, 0.6] })
-    lesson.blocks.forEach((block) => document.querySelector(`#${block.id}`) && blockObserver.observe(document.querySelector(`#${block.id}`)))
-  }
+
+  document.querySelector('[data-activity-mark]')?.addEventListener('click', () => {
+    interaction.activityMarked = !interaction.activityMarked
+    commitUnitCompletion(lesson, state, interaction)
+    render()
+  })
+
+  document.querySelectorAll('[data-checkpoint-option]').forEach((button) => button.addEventListener('click', () => {
+    interaction.checkpointChoice = Number(button.dataset.checkpointOption)
+    commitUnitCompletion(lesson, state, interaction)
+    render()
+  }))
+
+  document.querySelectorAll('[data-answer-toggle]').forEach((button) => button.addEventListener('click', () => {
+    const panel = document.querySelector(`[data-answer="${button.dataset.answerToggle}"]`)
+    if (!panel) return
+    panel.hidden = !panel.hidden
+    button.setAttribute('aria-pressed', String(!panel.hidden))
+  }))
+
+  document.querySelectorAll('[data-quiz-option]').forEach((button) => button.addEventListener('click', () => answerQuestion(projected, button)))
+}
+
+function commitUnitCompletion(lesson, state, interaction) {
+  if (!Number.isInteger(interaction.checkpointChoice) || !interaction.activityMarked) return
+  const currentCursor = progress[lesson.id]?.cursor || 0
+  const cursor = Math.max(currentCursor, Math.min(state.index + 1, lesson.units.length))
+  if (cursor === currentCursor) return
+  progress = updateLessonProgress(progress, lesson.id, {
+    status: progress[lesson.id]?.status === 'completed' ? 'completed' : 'in_progress',
+    cursor
+  })
+  saveProgress(progress)
+  scheduleProgressSync()
 }
 
 function answerQuestion(lesson, button) {
@@ -257,7 +311,7 @@ function updateQuizSummary(lesson) {
   const score = calculateScore(results)
   const missed = lesson.quiz.filter((question) => answers[question.id] !== question.correctOption).map((question) => question.id)
   const passed = score.percent >= lesson.masteryThreshold
-  progress = updateLessonProgress(progress, lesson.id, { status: passed ? 'completed' : 'in_progress', cursor: lesson.blocks.length, bestScore: score.percent, reviewQuestionIds: missed, replaceReviewQuestionIds: true })
+  progress = updateLessonProgress(progress, lesson.id, { status: passed ? 'completed' : 'in_progress', cursor: Math.max(progress[lesson.id]?.cursor || 0, lesson.units.length), bestScore: score.percent, reviewQuestionIds: missed, replaceReviewQuestionIds: true })
   saveProgress(progress)
   document.querySelector('[data-quiz-summary]').innerHTML = `<div><b>${score.percent}%</b><span>${passed ? 'Competenza acquisita' : 'Ripassa e riprova'}</span></div><p>${score.correct}/${score.total} risposte corrette · soglia ${lesson.masteryThreshold}%</p>${passed ? `<a class="button primary" href="${nextLessonPath(lesson)}" data-link>Continua <span>→</span></a>` : '<a class="button secondary" href="/review" data-link>Apri il ripasso</a>'}`
   syncProgressQuietly()
@@ -265,7 +319,7 @@ function updateQuizSummary(lesson) {
 
 function nextLessonPath(lesson) {
   const next = lessons.find((item) => item.order === lesson.order + 1)
-  return next ? `/lesson/${next.slug}` : '/interview'
+  return next ? unitPath(next.slug) : '/interview'
 }
 
 function filterTerms(event) {
