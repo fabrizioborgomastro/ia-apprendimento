@@ -348,3 +348,34 @@ test('every landmark and progress indicator carries a distinct accessible name',
     assert.match(progressBar[0], /aria-label="[^"]+"/u, 'the progress indicator needs an accessible name')
   }
 })
+
+test('a unit without an activity completes on its checkpoint alone', () => {
+  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: false, hasActivity: false }), true)
+  assert.equal(isUnitComplete({ checkpointAnswered: false, activityMarked: false, hasActivity: false }), false)
+  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: false, hasActivity: true }), false)
+  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: true, hasActivity: true }), true)
+})
+
+test('every unit in the curriculum can actually be completed', () => {
+  for (const lesson of curriculum) {
+    for (const unit of lesson.units) {
+      const hasActivity = Boolean((unit.activities || []).length)
+      assert.ok(unit.checkpoint, `${lesson.id}/${unit.id} needs a checkpoint`)
+      assert.equal(
+        isUnitComplete({ checkpointAnswered: true, activityMarked: hasActivity, hasActivity }),
+        true,
+        `${lesson.id}/${unit.id} must be completable`
+      )
+    }
+  }
+})
+
+test('the unit view reports the correct completion requirement for a unit with no activity', () => {
+  const lesson = curriculum[0]
+  const unitWithoutActivity = lesson.units.find((unit) => !(unit.activities || []).length)
+  assert.ok(unitWithoutActivity, 'module one still has a unit without an activity')
+  const state = getUnitState(lesson, unitWithoutActivity.id, { cursor: 0 })
+  const html = renderUnitView({ lesson, state, locale: 'it', revealed: {}, checkpointChoice: 1, activityMarked: false })
+  assert.ok(!html.includes('data-activity-mark'), 'no activity means no self-mark control')
+  assert.ok(html.includes('Unità completata'), 'the unit must report itself complete after the checkpoint')
+})

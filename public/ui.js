@@ -50,11 +50,15 @@ export function normalizeAppHref(href, basePath) {
 }
 
 /**
- * A unit is complete only when its checkpoint has been answered and its activity
- * has been self-marked. Elapsed time is never a condition.
+ * A unit is complete when its checkpoint has been answered and, where the unit
+ * actually has an activity, that activity has been self-marked. Units that ship
+ * no activity would otherwise be impossible to complete. Elapsed time is never a
+ * condition. `hasActivity` defaults to true so an omitted flag stays strict.
  */
 export function isUnitComplete(unitState) {
-  return Boolean(unitState?.checkpointAnswered && unitState?.activityMarked)
+  if (!unitState?.checkpointAnswered) return false
+  const hasActivity = unitState.hasActivity ?? true
+  return hasActivity ? Boolean(unitState.activityMarked) : true
 }
 
 /**

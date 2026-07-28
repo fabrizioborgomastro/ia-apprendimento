@@ -1,8 +1,8 @@
 import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=5'
 import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=5'
 import {
-  getDashboardState, getUnitState, normalizeAppHref, parseRoute, quizFeedback,
-  readLocale, selectLocale, unitPath, writeLocale
+  getDashboardState, getUnitState, isUnitComplete, normalizeAppHref, parseRoute,
+  quizFeedback, readLocale, selectLocale, unitPath, writeLocale
 } from './ui.js?v=5'
 import { renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView } from './render.js?v=5'
 import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=5'
@@ -273,7 +273,12 @@ function bindLessonEvents(slug, unitId) {
 }
 
 function commitUnitCompletion(lesson, state, interaction) {
-  if (!Number.isInteger(interaction.checkpointChoice) || !interaction.activityMarked) return
+  const complete = isUnitComplete({
+    checkpointAnswered: Number.isInteger(interaction.checkpointChoice),
+    activityMarked: interaction.activityMarked,
+    hasActivity: (state.unit.activities || []).length > 0
+  })
+  if (!complete) return
   const currentCursor = progress[lesson.id]?.cursor || 0
   const cursor = Math.max(currentCursor, Math.min(state.index + 1, lesson.units.length))
   if (cursor === currentCursor) return

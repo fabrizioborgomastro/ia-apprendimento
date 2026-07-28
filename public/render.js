@@ -1,4 +1,4 @@
-import { selectLocale, unitPath } from './ui.js'
+import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=5'
 import { sources } from './content/index.js'
 
 const COPY = {
@@ -231,7 +231,11 @@ export function renderUnitView({ lesson, state, locale, revealed = {}, checkpoin
   const timedItems = [...(unit.microExamples || []), ...(unit.caseSegments || [])]
   const workedCases = unit.workedCases || []
   const activities = unit.activities || []
-  const unitComplete = Number.isInteger(checkpointChoice) && activityMarked
+  const unitComplete = isUnitComplete({
+    checkpointAnswered: Number.isInteger(checkpointChoice),
+    activityMarked,
+    hasActivity: activities.length > 0
+  })
 
   return `<article class="lesson-unit shell">
     <header class="unit-header" data-unit-header>
