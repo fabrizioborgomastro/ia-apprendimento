@@ -1112,6 +1112,9 @@ function validateModule5GovernanceContracts(lesson, path, errors) {
     if (shadow.caseArtifact.reviewQueuePerShift > shadow.caseArtifact.reviewCapacityPerShift) {
       errors.push(`${contractPath} shadow case review queue must stay within review capacity`)
     }
+    if (shadow.caseArtifact.canvas?.id !== lesson.mvpExperimentCanvas?.id) {
+      errors.push(`${contractPath} shadow case must reference the lesson MVP experiment canvas`)
+    }
   } else if (shadow) {
     errors.push(`${contractPath} shadow case needs a confusion matrix`)
   }
@@ -1146,6 +1149,9 @@ function validateModule5GovernanceContracts(lesson, path, errors) {
     }
     if (!plants.some((plant) => plant?.hardGatesPassed === false && plant?.eligible === false)) {
       errors.push(`${contractPath} rollout case must retain a high-scoring plant blocked by a hard gate`)
+    }
+    if (rolloutArtifact.checklist?.id !== lesson.scalingGateChecklist?.id) {
+      errors.push(`${contractPath} rollout case must reference the lesson scaling gate checklist`)
     }
   } else if (rollout) {
     errors.push(`${contractPath} rollout case needs a readiness artifact`)

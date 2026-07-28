@@ -1576,6 +1576,37 @@ test('Module 5 identity-anchored validator rejects mutations to central governan
     .some((error) => /readiness score must equal its weighted criteria total/i.test(error)))
   assert.ok(errorsFor((lesson) => { lesson.units[7].workedCases[0].caseArtifact.plants[3].eligible = true })
     .some((error) => /eligibility must follow the threshold and the hard gates/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].expectedOutput })
+    .some((error) => /timed case item 1.*expectedOutput/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].modelReasoning })
+    .some((error) => /timed case item 1.*modelReasoning/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].decisionAid })
+    .some((error) => /timed case item 1 needs a localized decision aid/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[0].microExamples[0].decisionAid.rows = [] })
+    .some((error) => /timed case item 1 needs a localized decision aid/i.test(error)))
+  assert.ok(errorsFor((lesson) => {
+    const row = lesson.riskRegister.rows[2]
+    row.residualLikelihood = 5
+    row.residualImpact = 5
+    row.residualScore = 25
+  }).some((error) => /controls must not increase the score/i.test(error)))
+  assert.ok(errorsFor((lesson) => {
+    lesson.raciMatrix.activities[0].assignments['unknown-role'] = 'R'
+  }).some((error) => /assigns unknown roles/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => {
+    lesson.units[2].workedCases[0].caseArtifact.canvas = {
+      ...lesson.mvpExperimentCanvas,
+      id: 'divergent-canvas'
+    }
+  }).some((error) => /shadow case must reference the lesson MVP experiment canvas/i.test(error)))
+  assert.ok(errorsFor((lesson) => {
+    lesson.units[7].workedCases[0].caseArtifact.checklist = {
+      ...lesson.scalingGateChecklist,
+      id: 'divergent-checklist'
+    }
+  }).some((error) => /rollout case must reference the lesson scaling gate checklist/i.test(error)))
 })
 
 test('Module 5 governance validation is anchored to stable lesson identity', () => {
