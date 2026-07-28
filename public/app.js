@@ -1,7 +1,7 @@
-import { allGlossary, interviewQuestions, lessons } from './content.js'
-import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js'
-import { getDashboardState, normalizeAppHref, parseRoute, quizFeedback } from './ui.js'
-import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js'
+import { allGlossary, interviewQuestions, lessons } from './content.js?v=2'
+import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=2'
+import { getDashboardState, normalizeAppHref, parseRoute, quizFeedback } from './ui.js?v=2'
+import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=2'
 
 const main = document.querySelector('#main')
 const toast = document.querySelector('#toast')
