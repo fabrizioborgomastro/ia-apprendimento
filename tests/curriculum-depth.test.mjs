@@ -942,6 +942,83 @@ test('Module 3 explicit timing validation reports malformed allocation without t
   ]).some((error) => /allocate non-negative theory, cases and practice/i.test(error)))
 })
 
+test('Module 3 engaged-time runtime contract rejects deletion and timing mutations', () => {
+  const errorsFor = (mutate) => {
+    const lesson = structuredClone(dataAiLesson)
+    mutate(lesson)
+    return lessonLocalErrors([digitalTransformationLesson, architectureLesson, lesson])
+  }
+
+  assert.ok(errorsFor((lesson) => {
+    for (const unit of lesson.units) {
+      for (const item of [
+        ...(unit.microExamples || []),
+        ...(unit.caseSegments || []),
+        ...(unit.workedCases || [])
+      ]) delete item.durationMinutes
+    }
+  }).some((error) => /engaged case items.*durationMinutes/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => {
+    for (const activity of lesson.units.flatMap(({ activities }) => activities || [])) {
+      delete activity.quickTask
+    }
+  }).some((error) => /activity 1.*quickTask/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.units[0].activities = [] })
+    .some((error) => /must retain at least one engaged-time activity/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.units[0].activities[0].durationMinutes = 0 })
+    .some((error) => /activity 1.*positive integer durationMinutes/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.units[0].microExamples[0].durationMinutes = 2 })
+    .some((error) => /engaged case durations.*allocated case minutes/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.units[0].activities[0].durationMinutes = 3 })
+    .some((error) => /engaged activity durations.*allocated practice minutes/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => {
+    lesson.units[0].timeAllocation.theory = 4
+    lesson.units[0].timeAllocation.cases = 3
+    lesson.units[0].caseSegments[0].durationMinutes = 2
+  }).some((error) => /engaged case minutes must total 20/i.test(error)))
+  assert.ok(errorsFor((lesson) => {
+    lesson.units[0].timeAllocation.theory = 4
+    lesson.units[0].timeAllocation.cases = 3
+    lesson.units[0].caseSegments[0].durationMinutes = 2
+  }).some((error) => /unit allocations must remain 31 theory, 20 cases and 14 practice/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => {
+    lesson.units[0].timeAllocation.theory = 4
+    lesson.units[0].timeAllocation.practice = 3
+    lesson.units[0].activities[0].durationMinutes = 3
+  }).some((error) => /engaged practice minutes must total 14/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.durationMinutes = 66 })
+    .some((error) => /durationMinutes must remain 65/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.timeBudget.theory = 30 })
+    .some((error) => /time budget must remain 31 theory, 20 cases and 14 practice/i.test(error)))
+})
+
+test('engaged-time runtime contract remains opt-in to the Module 3 scorecard marker', () => {
+  const lesson = structuredClone(dataAiLesson)
+  delete lesson.dataReadinessUseCaseArtifact
+  for (const unit of lesson.units) {
+    for (const item of [
+      ...(unit.microExamples || []),
+      ...(unit.caseSegments || []),
+      ...(unit.workedCases || [])
+    ]) delete item.durationMinutes
+    for (const activity of unit.activities || []) delete activity.quickTask
+  }
+
+  assert.ok(lessonLocalErrors([
+    digitalTransformationLesson,
+    architectureLesson,
+    lesson
+  ]).every((error) => !/engaged-time|engaged case|engaged practice/i.test(error)))
+})
+
 test('Module 3 teaches the simplest adequate method and readiness before AI promises', () => {
   assert.ok(dataAiLesson, 'Module 3 content must exist')
   const ladder = dataAiLesson.methodSelectionLadder

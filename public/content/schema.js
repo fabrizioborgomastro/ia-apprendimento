@@ -92,6 +92,16 @@ function isSolvedActivity(value) {
   return isObject(value) && isLocalized(value.prompt) && isLocalized(solution) && asArray(value.rubric).length > 0 && value.rubric.every(isLocalized)
 }
 
+function isValidQuickTaskScope(value) {
+  return isObject(value) &&
+    value.outputCount === 1 &&
+    Number.isInteger(value.decisionCount) && value.decisionCount >= 0 &&
+    Number.isInteger(value.calculationCount) && value.calculationCount >= 0 &&
+    value.decisionCount + value.calculationCount <= 1 &&
+    isLocalized(value.providedContext) &&
+    isLocalized(value.responseFormat)
+}
+
 function isProfessionalAnswer(value) {
   return isObject(value) &&
     isLocalized(value.prompt) &&
@@ -571,6 +581,80 @@ function validateDataReadinessScorecard(artifact, path, errors) {
   }
 }
 
+function validateModule3EngagedTime(lesson, path, errors) {
+  const expectedAllocation = { theory: 31, cases: 20, practice: 14 }
+  const allocationTotals = { theory: 0, cases: 0, practice: 0 }
+  let engagedCaseMinutes = 0
+  let engagedPracticeMinutes = 0
+
+  for (const [unitIndex, unit] of asArray(lesson.units).entries()) {
+    const unitPath = `${path} unit ${unit?.id || unitIndex + 1}`
+    const caseItems = [
+      ...asArray(unit?.microExamples),
+      ...asArray(unit?.caseSegments),
+      ...asArray(unit?.workedCases)
+    ]
+    if (!caseItems.length) errors.push(`${unitPath} must retain learner-visible engaged case content`)
+
+    let unitCaseMinutes = 0
+    let caseDurationsValid = true
+    for (const [caseIndex, item] of caseItems.entries()) {
+      const itemPath = `${unitPath} engaged case item ${caseIndex + 1}`
+      if (!isObject(item) || !isLocalized(item.title) ||
+          (!isLocalized(item.explanation) && !isLocalized(item.scenario))) {
+        errors.push(`${itemPath} must remain localized learner-visible content`)
+      }
+      if (!isPositiveInteger(item?.durationMinutes)) {
+        caseDurationsValid = false
+        errors.push(`${unitPath} engaged case items need positive integer durationMinutes`)
+      } else {
+        unitCaseMinutes += item.durationMinutes
+      }
+    }
+    engagedCaseMinutes += unitCaseMinutes
+    if (caseDurationsValid && Number.isFinite(unit?.timeAllocation?.cases) &&
+        unitCaseMinutes !== unit.timeAllocation.cases) {
+      errors.push(`${unitPath} engaged case durations must equal allocated case minutes`)
+    }
+
+    const activities = asArray(unit?.activities)
+    if (!activities.length) errors.push(`${unitPath} must retain at least one engaged-time activity`)
+    let unitPracticeMinutes = 0
+    let activityDurationsValid = true
+    for (const [activityIndex, activity] of activities.entries()) {
+      const activityPath = `${unitPath} activity ${activityIndex + 1}`
+      if (!isPositiveInteger(activity?.durationMinutes)) {
+        activityDurationsValid = false
+        errors.push(`${activityPath} needs positive integer durationMinutes`)
+      } else {
+        unitPracticeMinutes += activity.durationMinutes
+      }
+      if (!isValidQuickTaskScope(activity?.quickTask)) {
+        errors.push(`${activityPath} quickTask must define one concise localized output`)
+      }
+    }
+    engagedPracticeMinutes += unitPracticeMinutes
+    if (activityDurationsValid && Number.isFinite(unit?.timeAllocation?.practice) &&
+        unitPracticeMinutes !== unit.timeAllocation.practice) {
+      errors.push(`${unitPath} engaged activity durations must equal allocated practice minutes`)
+    }
+
+    for (const mode of TIME_BUDGET_KEYS) {
+      if (Number.isFinite(unit?.timeAllocation?.[mode])) allocationTotals[mode] += unit.timeAllocation[mode]
+    }
+  }
+
+  if (engagedCaseMinutes !== 20) errors.push(`${path} engaged case minutes must total 20`)
+  if (engagedPracticeMinutes !== 14) errors.push(`${path} engaged practice minutes must total 14`)
+  if (TIME_BUDGET_KEYS.some((mode) => allocationTotals[mode] !== expectedAllocation[mode])) {
+    errors.push(`${path} unit allocations must remain 31 theory, 20 cases and 14 practice minutes`)
+  }
+  if (TIME_BUDGET_KEYS.some((mode) => lesson.timeBudget?.[mode] !== expectedAllocation[mode])) {
+    errors.push(`${path} time budget must remain 31 theory, 20 cases and 14 practice minutes`)
+  }
+  if (lesson.durationMinutes !== 65) errors.push(`${path} durationMinutes must remain 65`)
+}
+
 function validateCheckpoint(checkpoint, path, errors) {
   if (!checkpoint) {
     errors.push(`${path} is missing a checkpoint`)
@@ -698,6 +782,7 @@ export function validateCurriculum(lessons, sources) {
         `${path} data-readiness scorecard`,
         errors
       )
+      validateModule3EngagedTime(lesson, path, errors)
     }
 
     for (const [unitIndex, unit] of units.entries()) {
@@ -718,11 +803,7 @@ export function validateCurriculum(lessons, sources) {
       for (const [activityIndex, activity] of asArray(unit.activities).entries()) {
         if ('quickTask' in (activity || {})) {
           const quickTask = activity.quickTask
-          if (!isObject(quickTask) || quickTask.outputCount !== 1 ||
-              !Number.isInteger(quickTask.decisionCount) || quickTask.decisionCount < 0 ||
-              !Number.isInteger(quickTask.calculationCount) || quickTask.calculationCount < 0 ||
-              quickTask.decisionCount + quickTask.calculationCount > 1 ||
-              !isLocalized(quickTask.providedContext) || !isLocalized(quickTask.responseFormat)) {
+          if (!isValidQuickTaskScope(quickTask)) {
             errors.push(`${unitPath} activity ${activityIndex + 1} quickTask must define one concise localized output`)
           }
         }
