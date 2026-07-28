@@ -13,14 +13,28 @@ const checkpoint = (promptIt, promptEn, options, correctOption) => ({
 
 const microExample = (titleIt, titleEn, explanationIt, explanationEn) => ({
   title: t(titleIt, titleEn),
-  explanation: t(explanationIt, explanationEn)
+  explanation: t(explanationIt, explanationEn),
+  durationMinutes: 1
 })
 
+let evidenceReferenceSequence = 0
 const assessment = (score, confidence, evidenceIt, evidenceEn, rationaleIt, rationaleEn) => ({
   score,
   confidence,
   evidence: t(evidenceIt, evidenceEn),
-  rationale: t(rationaleIt, rationaleEn)
+  rationale: t(rationaleIt, rationaleEn),
+  assumptions: [t(
+    'La valutazione assume che il documento osservato rappresenti il perimetro dichiarato fino alla data di riesame.',
+    'The assessment assumes that the observed document represents the stated scope until the review date.'
+  )],
+  evidenceReferences: [{
+    id: `score-evidence-${String(++evidenceReferenceSequence).padStart(2, '0')}`,
+    sourceId: 'module-3-case-evidence',
+    documentId: `M3-EVID-${String(evidenceReferenceSequence).padStart(2, '0')}`,
+    observationDate: '2026-07-15',
+    reviewDate: '2026-10-15',
+    description: t(evidenceIt, evidenceEn)
+  }]
 })
 
 const gateCheck = (gateId, passed, evidenceIt, evidenceEn, rationaleIt, rationaleEn) => ({
@@ -28,6 +42,56 @@ const gateCheck = (gateId, passed, evidenceIt, evidenceEn, rationaleIt, rational
   passed,
   evidence: t(evidenceIt, evidenceEn),
   rationale: t(rationaleIt, rationaleEn)
+})
+
+const caseSegment = (id, durationMinutes, titleIt, titleEn, scenarioIt, scenarioEn) => ({
+  id,
+  durationMinutes,
+  title: t(titleIt, titleEn),
+  scenario: t(scenarioIt, scenarioEn)
+})
+
+const quickTask = (decisionCount, calculationCount, contextIt, contextEn, formatIt, formatEn) => ({
+  outputCount: 1,
+  decisionCount,
+  calculationCount,
+  providedContext: t(contextIt, contextEn),
+  responseFormat: t(formatIt, formatEn)
+})
+
+const decisionContexts = {
+  'approved-for-shadow-pilot': {
+    target: t('Completare uno shadow pilot sugli SKU approvati con decision log.', 'Complete a shadow pilot on approved SKUs with a decision log.'),
+    budgetBoundary: t('Massimo 45.000 euro; nessuna autorità di rilascio automatica.', 'Maximum EUR 45,000; no automated release authority.'),
+    dependencies: [t('Identità prodotto verificata e reviewer qualificati disponibili.', 'Verified product identity and available qualified reviewers.')]
+  },
+  'approved-for-data-readiness': {
+    target: t('Riconciliare 40 eventi, completare il lineage e misurare la baseline shadow.', 'Reconcile 40 events, complete lineage, and measure the shadow baseline.'),
+    budgetBoundary: t('Massimo 20.000 euro per data readiness; nessun training di produzione.', 'Maximum EUR 20,000 for data readiness; no production training.'),
+    dependencies: [t('Failure coding, work order e configurazione sensori riconciliati.', 'Reconciled failure coding, work orders, and sensor configuration.')]
+  },
+  'approved-for-limited-pilot': {
+    target: t('Completare backtest rolling-origin e decision log per dodici settimane.', 'Complete rolling-origin backtesting and a decision log for twelve weeks.'),
+    budgetBoundary: t('Massimo 30.000 euro; nessuna modifica automatica degli ordini.', 'Maximum EUR 30,000; no automatic order changes.'),
+    dependencies: [t('Vintage forecast conservati e partecipazione di Planning e Procurement.', 'Retained forecast vintages and Planning and Procurement participation.')]
+  },
+  'rejected-use-rule': {
+    target: t('Implementare la soglia approvata come regola deterministica auditabile.', 'Implement the approved threshold as an auditable deterministic rule.'),
+    budgetBoundary: t('Massimo 8.000 euro per regola, test e audit; nessun servizio GenAI.', 'Maximum EUR 8,000 for rule, testing, and audit; no GenAI service.'),
+    dependencies: [t('Limite approvato, owner PLC e procedura di escalation.', 'Approved limit, PLC owner, and escalation procedure.')]
+  }
+}
+
+const decisionRecord = (status, ownerIt, ownerEn, dissentIt, dissentEn, guardrailIt, guardrailEn, stopIt, stopEn, reviewDate) => ({
+  dissent: t(dissentIt, dissentEn),
+  approval: {
+    status,
+    owner: t(ownerIt, ownerEn)
+  },
+  guardrails: [t(guardrailIt, guardrailEn)],
+  stopCriteria: [t(stopIt, stopEn)],
+  ...decisionContexts[status],
+  reviewDate
 })
 
 const workedExamples = {
@@ -259,38 +323,96 @@ const methodSelectionLadder = {
 
 const dataReadinessUseCaseArtifact = {
   title: t(
-    'Scheda auditabile di data readiness e selezione use case',
+    'Scheda auditabile di data readiness e selezione del caso d’uso',
     'Auditable data-readiness and use-case selection sheet'
   ),
   description: t(
     'Una matrice che rende separati score, evidenza, confidenza, hard gate e decisione di portafoglio, così un numero alto non nasconde una precondizione mancante.',
     'A matrix that keeps score, evidence, confidence, hard gates, and portfolio decision separate so a high number cannot hide a missing prerequisite.'
   ),
+  scale: t(
+    'Scala ponderata ottenibile da 20 a 100, perché ogni criterio ammette score interi da 1 a 5.',
+    'Attainable weighted scale from 20 to 100 because every criterion accepts integer scores from 1 to 5.'
+  ),
+  formula: t(
+    'Somma di score per peso divisa per 5; con pesi pari a 100 il minimo è 20 e il massimo è 100.',
+    'Sum of score times weight divided by 5; with weights totaling 100, the minimum is 20 and the maximum is 100.'
+  ),
+  attainableScoreRange: { minimum: 20, maximum: 100 },
+  audit: {
+    rubricVersion: 'M3-DRS-1.0',
+    assessmentDate: '2026-07-15',
+    participants: [
+      { role: t('Responsabile Quality', 'Quality lead') },
+      { role: t('Responsabile Reliability', 'Reliability lead') },
+      { role: t('Data product owner', 'Data product owner') },
+      { role: t('Responsabile OT e Security', 'OT and Security lead') }
+    ],
+    decisionOwner: t('Direttore Operations', 'Operations director'),
+    budgetBoundary: t(
+      'Massimo 45.000 euro per pilot, senza modifica automatica di PLC, rilascio prodotto o ordini.',
+      'Maximum EUR 45,000 per pilot, with no automatic PLC, product-release, or ordering changes.'
+    ),
+    dependencies: [
+      t('Identità prodotto e asset con validità temporale.', 'Product and asset identity with temporal validity.'),
+      t('Capacità di review umana e owner operativi nominati.', 'Human-review capacity and named operational owners.')
+    ]
+  },
   criteria: [
     {
       id: 'business-decision-value',
       weight: 20,
-      label: t('Valore della decisione', 'Business decision value')
+      label: t('Valore della decisione', 'Business decision value'),
+      anchors: {
+        1: t('Nessuna decisione, baseline o conseguenza economica definita.', 'No defined decision, baseline, or economic consequence.'),
+        3: t('Decisione e baseline definite, ma valore o frequenza sono ancora stimati.', 'Decision and baseline are defined, but value or frequency remains estimated.'),
+        5: t('Owner, frequenza, baseline e valore netto sono osservati e riconciliati.', 'Owner, frequency, baseline, and net value are observed and reconciled.')
+      },
+      intermediateScorePolicy: t('Usare 2 o 4 solo quando l’evidenza cade tra i due anchor adiacenti e documentare il gap.', 'Use 2 or 4 only when evidence falls between adjacent anchors and document the gap.')
     },
     {
       id: 'data-semantic-readiness',
       weight: 25,
-      label: t('Readiness semantica dei dati', 'Data semantic readiness')
+      label: t('Readiness semantica dei dati', 'Data semantic readiness'),
+      anchors: {
+        1: t('Fonti, unità, identità e significato non sono controllati.', 'Sources, units, identity, and meaning are uncontrolled.'),
+        3: t('Contratto e owner esistono, ma coverage o lineage hanno lacune note.', 'Contract and owners exist, but coverage or lineage has known gaps.'),
+        5: t('Contratto approvato, lineage, qualità e coverage sono misurati sul perimetro.', 'Approved contract, lineage, quality, and coverage are measured for the scope.')
+      },
+      intermediateScorePolicy: t('Usare 2 o 4 solo con evidenza tra anchor adiacenti e una lacuna esplicita.', 'Use 2 or 4 only with evidence between adjacent anchors and an explicit gap.')
     },
     {
       id: 'label-and-ground-truth-readiness',
       weight: 20,
-      label: t('Readiness di label e ground truth', 'Label and ground-truth readiness')
+      label: t('Readiness di label e ground truth', 'Label and ground-truth readiness'),
+      anchors: {
+        1: t('Il target non è definito o deriva da proxy non verificati.', 'The target is undefined or comes from unverified proxies.'),
+        3: t('Policy e campione verificato esistono, ma agreement o coverage sono parziali.', 'Policy and a verified sample exist, but agreement or coverage is partial.'),
+        5: t('Policy approvata, adjudication, agreement, casi incerti, coverage e lineage sono misurati.', 'Approved policy, adjudication, agreement, uncertain cases, coverage, and lineage are measured.')
+      },
+      intermediateScorePolicy: t('Usare 2 o 4 soltanto citando quale requisito dell’anchor superiore manca.', 'Use 2 or 4 only by citing which higher-anchor requirement is missing.')
     },
     {
       id: 'workflow-and-integration-readiness',
       weight: 20,
-      label: t('Readiness di workflow e integrazione', 'Workflow and integration readiness')
+      label: t('Readiness di workflow e integrazione', 'Workflow and integration readiness'),
+      anchors: {
+        1: t('Output, owner, capacità, interfaccia e fallback non sono definiti.', 'Output, owner, capacity, interface, and fallback are undefined.'),
+        3: t('Workflow advisory e owner sono definiti, ma capacità o degraded mode non sono provati.', 'Advisory workflow and owner are defined, but capacity or degraded mode is unproven.'),
+        5: t('Workflow, capacità, integrazione, monitoraggio e fallback sono testati end-to-end.', 'Workflow, capacity, integration, monitoring, and fallback are tested end to end.')
+      },
+      intermediateScorePolicy: t('Usare 2 o 4 quando una prova osservabile soddisfa solo parte dell’anchor successivo.', 'Use 2 or 4 when observable evidence satisfies only part of the next anchor.')
     },
     {
       id: 'risk-oversight-and-adoption',
       weight: 15,
-      label: t('Rischio, oversight e adozione', 'Risk, oversight, and adoption')
+      label: t('Rischio, oversight e adozione', 'Risk, oversight, and adoption'),
+      anchors: {
+        1: t('Autorità, guardrail, soggetti coinvolti e stop criteria non sono definiti.', 'Authority, guardrails, affected parties, and stop criteria are undefined.'),
+        3: t('Owner e confine di autorità sono definiti, ma controllo o adozione non sono ancora provati.', 'Owner and authority boundary are defined, but controls or adoption remain unproven.'),
+        5: t('Oversight, guardrail, audit, stop criteria e adozione sono testati e approvati.', 'Oversight, guardrails, audit, stop criteria, and adoption are tested and approved.')
+      },
+      intermediateScorePolicy: t('Usare 2 o 4 soltanto con motivazione riferita agli anchor confinanti.', 'Use 2 or 4 only with rationale tied to the neighboring anchors.')
     }
   ],
   hardGates: [
@@ -375,6 +497,15 @@ const dataReadinessUseCaseArtifact = {
         )
       ],
       portfolioDecision: 'selected',
+      decisionRecord: decisionRecord(
+        'approved-for-shadow-pilot', 'Direttore Quality', 'Quality director',
+        'Security chiede verifica degli accessi alle immagini prima dell’advisory.',
+        'Security requests image-access verification before advisory operation.',
+        'La disposizione resta a un reviewer qualificato.', 'Disposition remains with a qualified reviewer.',
+        'Fermare se la coda supera 50 per due ore o manca identità prodotto.',
+        'Stop if the queue exceeds 50 for two hours or product identity is missing.',
+        '2026-09-15'
+      ),
       recommendation: t(
         'Selezionare un pilot shadow e poi advisory con review umana e stop criteria.',
         'Select a shadow pilot followed by advisory operation with human review and stop criteria.'
@@ -444,6 +575,15 @@ const dataReadinessUseCaseArtifact = {
         )
       ],
       portfolioDecision: 'deferred',
+      decisionRecord: decisionRecord(
+        'approved-for-data-readiness', 'Responsabile Reliability', 'Reliability lead',
+        'Maintenance ritiene utile iniziare subito; Data contesta la rappresentatività delle label.',
+        'Maintenance favors starting now; Data disputes label representativeness.',
+        'Nessun alert operativo prima del superamento del gate dati.', 'No operational alerts before the data gate passes.',
+        'Interrompere se physical asset identity o sensor lineage non sono ricostruibili.',
+        'Stop if physical asset identity or sensor lineage cannot be reconstructed.',
+        '2026-10-15'
+      ),
       recommendation: t(
         'Rinviare la promessa PdM; finanziare prima lineage, failure coding e shadow baseline.',
         'Defer the PdM promise; first fund lineage, failure coding, and a shadow baseline.'
@@ -513,6 +653,15 @@ const dataReadinessUseCaseArtifact = {
         )
       ],
       portfolioDecision: 'pilot',
+      decisionRecord: decisionRecord(
+        'approved-for-limited-pilot', 'Direttore Supply Chain', 'Supply-chain director',
+        'Finance chiede che i benefici siano distinti dalla normale variabilità del piano.',
+        'Finance asks that benefits be separated from normal planning variation.',
+        'Gli scenari non modificano automaticamente ordini o allocazioni.', 'Scenarios do not automatically change orders or allocations.',
+        'Fermare se il backtest non supera la baseline stagionale o gli override non sono registrati.',
+        'Stop if backtesting does not beat the seasonal baseline or overrides are not logged.',
+        '2026-09-30'
+      ),
       recommendation: t(
         'Avviare un pilot di scenario planning con backtest e decision log.',
         'Run a scenario-planning pilot with backtesting and a decision log.'
@@ -582,6 +731,15 @@ const dataReadinessUseCaseArtifact = {
         )
       ],
       portfolioDecision: 'rejected',
+      decisionRecord: decisionRecord(
+        'rejected-use-rule', 'Responsabile Operations', 'Operations lead',
+        'Il proponente GenAI contesta il rifiuto; l’owner richiede output deterministico.',
+        'The GenAI proposer disputes rejection; the owner requires deterministic output.',
+        'La soglia resta implementata come regola con isteresi e audit.', 'The threshold remains a rule with hysteresis and audit.',
+        'Fermare ogni prototipo che possa emettere istruzioni operative variabili.',
+        'Stop any prototype able to issue variable operating instructions.',
+        '2027-01-15'
+      ),
       recommendation: t(
         'Rifiutare GenAI e implementare la regola deterministica approvata con audit e fallback.',
         'Reject GenAI and implement the approved deterministic rule with audit and fallback.'
@@ -606,7 +764,7 @@ const unitOne = {
   timeAllocation: { theory: 5, cases: 2, practice: 2 },
   theory: [
     t(
-      `Un use case serio parte da una decisione, non dalla tecnologia disponibile. La formulazione minima contiene attore, oggetto, momento, alternative, evidenza e conseguenza. "Ridurre i fermi con AI" non identifica chi farà che cosa. "Il reliability engineer decide entro il briefing delle 14 se ispezionare il cuscinetto, prenotare una finestra entro 36 ore o continuare il monitoraggio, usando segnali con timestamp e uno storico di failure mode verificati" è invece valutabile. Da qui si definiscono baseline, frequenza, lead time utile, errore tollerabile e fallback. La domanda della tecnica arriva dopo. Una regola deterministica è adeguata quando la relazione è nota, stabile e approvata: temperatura oltre un limite con sensore valido, combinazione di stati impossibile, documento scaduto. Gli analytics descrittivi mostrano che cosa è accaduto; quelli diagnostici segmentano e confrontano per sostenere un’ipotesi causale. Un Pareto delle perdite per asset e reason code può creare più valore di un modello se il problema è mancanza di visibilità. Un modello predittivo serve quando variabili multiple anticipano probabilisticamente un evento e il lead time permette un’azione. L'ottimizzazione sceglie azioni sotto vincoli: quantità, sequenza, capacità, qualifica, costo. GenAI è adatta soprattutto a contenuto non strutturato, per esempio sintetizzare manuali controllati, e richiede verifica. La scala non rappresenta maturità crescente: ogni gradino risolve una classe diversa di problema.`,
+      `Un caso d’uso serio parte da una decisione, non dalla tecnologia disponibile. La formulazione minima contiene attore, oggetto, momento, alternative, evidenza e conseguenza. "Ridurre i fermi con AI" non identifica chi farà che cosa. "Il reliability engineer decide entro il briefing delle 14 se ispezionare il cuscinetto, prenotare una finestra entro 36 ore o continuare il monitoraggio, usando segnali con timestamp e uno storico di failure mode verificati" è invece valutabile. Da qui si definiscono baseline, frequenza, lead time utile, errore tollerabile e fallback. La domanda della tecnica arriva dopo. Una regola deterministica è adeguata quando la relazione è nota, stabile e approvata: temperatura oltre un limite con sensore valido, combinazione di stati impossibile, documento scaduto. Gli analytics descrittivi mostrano che cosa è accaduto; quelli diagnostici segmentano e confrontano per sostenere un’ipotesi causale. Un Pareto delle perdite per asset e reason code può creare più valore di un modello se il problema è mancanza di visibilità. Un modello predittivo serve quando variabili multiple anticipano probabilisticamente un evento e il lead time permette un’azione. L'ottimizzazione sceglie azioni sotto vincoli: quantità, sequenza, capacità, qualifica, costo. GenAI è adatta soprattutto a contenuto non strutturato, per esempio sintetizzare manuali controllati, e richiede verifica. La scala non rappresenta maturità crescente: ogni gradino risolve una classe diversa di problema.`,
       `A serious use case starts with a decision, not an available technology. A useful formulation names the actor, object, moment, alternatives, evidence, and consequence. "Reduce downtime with AI" does not say who will do what. "At the 14:00 briefing, the reliability engineer decides whether to inspect the bearing, reserve a maintenance window within 36 hours, or continue monitoring, using timestamped signals and verified failure-mode history" can be evaluated. That definition leads to the baseline, decision frequency, useful lead time, tolerated error, and fallback. Method selection comes afterwards. A deterministic rule fits when the relationship is known, stable, and approved: a temperature beyond a limit with a valid sensor, an impossible combination of states, or an expired document. Descriptive analytics shows what happened; diagnostic analytics segments and compares observations to support a causal hypothesis. A loss Pareto by asset and reason code may create more value than a model when visibility is the problem. Predictive ML is useful when several variables probabilistically anticipate an event and the lead time enables action. Optimization selects actions under constraints such as quantities, sequence, capacity, qualification, and cost. Generative AI is mainly suited to unstructured content, such as summarizing controlled manuals, and requires verification. The ladder is not a maturity hierarchy. Each rung solves a different problem class.`
     ),
     t(
@@ -633,23 +791,29 @@ const unitOne = {
     'Un limite approvato, un sensore valido e una risposta nota richiedono una regola deterministica con isteresi e audit, non un’interpretazione linguistica variabile.',
     'An approved limit, valid sensor, and known response call for a deterministic rule with hysteresis and audit, not variable language interpretation.'
   )],
+  caseSegments: [caseSegment(
+    'temperature-method-choice', 1,
+    'Decisione rapida: limite temperatura', 'Quick decision: temperature limit',
+    'Dato un limite approvato e uno stato sensore valido, chi studia confronta regola e GenAI e osserva perché la regola è sufficiente.',
+    'Given an approved limit and valid sensor state, the learner compares a rule with GenAI and observes why the rule is sufficient.'
+  )],
   activities: [
     {
       id: 'choose-minimum-method-record',
       prompt: t(
-        'Classifica limite temperatura, Pareto perdite e sintesi manuale sulla scala, poi registra una scelta e un rifiuto con evidence.',
-        'Place a temperature limit, loss Pareto, and manual summary on the ladder, then record one selection and one rejection with evidence.'
+        'Per il limite temperatura già descritto, scegli regola o GenAI e scrivi una ragione.',
+        'For the supplied temperature-limit case, choose a rule or GenAI and write one reason.'
       ),
-      expectedArtifact: t('Decision record di tre righe.', 'Three-row decision record.'),
+      expectedArtifact: t('Una scelta con una ragione.', 'One choice with one reason.'),
       durationMinutes: 2,
+      quickTask: quickTask(1, 0, 'Limite, stato sensore e risposta sono già approvati.', 'Limit, sensor state, and response are already approved.', 'Metodo scelto più una frase.', 'Chosen method plus one sentence.'),
       hints: [t('Parti dalla forma dell’output e dalla conseguenza.', 'Start from output form and consequence.')],
       modelSolution: t(
-        'Limite temperatura: regola deterministica, selezionata perché limite e risposta sono approvati; GenAI rifiutata per variabilità inutile. Pareto: analytics descrittivi con reason code e denominatori. Sintesi manuale: pilot GenAI controllato soltanto con corpus autorizzato, citazioni e verifica umana.',
-        'Temperature limit: select a deterministic rule because limit and response are approved; reject GenAI due to unnecessary variability. Pareto: descriptive analytics with reason codes and denominators. Manual summary: controlled GenAI pilot only with an authorized corpus, citations, and human verification.'
+        'Scelgo una regola deterministica: limite e risposta sono approvati, quindi GenAI aggiungerebbe variabilità senza informazione.',
+        'I choose a deterministic rule: the limit and response are approved, so GenAI would add variability without information.'
       ),
       rubric: [
-        t('Collega ogni metodo alla decisione.', 'Connects each method to the decision.'),
-        t('Motiva esplicitamente il rifiuto di GenAI.', 'Explicitly justifies rejecting GenAI.')
+        t('Sceglie la regola e collega la ragione al limite approvato.', 'Chooses the rule and ties the reason to the approved limit.')
       ]
     }
   ],
@@ -689,7 +853,7 @@ const unitTwo = {
       `Context joins domains. A sensor measurement belongs to an asset; the asset performs a step; the step produces or transforms material; and order, recipe, shift, and environment explain the state. ISA-95 provides categories linking business and manufacturing operations, but local mappings must be explicit. Give stable identifiers to assets, materials, orders, and lots, and record the temporal validity of relationships. If a motor is replaced, retaining the same tag name is not enough. Analysts need to know which physical instance produced signals before and after replacement. If a recipe changes at 10:03 but analytics receives it at 10:12, event time and processing time differ. Lineage describes origin, transformations, joins, filters, versions, and destinations. It allows a team to reconstruct why a feature had a value and which dashboards or models are affected by correction. It is not a decorative flow picture. A useful lineage record names source system, schema and version, key, timestamp, transformation logic, software release, quality check, and retention. Aggregated features also specify window and missing-value treatment. Without that detail, a team may leak future information into a forecast or compare series with incompatible timestamps and time zones.`
     ),
     t(
-      `Ownership rende il dato governabile. Il system owner mantiene piattaforma e servizio; il data owner è accountable per definizione, accesso e uso; lo steward cura regole, issue e metadati; il producer risolve difetti alla fonte; il consumer dichiara requisiti e conseguenze. I nomi possono variare, ma non deve esistere una metrica critica senza una persona che possa decidere. Un owner non certifica ogni valore manualmente: approva semantic contract, soglie qualità, priorità e remediation. Il contratto specifica significato, unità, enum, cardinalità, freshness, status, chiavi, compatibilità e modalità di cambio. Se un reason code "other" cresce dal 4 al 38 per cento, il controllo tecnico può essere verde mentre l'utilità diagnostica crolla. L'issue deve arrivare a Operations, che conosce il processo di codifica, non restare soltanto al data engineer. L'accesso segue scopo e minimizzazione. Dati personali, segreti, record qualità e dati operativi hanno classificazioni e retention differenti. Copiare tutto in un data lake non crea ownership. Per un use case si redige invece un data product contract limitato: quali fonti sono autorevoli, quale popolazione è ammessa, quale latency si garantisce, chi approva una nuova feature e come si comunica breaking change. Questa disciplina consente riuso senza perdere accountability e rende esplicite le dipendenze prima che un pilot diventi servizio.`,
+      `Ownership rende il dato governabile. Il system owner mantiene piattaforma e servizio; il data owner è accountable per definizione, accesso e uso; lo steward cura regole, issue e metadati; il producer risolve difetti alla fonte; il consumer dichiara requisiti e conseguenze. I nomi possono variare, ma non deve esistere una metrica critica senza una persona che possa decidere. Un owner non certifica ogni valore manualmente: approva semantic contract, soglie qualità, priorità e remediation. Il contratto specifica significato, unità, enum, cardinalità, freshness, status, chiavi, compatibilità e modalità di cambio. Se un reason code "other" cresce dal 4 al 38 per cento, il controllo tecnico può essere verde mentre l'utilità diagnostica crolla. L'issue deve arrivare a Operations, che conosce il processo di codifica, non restare soltanto al data engineer. L'accesso segue scopo e minimizzazione. Dati personali, segreti, record qualità e dati operativi hanno classificazioni e retention differenti. Copiare tutto in un data lake non crea ownership. Per un caso d’uso si redige invece un data product contract limitato: quali fonti sono autorevoli, quale popolazione è ammessa, quale latency si garantisce, chi approva una nuova feature e come si comunica breaking change. Questa disciplina consente riuso senza perdere accountability e rende esplicite le dipendenze prima che un pilot diventi servizio.`,
       `Ownership makes data governable. A system owner maintains platform and service; a data owner is accountable for definition, access, and use; a steward manages rules, issues, and metadata; a producer repairs defects at source; and a consumer states requirements and consequences. Names may vary, but no critical metric should exist without someone able to decide. An owner does not manually certify every value. They approve the semantic contract, quality thresholds, priorities, and remediation. The contract defines meaning, unit, enum, cardinality, freshness, status, keys, compatibility, and change process. If the reason code "other" rises from 4 to 38 percent, technical checks may remain green while diagnostic usefulness collapses. The issue belongs with Operations, which understands the coding process, not only with a data engineer. Access follows purpose and minimization. Personal data, secrets, quality records, and operating data have different classifications and retention. Copying everything into a lake does not create ownership. Instead, each use case gets a bounded data-product contract: authoritative sources, permitted population, latency commitment, feature approval, and breaking-change communication. This discipline enables reuse without losing accountability and exposes dependencies before a pilot becomes a service.`
     ),
     t(
@@ -708,23 +872,29 @@ const unitTwo = {
     'La serie conserva il nome M201_VIB ma cambia physical asset dopo una sostituzione: senza validità temporale il modello tratta due popolazioni come una sola.',
     'The series retains tag M201_VIB while the physical asset changes after replacement. Without temporal validity, the model treats two populations as one.'
   )],
+  caseSegments: [caseSegment(
+    'asset-identity-contract-gap', 1,
+    'Gap di contratto dopo la sostituzione', 'Contract gap after replacement',
+    'Una riga con tag invariato e motore sostituito mostra che manca la physical instance con validità temporale.',
+    'A row with an unchanged tag and replaced motor shows that physical instance with temporal validity is missing.'
+  )],
   activities: [
     {
       id: 'write-data-contract-row',
       prompt: t(
-        'Scrivi una riga di data contract per vibrazione cuscinetto con identità, unità, tempo, qualità, owner e label.',
-        'Write one data-contract row for bearing vibration including identity, unit, time, quality, owner, and label.'
+        'Nella riga fornita manca un campo: tag M201_VIB, mm/s, timestamp UTC, status good. Indica il campo mancante più critico.',
+        'One field is missing from the supplied row: tag M201_VIB, mm/s, UTC timestamp, good status. Name the most critical missing field.'
       ),
-      expectedArtifact: t('Riga di contratto verificabile.', 'Verifiable contract row.'),
+      expectedArtifact: t('Un campo con una ragione.', 'One field with one reason.'),
       durationMinutes: 2,
+      quickTask: quickTask(1, 0, 'Il motore è stato sostituito ma il tag logico è rimasto invariato.', 'The motor was replaced while the logical tag stayed unchanged.', 'Campo mancante più una frase.', 'Missing field plus one sentence.'),
       hints: [t('Distingui tag logico e physical instance.', 'Distinguish logical tag from physical instance.')],
       modelSolution: t(
-        'Feature RMS mm/s per physical-bearing-id e asse, finestra 10 s, source timestamp UTC, status good obbligatorio, operating mode running, owner Reliability Data; label inner-race-confirmed deriva da ispezione del componente rimosso e adjudication, non dalla sola chiusura work order.',
-        'RMS mm/s feature by physical-bearing-id and axis, 10-second window, UTC source timestamp, required good status, running operating mode, Reliability Data owner; inner-race-confirmed label comes from removed-component inspection and adjudication, not work-order closure alone.'
+        'Manca physical-bearing-id con validità temporale: il tag invariato altrimenti unisce il vecchio e il nuovo componente.',
+        'Physical-bearing-id with temporal validity is missing; otherwise the unchanged tag merges the old and new components.'
       ),
       rubric: [
-        t('Specifica significato e physical identity.', 'Specifies meaning and physical identity.'),
-        t('Definisce quality state, owner e ground truth.', 'Defines quality state, owner, and ground truth.')
+        t('Identifica physical identity con validità temporale come campo mancante.', 'Identifies physical identity with temporal validity as the missing field.')
       ]
     }
   ],
@@ -733,7 +903,7 @@ const unitTwo = {
     'A dataset has 99.9 percent monthly completeness but always loses the minutes before a failure. How should it be judged?',
     [
       ['Pronto, perché supera 99 per cento.', 'Ready because it exceeds 99 percent.', 'La media nasconde un’assenza sistematica nella finestra decisionale.', 'The average hides systematic absence in the decision window.'],
-      ['Non pronto per il use case finché la mancanza sistematica non è compresa e corretta.', 'Not ready for the use case until the systematic gap is understood and corrected.', 'La qualità deve essere misurata sulla popolazione e finestra rilevanti.', 'Quality must be measured on the relevant population and window.'],
+      ['Non pronto per il caso d’uso finché la mancanza sistematica non è compresa e corretta.', 'Not ready for the use case until the systematic gap is understood and corrected.', 'La qualità deve essere misurata sulla popolazione e finestra rilevanti.', 'Quality must be measured on the relevant population and window.'],
       ['Pronto se si imputano valori medi.', 'Ready if averages are imputed.', 'L’imputazione non ricrea il segnale che precede il guasto.', 'Imputation does not recreate the pre-failure signal.']
     ],
     1
@@ -783,18 +953,22 @@ const unitThree = {
     'Con 80 difetti su 1.000, classificare tutto conforme produce 92 per cento di accuracy ma perde tutti gli 80 difetti.',
     'With 80 defects in 1,000 units, classifying everything as conforming produces 92 percent accuracy but misses all 80 defects.'
   )],
+  caseSegments: [caseSegment(
+    'referral-rate-capacity-check', 1,
+    'Rate di referral e capacità', 'Referral rate and capacity',
+    'Il caso fornisce 120 referral in 2,5 ore e chiede di confrontare il rate risultante con 60 review ogni ora.',
+    'The case provides 120 referrals in 2.5 hours and asks learners to compare the resulting rate with 60 reviews per hour.'
+  )],
   activities: [
     {
       id: 'threshold-cost-capacity-analysis',
       prompt: t(
-        'Ricalcola precision, recall e costo delle due soglie, verifica la capacità review e raccomanda una policy con un limite di stop.',
-        'Recompute precision, recall, and cost for both thresholds, verify review capacity, and recommend a policy with a stop limit.'
+        'Con 120 referral in 2,5 ore, calcola i referral ogni ora e confrontali con capacità 60.',
+        'Given 120 referrals in 2.5 hours, calculate referrals per hour and compare them with capacity of 60.'
       ),
-      expectedArtifact: t(
-        'Una tabella con formule, ipotesi, decisione e stop criterion.',
-        'A table containing formulas, assumptions, decision, and stop criterion.'
-      ),
+      expectedArtifact: t('Un calcolo e un esito di capacità.', 'One calculation and one capacity result.'),
       durationMinutes: 2,
+      quickTask: quickTask(0, 1, 'Referral totali 120, finestra 2,5 ore, capacità 60 ogni ora.', '120 total referrals, 2.5-hour window, capacity 60 per hour.', 'Formula, risultato e sopra/sotto capacità.', 'Formula, result, and above/below capacity.'),
       hints: [
         t(
           'Non confrontare soltanto F1: applica i costi a FP e FN e confronta referral con capacità.',
@@ -802,13 +976,11 @@ const unitThree = {
         )
       ],
       modelSolution: t(
-        'La matrice produce precision 80 per cento e recall 90 per cento. La soglia 0,62 costa 15.390 euro; la soglia 0,44 costa 7.765 euro. Raccomando 0,44 in advisory perché 120 referral in 2,5 ore equivalgono a 48/ora, sotto la capacità 60. Sospendo l’automazione se la coda supera 50 per due ore, se il recall rolling scende sotto 85 per cento con almeno 40 difetti verificati o se manca identità prodotto; il fallback è review manuale.',
-        'The matrix yields 80 percent precision and 90 percent recall. Threshold 0.62 costs EUR 15,390; threshold 0.44 costs EUR 7,765. I recommend 0.44 in advisory because 120 referrals in 2.5 hours equal 48/hour, below capacity of 60. I suspend automation if the queue exceeds 50 for two hours, rolling recall falls below 85 percent with at least 40 verified defects, or product identity is missing; fallback is manual review.'
+        '120 ÷ 2,5 = 48 referral ogni ora. Il carico è sotto la capacità di 60 di 12 review ogni ora.',
+        '120 ÷ 2.5 = 48 referrals per hour. Workload is 12 reviews per hour below the capacity of 60.'
       ),
       rubric: [
-        t('Riconcilia tutti i conteggi e usa i denominatori corretti.', 'Reconciles all counts and uses correct denominators.'),
-        t('Calcola entrambi i costi senza invertire FP e FN.', 'Calculates both costs without reversing FP and FN.'),
-        t('Collega soglia a capacità, stop criterion e fallback.', 'Connects threshold with capacity, stop criterion, and fallback.')
+        t('Calcola 48 referral ogni ora e li confronta correttamente con 60.', 'Calculates 48 referrals per hour and correctly compares them with 60.')
       ],
       solutionArtifact: {
         matrixId: 'seal-inspection-1000',
@@ -877,6 +1049,7 @@ const unitFour = {
   workedCases: [
     {
       id: 'bearing-degradation-maintenance-window',
+      durationMinutes: 3,
       title: t(
         'Caso ipotetico: degrado cuscinetto su modulo di confezionamento',
         'Hypothetical case: bearing degradation on a packaging module'
@@ -903,7 +1076,7 @@ const unitFour = {
         t('Autorizzare una finestra soltanto dopo verifica tecnica umana.', 'Authorize a window only after human technical verification.')
       ],
       decision: t(
-        'Il use case viene rinviato finché il hard gate dati non è superato; il case artifact mostra le condizioni necessarie per un futuro pilot advisory con finestra di 36 ore.',
+        'Il caso d’uso viene rinviato finché il hard gate dati non è superato; il case artifact mostra le condizioni necessarie per un futuro pilot advisory con finestra di 36 ore.',
         'The use case is deferred until the data hard gate passes; the case artifact shows conditions for a future advisory pilot with a 36-hour window.'
       ),
       tradeOff: t(
@@ -979,19 +1152,19 @@ const unitFour = {
     {
       id: 'evaluate-pdm-gates',
       prompt: t(
-        'Valuta i cinque gate PdM usando l’evidenza attuale e definisci il prossimo deliverable senza promettere un modello.',
-        'Evaluate the five PdM gates using current evidence and define the next deliverable without promising a model.'
+        'Per il solo gate dati PdM, scegli passed o failed usando le nove label e il lineage incompleto forniti.',
+        'For the PdM data gate only, choose passed or failed using the supplied nine labels and incomplete lineage.'
       ),
-      expectedArtifact: t('Gate review con status ed evidence gap.', 'Gate review with status and evidence gap.'),
+      expectedArtifact: t('Uno status con una ragione.', 'One status with one reason.'),
       durationMinutes: 2,
+      quickTask: quickTask(1, 0, 'Sono disponibili nove label verificate e due sensori hanno cambiato posizione.', 'Nine verified labels exist and two sensors changed position.', 'Passed o failed più una frase.', 'Passed or failed plus one sentence.'),
       hints: [t('Una soglia futura non è evidenza di un gate passato.', 'A future threshold is not evidence of a passed gate.')],
       modelSolution: t(
-        'Failure mode e azione passano. Data e label falliscono con nove eventi e sensor lineage incompleto. Performance, valore netto e deployment restano not evaluated perché dipendono dal gate dati. Il prossimo deliverable è riconciliare almeno 40 eventi, stabilire coverage pre-evento e misurare la baseline in shadow mode.',
-        'Failure mode and action pass. Data and labels fail with nine events and incomplete sensor lineage. Performance, net value, and deployment remain not evaluated because they depend on the data gate. The next deliverable is reconciling at least 40 events, establishing pre-event coverage, and measuring the baseline in shadow mode.'
+        'Failed: nove label e lineage incompleto non rappresentano operating mode, configurazioni e interventi.',
+        'Failed: nine labels and incomplete lineage do not represent operating modes, configurations, and interventions.'
       ),
       rubric: [
-        t('Non segna come passato un gate futuro.', 'Does not mark a future gate as passed.'),
-        t('Collega next evidence alla causa del defer.', 'Links next evidence to the reason for deferral.')
+        t('Segna failed e cita label insufficienti o lineage incompleto.', 'Marks failed and cites insufficient labels or incomplete lineage.')
       ]
     }
   ],
@@ -1023,7 +1196,7 @@ const unitFive = {
   timeAllocation: { theory: 4, cases: 4, practice: 2 },
   theory: [
     t(
-      `Un use case di computer vision comincia dalla definizione del difetto e dal sistema di imaging. "Riconoscere confezioni sbagliate" è insufficiente. Occorre specificare regione, orientamento, dimensione minima, contrasto, classi accettabile, non accettabile e incerta, standard visivo, conseguenza e unità di disposizione. Camera, lente, distanza, illuminazione, trigger, exposure, motion blur, pulizia e sincronizzazione con identità prodotto determinano ciò che il modello può vedere. Un difetto sotto la risoluzione fisica non diventa rilevabile aumentando la rete neurale. Si esegue un measurement-system analysis: ripetibilità della camera, riproducibilità tra stazioni, stabilità nel tempo e accordo tra ispettori. Il dataset è stratificato per SKU, lotto, turno, materiale, camera, luce e condizioni rare. Immagini quasi duplicate dello stesso ciclo non vanno distribuite tra train e test. La label policy collega classe a standard approvato e prevede adjudication dei borderline. Conservare la categoria incerta evita di forzare ground truth fittizia. Augmentation simula variazioni plausibili, non difetti impossibili. Un test set locked rappresenta il deployment e resta separato dalle iterazioni. Inoltre si valida il percorso prodotto-immagine: una classificazione corretta associata all’unità sbagliata è un errore di sistema, non un successo del modello.`,
+      `Un caso d’uso di computer vision comincia dalla definizione del difetto e dal sistema di imaging. "Riconoscere confezioni sbagliate" è insufficiente. Occorre specificare regione, orientamento, dimensione minima, contrasto, classi accettabile, non accettabile e incerta, standard visivo, conseguenza e unità di disposizione. Camera, lente, distanza, illuminazione, trigger, exposure, motion blur, pulizia e sincronizzazione con identità prodotto determinano ciò che il modello può vedere. Un difetto sotto la risoluzione fisica non diventa rilevabile aumentando la rete neurale. Si esegue un measurement-system analysis: ripetibilità della camera, riproducibilità tra stazioni, stabilità nel tempo e accordo tra ispettori. Il dataset è stratificato per SKU, lotto, turno, materiale, camera, luce e condizioni rare. Immagini quasi duplicate dello stesso ciclo non vanno distribuite tra train e test. La label policy collega classe a standard approvato e prevede adjudication dei borderline. Conservare la categoria incerta evita di forzare ground truth fittizia. Augmentation simula variazioni plausibili, non difetti impossibili. Un test set locked rappresenta il deployment e resta separato dalle iterazioni. Inoltre si valida il percorso prodotto-immagine: una classificazione corretta associata all’unità sbagliata è un errore di sistema, non un successo del modello.`,
       `A computer-vision use case begins with defect definition and the imaging system. "Recognize bad packages" is insufficient. Specify region, orientation, minimum size, contrast, acceptable, unacceptable, and uncertain classes, visual standard, consequence, and disposition unit. Camera, lens, distance, illumination, trigger, exposure, motion blur, cleanliness, and synchronization with product identity determine what the model can see. A defect below physical resolution does not become detectable with a larger neural network. Perform measurement-system analysis covering camera repeatability, station reproducibility, time stability, and inspector agreement. Stratify data by SKU, lot, shift, material, camera, light, and rare conditions. Near-duplicate images from one cycle must not be divided between training and test. The label policy links classes to an approved standard and adjudicates borderline cases. Keeping an uncertain class prevents invented ground truth. Augmentation simulates plausible variation rather than impossible defects. A locked test set represents deployment and remains separate from iteration. Also validate the product-image path. A correct classification linked to the wrong unit is a system error, not a model success.`
     ),
     t(
@@ -1053,6 +1226,7 @@ const unitFive = {
   workedCases: [
     {
       id: 'seal-inspection-human-review',
+      durationMinutes: 3,
       title: t(
         'Caso ipotetico: ispezione della sigillatura con referral umano',
         'Hypothetical case: seal inspection with human referral'
@@ -1130,19 +1304,19 @@ const unitFive = {
     {
       id: 'design-human-review-queue',
       prompt: t(
-        'Dimensiona la coda della soglia 0,44 e definisci ciò che il reviewer vede, decide e fa quando la capacità è superata.',
-        'Size the threshold-0.44 queue and define what reviewers see, decide, and do when capacity is exceeded.'
+        'Dato il rate precomputato di 48 referral/ora e capacità 60, decidi se la coda è sostenibile.',
+        'Given the precomputed rate of 48 referrals/hour and capacity of 60, decide whether the queue is sustainable.'
       ),
-      expectedArtifact: t('Scheda di human review e degraded mode.', 'Human-review and degraded-mode sheet.'),
+      expectedArtifact: t('Una decisione con margine.', 'One decision with headroom.'),
       durationMinutes: 2,
+      quickTask: quickTask(1, 0, 'Il rate 48/ora è già calcolato; la capacità è 60/ora.', 'The 48/hour rate is precomputed; capacity is 60/hour.', 'Sostenibile o no più il margine.', 'Sustainable or not plus headroom.'),
       hints: [t('Referral totali uguale TP più FP, non soltanto FP.', 'Total referrals equal TP plus FP, not FP alone.')],
       modelSolution: t(
-        '77 TP + 43 FP = 120 referral in 2,5 ore, quindi 48/ora contro capacità 60. Il reviewer vede immagine, standard, identity, camera health e versione; decide accept, reject o escalate. Oltre il limite coda, il sistema sospende referral automatico e torna alla procedura manuale approvata.',
-        '77 TP + 43 FP = 120 referrals in 2.5 hours, or 48/hour against capacity of 60. Reviewers see the image, standard, identity, camera health, and version; they choose accept, reject, or escalate. Beyond the queue limit, automated referral is suspended and the approved manual process resumes.'
+        'Sostenibile: 60 - 48 = 12 review ogni ora di margine, da verificare nel pilot.',
+        'Sustainable: 60 - 48 = 12 reviews per hour of headroom, to be verified in the pilot.'
       ),
       rubric: [
-        t('Ricalcola referral e rate dalla matrice.', 'Recalculates referrals and rate from the matrix.'),
-        t('Definisce decision rights e fallback.', 'Defines decision rights and fallback.')
+        t('Confronta 48 con 60 e identifica 12 review ogni ora di margine.', 'Compares 48 with 60 and identifies 12 reviews per hour of headroom.')
       ]
     }
   ],
@@ -1201,23 +1375,29 @@ const unitSix = {
     'Il centro 1.000 con intervallo 820-1.210 orienta capacità flessibile e materiali; usare soltanto 1.000 nasconde due decisioni plausibili opposte.',
     'A center of 1,000 with interval 820-1,210 guides flexible capacity and material decisions. Using only 1,000 hides two plausible opposite decisions.'
   )],
+  caseSegments: [caseSegment(
+    'forecast-trigger-choice', 2,
+    'Trigger di scenario e azione reversibile', 'Scenario trigger and reversible action',
+    'Con forecast centrale 1.000, intervallo 820-1.210 e ritardo fornitore oltre cinque giorni, chi studia sceglie l’azione reversibile già definita.',
+    'With a central forecast of 1,000, an 820-1,210 interval, and a supplier delay beyond five days, the learner chooses the predefined reversible action.'
+  )],
   activities: [
     {
       id: 'forecast-scenario-decision-note',
       prompt: t(
-        'Scrivi una nota al planner con stima centrale, intervallo, tre scenari, trigger e un’azione reversibile.',
-        'Write a planner note containing central estimate, interval, three scenarios, triggers, and one reversible action.'
+        'Il ritardo fornitore supera cinque giorni: scegli l’azione già definita nello scenario downside.',
+        'Supplier delay exceeds five days: choose the predefined downside-scenario action.'
       ),
-      expectedArtifact: t('Nota di scenario con decision log.', 'Scenario note with decision log.'),
+      expectedArtifact: t('Una decisione di scenario.', 'One scenario decision.'),
       durationMinutes: 2,
+      quickTask: quickTask(1, 0, 'Scenario downside: domanda 800 e ritardo fornitore oltre cinque giorni.', 'Downside scenario: demand 800 and supplier delay beyond five days.', 'Azione più una frase sul trigger.', 'Action plus one sentence about the trigger.'),
       hints: [t('Non chiamare certo il valore centrale.', 'Do not call the central value certain.')],
       modelSolution: t(
-        'Centro 1.000, prediction interval 90 per cento 820-1.210. Scenari: disruption 800, centrale 1.000, recovery 1.150. Ritardo confermato oltre cinque giorni attiva protezione materiali e review quotidiana; ordini oltre 1.100 con disponibilità verificata riservano capacità flessibile senza rendere irrevocabile il piano.',
-        'Center 1,000, 90 percent prediction interval 820-1,210. Scenarios: disruption 800, central 1,000, recovery 1,150. Confirmed delay beyond five days triggers material protection and daily review; orders above 1,100 with verified availability reserve flexible capacity without making the plan irrevocable.'
+        'Proteggere i materiali critici, ridurre il piano non vincolante e riesaminare ogni giorno perché il trigger di ritardo è attivo.',
+        'Protect constrained materials, reduce the non-firm plan, and review daily because the delay trigger is active.'
       ),
       rubric: [
-        t('Distingue intervallo e scenario.', 'Distinguishes interval and scenario.'),
-        t('Collega trigger a un’azione reversibile.', 'Connects triggers with a reversible action.')
+        t('Collega il trigger di ritardo all’azione downside già definita.', 'Connects the delay trigger to the predefined downside action.')
       ]
     }
   ],
@@ -1253,16 +1433,16 @@ const unitSeven = {
       `The sheet records evidence expiry because a score based on an obsolete sample does not remain trustworthy and must be reviewed.`
     ),
     t(
-      `Uno scorecard è utile soltanto se rende una decisione più contestabile. Prima definisce il perimetro del candidato: processo, actor, decision, frequenza, baseline, popolazione, output e conseguenza. Poi assegna criteri e pesi prima di valutare i casi. La scheda usa valore decisionale 20, readiness semantica 25, label e ground truth 20, workflow e integrazione 20, rischio, oversight e adozione 15. I pesi sommano 100. Ogni criterio riceve score intero da 1 a 5, evidence localizzata, rationale e confidence low, medium o high. Lo score pesato è la somma di score×peso divisa per 5, quindi resta su scala 0-100. Per vision seal review i valori 5,4,4,4,4 producono (5×20 + 4×25 + 4×20 + 4×20 + 4×15)/5 = 84. Il calcolo è riproducibile, ma 84 non significa 84 per cento di probabilità di successo. È un indice di priorità sotto una rubric. Confidence segnala quanto è solida l'evidenza: una valutazione 5 con confidence low richiede discovery, non entusiasmo. Evidence cita un artefatto osservabile, per esempio tre mesi di scrap riconciliato o un campione adjudicato; rationale spiega perché quell'evidenza sostiene il punteggio e quali lacune restano.`,
-      `A scorecard is useful only when it makes a decision more challengeable. First define each candidate's process, actor, decision, frequency, baseline, population, output, and consequence. Then set criteria and weights before scoring. This sheet uses decision value 20, semantic readiness 25, labels and ground truth 20, workflow and integration 20, and risk, oversight, and adoption 15. Weights total 100. Each criterion receives an integer score from 1 to 5, localized evidence, rationale, and low, medium, or high confidence. Weighted score is the sum of score×weight divided by 5, preserving a 0 to 100 scale. Vision seal review scores 5,4,4,4,4, producing (5×20 + 4×25 + 4×20 + 4×20 + 4×15)/5 = 84. The calculation is reproducible, but 84 does not mean an 84 percent chance of success. It is a priority index under a rubric. Confidence shows evidence strength. A score of 5 with low confidence calls for discovery rather than enthusiasm. Evidence points to an observable artifact, such as three reconciled months of scrap or an adjudicated sample; rationale explains why it supports the score and which gaps remain.`
+      `Una scorecard è utile soltanto se rende una decisione più contestabile. Prima definisce il perimetro del candidato: processo, actor, decision, frequenza, baseline, popolazione, output e conseguenza. Poi assegna criteri e pesi prima di valutare i casi. La scheda usa valore decisionale 20, readiness semantica 25, label e ground truth 20, workflow e integrazione 20, rischio, oversight e adozione 15. I pesi sommano 100. Ogni criterio riceve score intero da 1 a 5, evidence localizzata, rationale e confidence low, medium o high. Lo score pesato è la somma di score×peso divisa per 5, quindi resta su scala 20-100. Per vision seal review i valori 5,4,4,4,4 producono (5×20 + 4×25 + 4×20 + 4×20 + 4×15)/5 = 84. Il calcolo è riproducibile, ma 84 non significa 84 per cento di probabilità di successo. È un indice di priorità sotto una rubric. Confidence segnala quanto è solida l'evidenza: una valutazione 5 con confidence low richiede discovery, non entusiasmo. Evidence cita un artefatto osservabile, per esempio tre mesi di scrap riconciliato o un campione adjudicato; rationale spiega perché quell'evidenza sostiene il punteggio e quali lacune restano.`,
+      `A scorecard is useful only when it makes a decision more challengeable. First define each candidate's process, actor, decision, frequency, baseline, population, output, and consequence. Then set criteria and weights before scoring. This sheet uses decision value 20, semantic readiness 25, labels and ground truth 20, workflow and integration 20, and risk, oversight, and adoption 15. Weights total 100. Each criterion receives an integer score from 1 to 5, localized evidence, rationale, and low, medium, or high confidence. Weighted score is the sum of score×weight divided by 5, preserving a 20 to 100 scale. Vision seal review scores 5,4,4,4,4, producing (5×20 + 4×25 + 4×20 + 4×20 + 4×15)/5 = 84. The calculation is reproducible, but 84 does not mean an 84 percent chance of success. It is a priority index under a rubric. Confidence shows evidence strength. A score of 5 with low confidence calls for discovery rather than enthusiasm. Evidence points to an observable artifact, such as three reconciled months of scrap or an adjudicated sample; rationale explains why it supports the score and which gaps remain.`
     ),
     t(
-      `Gli hard gate non vengono compensati dal punteggio. La scheda ne usa tre. Primo, azione e owner devono essere definiti: un insight senza decision rights è una demo. Secondo, dati rappresentativi e affidabili devono sostenere la popolazione: volume elevato con label scorrette non passa. Terzo, il confine di autorità deve restare controllato: un modello non ottiene decision rights perché ha score alto. Ogni candidato riporta passed boolean, evidence e rationale per ogni gate. Il caso PdM ha valore elevato ma fallisce representative trustworthy data perché soltanto nove label verificate non coprono modalità e interventi; viene deferred a 67. Il caso GenAI per soglia viene rejected a 46 e fallisce il confine deterministico proposto, che lasciava a testo variabile un’istruzione operativa; soprattutto, una regola deterministica risolve meglio il problema. Il caso forecasting passa e viene pilot a 77. Vision passa tutti i gate e viene selected a 84. Il ranking si applica quindi soltanto tra candidati eleggibili e non sostituisce la decisione. Un use case con score 95 può essere rejected se manca una precondizione non negoziabile. Viceversa uno score medio può finanziare un discovery mirato, purché il next gate sia definito. Questo evita che un totale nasconda rischio o che un gate diventi un’opinione non documentata.`,
+      `Gli hard gate non vengono compensati dal punteggio. La scheda ne usa tre. Primo, azione e owner devono essere definiti: un insight senza decision rights è una demo. Secondo, dati rappresentativi e affidabili devono sostenere la popolazione: volume elevato con label scorrette non passa. Terzo, il confine di autorità deve restare controllato: un modello non ottiene decision rights perché ha score alto. Ogni candidato riporta passed boolean, evidence e rationale per ogni gate. Il caso PdM ha valore elevato ma fallisce representative trustworthy data perché soltanto nove label verificate non coprono modalità e interventi; viene rinviato a 67. Il caso GenAI per soglia viene rifiutato a 46 e fallisce il confine deterministico proposto, che lasciava a testo variabile un’istruzione operativa; soprattutto, una regola deterministica risolve meglio il problema. Il caso forecasting passa ed entra in pilot a 77. Il caso vision passa tutti i gate e viene selezionato a 84. Il ranking si applica quindi soltanto tra candidati eleggibili e non sostituisce la decisione. Un caso d’uso con score 95 può essere rifiutato se manca una precondizione non negoziabile. Viceversa uno score medio può finanziare un discovery mirato, purché il next gate sia definito. Questo evita che un totale nasconda rischio o che un gate diventi un’opinione non documentata.`,
       `Hard gates cannot be offset by score. The sheet uses three. First, action and owner must be defined because insight without decision rights is a demo. Second, representative trustworthy data must support the population; high volume with wrong labels does not pass. Third, the authority boundary must remain controlled; a model does not gain decision rights from a high score. Each candidate records a Boolean result, evidence, and rationale for every gate. The PdM candidate has high value but fails representative trustworthy data because only nine verified labels do not cover modes and interventions; it is deferred with 67. The GenAI threshold candidate is rejected with 46 and fails the proposed deterministic boundary, which left an operating instruction to variable text; more fundamentally, a deterministic rule solves the problem better. Forecasting passes and enters a pilot at 77. Vision passes all gates and is selected at 84. Ranking therefore applies only among eligible candidates and does not replace judgment. A use case scoring 95 can be rejected when a non-negotiable prerequisite is missing. Conversely, a medium score can fund targeted discovery if the next gate is defined. This keeps totals from hiding risk and gates from becoming undocumented opinion.`
     ),
     t(
-      `La portfolio decision usa categorie con azioni: select finanzia un esperimento controllato; pilot autorizza scope, durata e KPI limitati; defer finanzia la chiusura di gap e una data di riesame; reject interrompe lavoro e registra perché; retire termina un servizio che non crea più valore. Ogni decisione ha owner, budget boundary, dependency, target, guardrail, stop criterion e review date. Per PdM il deliverable successivo non è un modello: è la riconciliazione di almeno quaranta failure event, sensor lineage e shadow baseline. Per vision è un shadow pilot su segmenti approvati con audit dei non referral. Per forecasting è un rolling-origin backtest e decision log. Per GenAI threshold è l'implementazione della regola con status, isteresi e audit. In questo modo il portafoglio finanzia riduzione dell'incertezza, non soltanto sviluppo. Si considera anche correlazione tra candidati: due use case possono dipendere dallo stesso master data o competere per la stessa review capacity. Una capability comune, come product identity o label workflow, può avere più valore di tre pilot isolati. I rischi di concentrazione, vendor lock-in, capacità OT e change saturation entrano nella sequenza. Il risultato non è una classifica statica. È un’allocazione di opzioni con gate, in cui evidenza nuova può promuovere, rinviare o terminare.`,
-      `Portfolio decisions have actions. Select funds a controlled experiment; pilot authorizes limited scope, duration, and KPIs; defer funds gap closure and a review date; reject stops work and records why; retire ends a service no longer creating value. Each decision has an owner, budget boundary, dependency, target, guardrail, stop criterion, and review date. For PdM, the next deliverable is not a model. It is reconciliation of at least forty failure events, sensor lineage, and a shadow baseline. For vision, it is a shadow pilot on approved segments with non-referral audits. Forecasting requires rolling-origin backtesting and a decision log. The GenAI threshold proposal becomes a rule with status, hysteresis, and audit. The portfolio therefore funds uncertainty reduction, not just development. Candidate dependencies also matter. Two use cases may rely on the same master data or compete for review capacity. A shared capability such as product identity or label workflow may create more value than three isolated pilots. Concentration risk, vendor lock-in, OT capacity, and change saturation affect sequencing. The result is not a static ranking. It is an allocation of options with gates, where new evidence can promote, defer, or terminate work.`
+      `La decisione di portafoglio usa categorie operative: selezionare finanzia un esperimento controllato; avviare un pilot autorizza perimetro, durata e KPI limitati; rinviare finanzia la chiusura dei gap e una data di riesame; rifiutare interrompe il lavoro e ne registra la ragione; ritirare termina un servizio che non crea più valore. Ogni decisione ha owner, budget boundary, dependency, target, guardrail, stop criterion e review date. Per PdM il deliverable successivo non è un modello: è la riconciliazione di almeno quaranta failure event, sensor lineage e shadow baseline. Per vision è un shadow pilot su segmenti approvati con audit dei non referral. Per forecasting è un rolling-origin backtest e decision log. Per GenAI threshold è l'implementazione della regola con status, isteresi e audit. In questo modo il portafoglio finanzia riduzione dell'incertezza, non soltanto sviluppo. Si considera anche correlazione tra candidati: due casi d’uso possono dipendere dallo stesso master data o competere per la stessa review capacity. Una capability comune, come product identity o label workflow, può avere più valore di tre pilot isolati. I rischi di concentrazione, vendor lock-in, capacità OT e change saturation entrano nella sequenza. Il risultato non è una classifica statica. È un’allocazione di opzioni con gate, in cui evidenza nuova può promuovere, rinviare o terminare.`,
+      `Portfolio decisions have defined actions. Selection funds a controlled experiment; a pilot authorizes limited scope, duration, and KPIs; deferral funds gap closure and a review date; rejection stops work and records why; retirement ends a service that no longer creates value. Each decision has an owner, budget boundary, dependency, target, guardrail, stop criterion, and review date. For PdM, the next deliverable is not a model. It is reconciliation of at least forty failure events, sensor lineage, and a shadow baseline. For vision, it is a shadow pilot on approved segments with non-referral audits. Forecasting requires rolling-origin backtesting and a decision log. The GenAI threshold proposal becomes a rule with status, hysteresis, and audit. The portfolio therefore funds uncertainty reduction, not just development. Candidate dependencies also matter. Two use cases may rely on the same master data or compete for review capacity. A shared capability such as product identity or label workflow may create more value than three isolated pilots. Concentration risk, vendor lock-in, OT capacity, and change saturation affect sequencing. The result is not a static ranking. It is an allocation of options with gates, where new evidence can promote, defer, or terminate work.`
     ),
     t(
       `Auditabilità richiede snapshot e decision log. La scheda conserva versione della rubric, pesi, data, partecipanti, evidenza referenziata, assunzioni, score, confidence, gate, dissent e approvazione. Non si riscrive il punteggio passato quando arriva informazione nuova: si crea una nuova review e si spiega la variazione. Un assessor indipendente deve poter ricalcolare 84 dai cinque valori e trovare il documento dietro ogni evidence statement. Sensitivity analysis modifica pesi e score plausibili per vedere se la scelta è stabile. Se vision resta prima in molte combinazioni, la decisione è robusta; se un punto cambia ranking, serve più evidence. Si previene gaming richiedendo criteri comportamentali: score 5 per label readiness non significa "molti esempi", ma policy approvata, agreement misurato, casi incerti, coverage e lineage. Il workshop include Operations, Quality, Maintenance, Data, OT, IT, Security e Finance secondo il caso, con un decision owner finale. Il facilitatore separa fatto, assunzione e preferenza. La review conserva inoltre le ragioni del dissenso e assegna chi deve chiuderlo. La risposta da colloquio diventa concreta: "Ho selezionato vision a 84 dopo hard gate, rinviato PdM malgrado valore alto perché mancavano label e rifiutato GenAI perché una regola era più adeguata". Questa frase dimostra capacità tecnica, economica e di governance con un unico artefatto verificabile.`,
@@ -1280,18 +1460,25 @@ const unitSeven = {
     'Il candidato ha score valore 5 ma fallisce il gate dati con nove label: il portafoglio finanzia prima lineage e failure coding.',
     'The candidate has value score 5 but fails the data gate with nine labels. The portfolio first funds lineage and failure coding.'
   )],
+  caseSegments: [caseSegment(
+    'scorecard-gate-over-score', 2,
+    'Il gate prevale sul totale', 'Gate overrides total score',
+    'La scheda mostra PdM a 67 con gate dati fallito: chi studia osserva perché la decisione resta rinviata anche con valore alto.',
+    'The sheet shows PdM at 67 with a failed data gate, so the learner sees why the decision remains deferred despite high value.'
+  )],
   activities: [
     {
       id: 'score-and-defend-use-case-portfolio',
       prompt: t(
-        'Ricalcola vision e PdM, applica i gate e prepara una frase inglese che difenda select rispetto a defer.',
-        'Recalculate vision and PdM, apply the gates, and prepare one English sentence defending select versus defer.'
+        'PdM ha score 67 ma fallisce il gate dati: scegli la portfolio decision.',
+        'PdM scores 67 but fails the data gate: choose the portfolio decision.'
       ),
       expectedArtifact: t(
-        'Due righe della scheda e una frase di difesa.',
-        'Two scorecard rows and one defense sentence.'
+        'Una decisione con una ragione.',
+        'One decision with one reason.'
       ),
       durationMinutes: 2,
+      quickTask: quickTask(1, 0, 'Score 67, nove label verificate e gate dati failed.', 'Score 67, nine verified labels, and failed data gate.', 'Decisione più una frase.', 'Decision plus one sentence.'),
       hints: [
         t(
           'Ricalcola score×peso/5 e non classificare un candidato che fallisce un gate come selezionato.',
@@ -1299,13 +1486,11 @@ const unitSeven = {
         )
       ],
       modelSolution: t(
-        'Vision ottiene 84 e passa i gate: select per shadow pilot. PdM ottiene 67 ma fallisce dati rappresentativi: defer finché almeno 40 eventi, lineage e baseline sono verificati. Difesa: “I selected vision because it scored 84 and passed every gate; I deferred PdM because high value did not compensate for insufficient labels.”',
-        'Vision scores 84 and passes all gates: select for a shadow pilot. PdM scores 67 but fails representative data: defer until at least 40 events, lineage, and baseline are verified. Defense: “I selected vision because it scored 84 and passed every gate; I deferred PdM because high value did not compensate for insufficient labels.”'
+        'Rinviare: il punteggio 67 non compensa il gate dati fallito; prima servono label e lineage rappresentativi.',
+        'Decision: to defer. The score of 67 cannot offset the failed data gate; representative labels and lineage are required first.'
       ),
       rubric: [
-        t('Ricalcola correttamente i due score e i pesi.', 'Correctly recalculates both scores and weights.'),
-        t('Applica gate senza compensarli con il totale.', 'Applies gates without offsetting them with totals.'),
-        t('Distingue evidence, decisione e next gate in una frase concisa.', 'Distinguishes evidence, decision, and next gate in one concise sentence.')
+        t('Sceglie di rinviare senza compensare il gate fallito con lo score.', 'Chooses to defer without offsetting the failed gate with the score.')
       ],
       solutionArtifact: dataReadinessUseCaseArtifact
     }
@@ -1371,8 +1556,8 @@ const interviewAnswers = [
       `Before promising PdM, I require a specific failure mode, an actionable maintenance policy, useful lead time, physical asset identity, contextualized signals, reconciled work orders, confirmed labels, and a representative population. I define the baseline, temporal split, false-alert and miss costs, capacity, owners, shadow test, and fallback. If those gates fail, I defer the model and fund data readiness. Years of data do not replace ground truth and workflow.`
     ),
     long: t(
-      `Tratto predictive maintenance come un sistema decisionale, non come un acquisto di algoritmo. Il primo gate è failure mode e azione: Reliability deve distinguere il meccanismo, sapere quale evidenza lo conferma e definire che cosa farebbe con 36 ore di anticipo. Il secondo è data readiness: physical instance, posizione sensore, sampling, unità, status, operating mode, timestamp e maintenance history devono essere collegabili. I work order separano sintomo, diagnosi, intervento e causa confermata. Label e negativi devono essere affidabili, considerando interventi preventivi e periodi offline. Il terzo gate è evaluation: split per tempo o asset, feature disponibili al prediction time, baseline di regola o trend, minimum sample, recall, false alert per asset-settimana, calibration e lead-time distribution. Il quarto è valore e capacità: costo downtime, costo di ispezioni e finestre non necessarie, ricambi, backlog e disponibilità di tecnici. Il quinto è controlled deployment: shadow mode prospettico, advisory, autorizzazione umana, audit, stop criteria, rollback e fallback alle regole esistenti. Il modello non scrive al PLC e non bypassa interlock. Nel nostro scorecard il candidato bearing vale molto ma ottiene 67 e fallisce il gate dati perché ha soltanto nove label verificate e sensori ricollocati. La decisione corretta è defer: raccogliere almeno quaranta eventi riconciliati, completare lineage e misurare una baseline. Prometto un processo di evidence generation e gate, non una percentuale di downtime prima di avere prova prospettica.`,
-      `I treat predictive maintenance as a decision system rather than an algorithm purchase. The first gate is failure mode and action. Reliability must distinguish the mechanism, know what evidence confirms it, and define what it would do with 36 hours of notice. The second is data readiness. Physical instance, sensor location, sampling, unit, status, operating mode, timestamps, and maintenance history must link correctly. Work orders separate symptom, diagnosis, intervention, and confirmed cause. Labels and negatives must be trustworthy, accounting for preventive interventions and offline periods. The third gate is evaluation: time-based or asset-based splits, features available at prediction time, a rule or trend baseline, minimum sample, recall, false alerts per asset-week, calibration, and lead-time distribution. The fourth is value and capacity: downtime cost, unnecessary inspections and windows, spares, backlog, and technician availability. The fifth is controlled deployment: prospective shadow mode, advisory use, human authorization, audit, stop criteria, rollback, and fallback to existing rules. The model does not write to a PLC or bypass an interlock. In our scorecard, the bearing candidate has high value but scores 67 and fails the data gate because it has only nine verified labels and relocated sensors. The correct decision is defer: collect at least forty reconciled events, complete lineage, and measure a baseline. I promise an evidence-generation and gate process, not a downtime percentage before prospective proof.`
+      `Tratto predictive maintenance come un sistema decisionale, non come un acquisto di algoritmo. Il primo gate è failure mode e azione: Reliability deve distinguere il meccanismo, sapere quale evidenza lo conferma e definire che cosa farebbe con 36 ore di anticipo. Il secondo è data readiness: physical instance, posizione sensore, sampling, unità, status, operating mode, timestamp e maintenance history devono essere collegabili. I work order separano sintomo, diagnosi, intervento e causa confermata. Label e negativi devono essere affidabili, considerando interventi preventivi e periodi offline. Il terzo gate è evaluation: split per tempo o asset, feature disponibili al prediction time, baseline di regola o trend, minimum sample, recall, false alert per asset-settimana, calibration e lead-time distribution. Il quarto è valore e capacità: costo downtime, costo di ispezioni e finestre non necessarie, ricambi, backlog e disponibilità di tecnici. Il quinto è controlled deployment: shadow mode prospettico, advisory, autorizzazione umana, audit, stop criteria, rollback e fallback alle regole esistenti. Il modello non scrive al PLC e non bypassa interlock. Nella nostra scorecard il candidato bearing vale molto ma ottiene 67 e fallisce il gate dati perché ha soltanto nove label verificate e sensori ricollocati. La decisione corretta è rinviare: raccogliere almeno quaranta eventi riconciliati, completare lineage e misurare una baseline. Prometto un processo di evidence generation e gate, non una percentuale di downtime prima di avere prova prospettica.`,
+      `I treat predictive maintenance as a decision system rather than an algorithm purchase. The first gate is failure mode and action. Reliability must distinguish the mechanism, know what evidence confirms it, and define what it would do with 36 hours of notice. The second is data readiness. Physical instance, sensor location, sampling, unit, status, operating mode, timestamps, and maintenance history must link correctly. Work orders separate symptom, diagnosis, intervention, and confirmed cause. Labels and negatives must be trustworthy, accounting for preventive interventions and offline periods. The third gate is evaluation: time-based or asset-based splits, features available at prediction time, a rule or trend baseline, minimum sample, recall, false alerts per asset-week, calibration, and lead-time distribution. The fourth is value and capacity: downtime cost, unnecessary inspections and windows, spares, backlog, and technician availability. The fifth is controlled deployment: prospective shadow mode, advisory use, human authorization, audit, stop criteria, rollback, and fallback to existing rules. The model does not write to a PLC or bypass an interlock. In our scorecard, the bearing candidate has high value but scores 67 and fails the data gate because it has only nine verified labels and relocated sensors. The correct decision is to defer: collect at least forty reconciled events, complete lineage, and measure a baseline. I promise an evidence-generation and gate process, not a downtime percentage before prospective proof.`
     ),
     followUps: [
       t('Quale label policy useresti per i work order?', 'Which label policy would you use for work orders?'),

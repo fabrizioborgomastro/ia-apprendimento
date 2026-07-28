@@ -604,6 +604,49 @@ test('Module 3 keeps seven decision-oriented units and reconciles every minute b
   )))
 })
 
+test('Module 3 case and practice minutes are explicit, learner-visible, and auditable', () => {
+  let caseMinutes = 0
+  let practiceMinutes = 0
+
+  for (const unit of dataAiLesson.units) {
+    const caseItems = [
+      ...(unit.microExamples || []),
+      ...(unit.caseSegments || []),
+      ...(unit.workedCases || [])
+    ]
+    assert.ok(caseItems.length > 0, `${unit.id} needs learner-visible case content`)
+    assert.ok(caseItems.every(({ durationMinutes }) => (
+      Number.isInteger(durationMinutes) && durationMinutes > 0
+    )), `${unit.id} case items need explicit positive durationMinutes`)
+    assert.ok(caseItems.every((item) => (
+      (item.explanation?.it && item.explanation?.en) ||
+      (item.scenario?.it && item.scenario?.en)
+    )), `${unit.id} case items must be genuine localized learner content`)
+    assert.equal(
+      caseItems.reduce((sum, item) => sum + item.durationMinutes, 0),
+      unit.timeAllocation.cases,
+      `${unit.id} case items must reconcile to its case allocation`
+    )
+
+    const activities = unit.activities || []
+    for (const activity of activities) {
+      assert.equal(activity.durationMinutes, 2)
+      assert.equal(activity.quickTask.outputCount, 1)
+      assert.ok(activity.quickTask.decisionCount + activity.quickTask.calculationCount <= 1)
+      assert.ok(activity.quickTask.providedContext.it && activity.quickTask.providedContext.en)
+      assert.ok(activity.quickTask.responseFormat.it && activity.quickTask.responseFormat.en)
+      assert.ok(activity.modelSolution.it.split(/\s+/u).length <= 55)
+      assert.ok(activity.modelSolution.en.split(/\s+/u).length <= 55)
+    }
+
+    caseMinutes += caseItems.reduce((sum, item) => sum + item.durationMinutes, 0)
+    practiceMinutes += activities.reduce((sum, activity) => sum + activity.durationMinutes, 0)
+  }
+
+  assert.equal(caseMinutes, 20)
+  assert.equal(practiceMinutes, 14)
+})
+
 test('Module 3 calculations remain independently reproducible and decision-relevant', () => {
   assert.ok(dataAiLesson, 'Module 3 content must exist')
   const examples = dataAiLesson.workedExamples
@@ -736,6 +779,30 @@ test('Module 3 scorecard uses evidence, confidence and hard gates before ranking
   ]
   assert.deepEqual(artifact.criteria.map(({ id, weight }) => [id, weight]), expectedCriteria)
   assert.equal(artifact.criteria.reduce((sum, criterion) => sum + criterion.weight, 0), 100)
+  assert.equal(artifact.attainableScoreRange.minimum, 20)
+  assert.equal(artifact.attainableScoreRange.maximum, 100)
+  for (const criterion of artifact.criteria) {
+    assert.deepEqual(Object.keys(criterion.anchors), ['1', '3', '5'])
+    assert.ok(Object.values(criterion.anchors).every(({ it, en }) => it && en))
+    assert.ok(criterion.intermediateScorePolicy.it && criterion.intermediateScorePolicy.en)
+  }
+  assert.match(artifact.scale.it, /20.+100/u)
+  assert.match(artifact.scale.en, /20.+100/u)
+  assert.match(artifact.formula.it, /20.+100/u)
+  assert.match(artifact.formula.en, /20.+100/u)
+  assert.doesNotMatch(
+    dataAiLesson.units.flatMap(({ theory }) => theory.map(({ it, en }) => `${it} ${en}`)).join(' '),
+    /(?:^|[^0-9])(?:0-100|0 to 100)/u
+  )
+  assert.ok(artifact.audit.rubricVersion)
+  assert.match(artifact.audit.assessmentDate, /^\d{4}-\d{2}-\d{2}$/u)
+  assert.ok(artifact.audit.participants.length >= 2)
+  assert.ok(artifact.audit.participants.every(({ role }) => role.it && role.en))
+  for (const field of ['decisionOwner', 'budgetBoundary']) {
+    assert.ok(artifact.audit[field].it && artifact.audit[field].en)
+  }
+  assert.ok(artifact.audit.dependencies.length > 0)
+  assert.ok(artifact.audit.dependencies.every(({ it, en }) => it && en))
   assert.deepEqual(artifact.hardGates.map(({ id }) => id), [
     'defined-action-and-owner',
     'representative-trustworthy-data',
@@ -752,6 +819,16 @@ test('Module 3 scorecard uses evidence, confidence and hard gates before ranking
       assert.ok(confidenceLevels.has(assessment.confidence))
       assert.ok(assessment.evidence.it && assessment.evidence.en)
       assert.ok(assessment.rationale.it && assessment.rationale.en)
+      assert.ok(assessment.assumptions.length > 0)
+      assert.ok(assessment.assumptions.every(({ it, en }) => it && en))
+      assert.ok(assessment.evidenceReferences.length > 0)
+      assert.ok(assessment.evidenceReferences.every((reference) => (
+        reference.id && reference.sourceId && reference.documentId &&
+        /^\d{4}-\d{2}-\d{2}$/u.test(reference.observationDate) &&
+        /^\d{4}-\d{2}-\d{2}$/u.test(reference.reviewDate) &&
+        reference.observationDate <= reference.reviewDate &&
+        reference.description.it && reference.description.en
+      )))
     }
     const recomputedScore = expectedCriteria.reduce(
       (sum, [criterionId, weight]) => (
@@ -769,6 +846,18 @@ test('Module 3 scorecard uses evidence, confidence and hard gates before ranking
       gate.evidence.it && gate.evidence.en &&
       gate.rationale.it && gate.rationale.en
     )))
+    assert.ok(candidate.decisionRecord.dissent.it && candidate.decisionRecord.dissent.en)
+    assert.ok(candidate.decisionRecord.approval.status)
+    assert.ok(candidate.decisionRecord.approval.owner.it && candidate.decisionRecord.approval.owner.en)
+    assert.ok(candidate.decisionRecord.guardrails.length > 0)
+    assert.ok(candidate.decisionRecord.stopCriteria.length > 0)
+    assert.ok(candidate.decisionRecord.target.it && candidate.decisionRecord.target.en)
+    assert.ok(candidate.decisionRecord.budgetBoundary.it && candidate.decisionRecord.budgetBoundary.en)
+    assert.ok(candidate.decisionRecord.dependencies.length > 0)
+    assert.ok(candidate.decisionRecord.dependencies.every(({ it, en }) => it && en))
+    assert.match(candidate.decisionRecord.reviewDate, /^\d{4}-\d{2}-\d{2}$/u)
+    assert.ok(candidate.decisionRecord.guardrails.every(({ it, en }) => it && en))
+    assert.ok(candidate.decisionRecord.stopCriteria.every(({ it, en }) => it && en))
   }
 
   const selected = artifact.candidates.find(({ portfolioDecision }) => (
@@ -786,6 +875,71 @@ test('Module 3 scorecard uses evidence, confidence and hard gates before ranking
   assert.ok(deferred.hardGateChecks.some(({ passed }) => !passed))
   assert.equal(rejected.portfolioDecision, 'rejected')
   assert.match(rejected.recommendation.en, /reject.*rule/i)
+})
+
+test('Module 3 scorecard validator rejects incomplete and internally inconsistent mutations', () => {
+  const errorsFor = (mutate) => {
+    const lesson = structuredClone(dataAiLesson)
+    mutate(lesson.dataReadinessUseCaseArtifact)
+    return lessonLocalErrors([digitalTransformationLesson, architectureLesson, lesson])
+  }
+
+  assert.ok(errorsFor((artifact) => {
+    const { title, description } = artifact
+    for (const key of Object.keys(artifact)) delete artifact[key]
+    Object.assign(artifact, { title, description })
+  }).some((error) => /scorecard.*criteria/i.test(error)))
+
+  assert.ok(errorsFor((artifact) => { artifact.criteria = [] })
+    .some((error) => /scorecard.*criteria/i.test(error)))
+  assert.doesNotThrow(() => errorsFor((artifact) => { artifact.criteria[0] = null }))
+  assert.ok(errorsFor((artifact) => { artifact.criteria[0] = null })
+    .some((error) => /criterion 1/i.test(error)))
+  assert.ok(errorsFor((artifact) => { delete artifact.criteria[0].anchors['3'] })
+    .some((error) => /anchor 3/i.test(error)))
+  assert.ok(errorsFor((artifact) => { delete artifact.audit.rubricVersion })
+    .some((error) => /rubricVersion/i.test(error)))
+  assert.ok(errorsFor((artifact) => { delete artifact.audit.budgetBoundary })
+    .some((error) => /budgetBoundary/i.test(error)))
+  assert.ok(errorsFor((artifact) => { artifact.audit.assessmentDate = '2026-02-31' })
+    .some((error) => /assessmentDate.*ISO date/i.test(error)))
+  assert.ok(errorsFor((artifact) => {
+    delete artifact.candidates[0].assessments['business-decision-value'].evidence
+  }).some((error) => /evidence and rationale/i.test(error)))
+  assert.ok(errorsFor((artifact) => {
+    artifact.candidates[0].assessments['business-decision-value'].evidenceReferences = []
+  }).some((error) => /evidence reference/i.test(error)))
+  assert.ok(errorsFor((artifact) => { artifact.candidates[0].weightedScore += 1 })
+    .some((error) => /weightedScore.*recomputed/i.test(error)))
+  assert.ok(errorsFor((artifact) => { artifact.candidates[0].hardGateChecks.pop() })
+    .some((error) => /hard gate coverage/i.test(error)))
+  assert.ok(errorsFor((artifact) => {
+    artifact.candidates.find(({ id }) => id === 'predictive-maintenance-bearing').portfolioDecision = 'selected'
+  }).some((error) => /selected or pilot.*hard gates/i.test(error)))
+  assert.ok(errorsFor((artifact) => {
+    artifact.candidates.find(({ id }) => id === 'predictive-maintenance-bearing').portfolioDecision = 'pilot'
+  }).some((error) => /selected or pilot.*hard gates/i.test(error)))
+  assert.ok(errorsFor((artifact) => { artifact.candidates[0].portfolioDecision = 'unknown' })
+    .some((error) => /portfolioDecision/i.test(error)))
+  assert.ok(errorsFor((artifact) => { delete artifact.candidates[0].recommendation })
+    .some((error) => /localized recommendation/i.test(error)))
+  assert.ok(errorsFor((artifact) => { delete artifact.candidates[0].decisionRecord.target })
+    .some((error) => /decision record.*target/i.test(error)))
+})
+
+test('Module 3 explicit timing validation reports malformed allocation without throwing', () => {
+  const lesson = structuredClone(dataAiLesson)
+  delete lesson.units[0].timeAllocation
+  assert.doesNotThrow(() => lessonLocalErrors([
+    digitalTransformationLesson,
+    architectureLesson,
+    lesson
+  ]))
+  assert.ok(lessonLocalErrors([
+    digitalTransformationLesson,
+    architectureLesson,
+    lesson
+  ]).some((error) => /allocate non-negative theory, cases and practice/i.test(error)))
 })
 
 test('Module 3 teaches the simplest adequate method and readiness before AI promises', () => {
