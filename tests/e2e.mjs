@@ -14,9 +14,12 @@ try {
   await page.getByRole('link', { name: /inizia lo sprint/i }).click()
   await page.getByRole('heading', { name: /digital transformation/i }).waitFor()
   await page.getByRole('link', { name: /apri la lezione/i }).first().click()
-  await page.getByRole('heading', { name: /non partire dalla tecnologia/i }).waitFor()
-  await page.getByRole('button', { name: /ridurre il downtime/i }).click()
-  assert.match(await page.locator('[data-question="dt-q1"] [data-feedback]').innerText(), /corretto/i)
+  await page.getByRole('heading', { name: /digitizzazione, digitalizzazione e trasformazione/i }).waitFor()
+  await page.getByRole('button', { name: /perdita, gemba, baseline/i }).click()
+  assert.match(
+    await page.locator('[data-question="digital-transformation-check-1"] [data-feedback]').innerText(),
+    /corretto/i
+  )
   assert.equal((await page.locator('body').evaluate((body) => body.scrollWidth <= innerWidth)), true)
   console.log('E2E mobile: dashboard, sprint, lesson and quiz passed')
 } finally {
