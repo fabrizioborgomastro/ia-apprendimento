@@ -99,6 +99,70 @@ export const sources = {
     type: 'primary',
     url: 'https://www.pmi.com/content/dam/pmicom/global/docs/pmi-sustainability/pmi-value-report-2025.pdf',
     accessedAt
+  },
+  'oecd-digital-transformation-definitions': {
+    title: "How's Life in the Digital Age? - OECD Definition of the Digital Transformation",
+    organization: 'Organisation for Economic Co-operation and Development',
+    type: 'primary',
+    url: 'https://www.oecd.org/en/publications/how-s-life-in-the-digital-age_9789264311800-en/full-report/component-3.html',
+    accessedAt
+  },
+  'nist-manufacturing-kpi-procedure': {
+    title: 'Procedure for Developing Key Performance Indicators for Sustainable Manufacturing',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://www.nist.gov/publications/procedure-developing-key-performance-indicators-sustainable-manufacturing',
+    accessedAt
+  },
+  'nist-manufacturing-kpi-hierarchy': {
+    title: 'A Hierarchical Structure of Key Performance Indicators for Operation Improvement in Production Systems',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://www.nist.gov/publications/hierarchical-structure-key-performance-indicators-operation-improvement-production',
+    accessedAt
+  },
+  'nist-manufacturing-performance-baselines': {
+    title: 'ASTM E60.13 Standards for Manufacturing Performance and Baselines',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://www.nist.gov/el/systems-integration-division-73400/manufacturing-circular-economy/standards-work/astm-e6013',
+    accessedAt
+  },
+  'doe-manufacturing-baseline-normalization': {
+    title: 'Superior Energy Performance FAQs - Baselines and Normalized Performance',
+    organization: 'United States Department of Energy',
+    type: 'primary',
+    url: 'https://www.energy.gov/eere/amo/articles/superior-energy-performance-faqs',
+    accessedAt
+  },
+  'toyota-way-genchi-genbutsu': {
+    title: 'The Toyota Way 2001 - Genchi Genbutsu',
+    organization: 'Toyota Motor Corporation',
+    type: 'primary',
+    url: 'https://www.toyota-global.com/company/history_of_toyota/75years/text/leaping_forward_as_a_global_corporation/chapter4/section7/item4.html',
+    accessedAt
+  },
+  'lean-enterprise-gemba': {
+    title: 'Gemba - What Does It Mean?',
+    organization: 'Lean Enterprise Institute',
+    type: 'educational',
+    url: 'https://www.lean.org/lexicon-terms/gemba/',
+    accessedAt,
+    verifiedAgainst: ['toyota-way-genchi-genbutsu']
+  },
+  'uk-government-stakeholder-mapping': {
+    title: 'Stakeholder Mapping',
+    organization: 'UK Government Analysis Function',
+    type: 'primary',
+    url: 'https://analysisfunction.civilservice.gov.uk/policy-store/stakeholder-mapping/',
+    accessedAt
+  },
+  'ahrq-raci-chart': {
+    title: 'Appendix A. RACI Chart',
+    organization: 'Agency for Healthcare Research and Quality',
+    type: 'primary',
+    url: 'https://www.ahrq.gov/patient-safety/settings/hospital/resource/pressureinjury/guide/apa.html',
+    accessedAt
   }
 }
 

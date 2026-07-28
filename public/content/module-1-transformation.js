@@ -63,7 +63,7 @@ const unitOne = {
     ],
     1
   ),
-  sourceIds: ['pmi-operations', 'pmi-annual-report-2025']
+  sourceIds: ['oecd-digital-transformation-definitions', 'pmi-operations', 'pmi-annual-report-2025']
 }
 
 const unitTwo = {
@@ -189,7 +189,14 @@ const unitThree = {
     ],
     1
   ),
-  sourceIds: ['pmi-operations', 'pmi-product-reliability']
+  sourceIds: [
+    'nist-manufacturing-kpi-procedure',
+    'nist-manufacturing-kpi-hierarchy',
+    'nist-manufacturing-performance-baselines',
+    'doe-manufacturing-baseline-normalization',
+    'pmi-operations',
+    'pmi-product-reliability'
+  ]
 }
 
 const unitFour = {
@@ -243,9 +250,69 @@ const unitFour = {
       t('Chiudi il ciclo con feedback sulla causa e sull’esito.', 'Close the loop with feedback on cause and outcome.')
     ],
     modelSolution: t(
-      'Trigger macchina -> operatore verifica stato -> registra evento e contesto -> regola determina se creare richiesta -> tecnico accetta e diagnostica -> intervento autorizzato -> prova di ripartenza -> causa ed esito chiusi. Handoff e attese sono misurati. Operations possiede la continuità, manutenzione l’intervento, Quality i vincoli sul prodotto, OT l’accesso agli asset e IT l’integrazione. Le assunzioni su completezza dati e tempo di conferma hanno owner e test.',
-      'Machine trigger -> operator verifies state -> event and context are recorded -> a rule determines whether to create a request -> technician accepts and diagnoses -> intervention is authorized -> restart is tested -> cause and outcome are closed. Handoffs and waits are measured. Operations owns continuity, maintenance the intervention, Quality product constraints, OT asset access, and IT integration. Assumptions about data completeness and confirmation time have owners and tests.'
+      'Trigger macchina -> l’operatore verifica stato e contesto -> il supervisore di turno decide se l’evento richiede un work order usando codice, durata, stato linea e osservazione -> il coordinatore manutenzione assegna priorità usando criticità asset, sintomi e impatto sicurezza-qualità -> il tecnico diagnostica -> il responsabile manutenzione autorizza l’intervento usando diagnosi, permesso e stato sicuro -> operatore e tecnico provano la ripartenza -> il supervisore manutenzione accetta causa ed esito per la chiusura. Le attese a ogni handoff sono misurate. Eccezione uno: se esiste un work order aperto, il coordinatore collega l’evento senza creare un duplicato. Eccezione due: se emerge un possibile impatto prodotto, il workflow sospende l’automazione e Quality possiede valutazione ed escalation. Eccezione tre: se l’integrazione non è disponibile, l’operatore usa il fallback manuale e IT riconcilia il record. Operations cerca continuità e rischia alert tardivi; manutenzione cerca diagnosi completa e rischia backlog; Quality cerca tracciabilità e rischia una classificazione impropria; OT cerca disponibilità e rischia accessi non controllati; IT cerca integrazione manutenibile e rischia record divergenti. Le assunzioni su completezza dati e tempo di conferma hanno owner, prova e data.',
+      'Machine trigger -> the operator verifies state and context -> the shift supervisor decides whether the event requires a work order using code, duration, line state, and observation -> the maintenance coordinator assigns priority using asset criticality, symptoms, and safety-quality impact -> the technician diagnoses -> the maintenance manager authorizes intervention using diagnosis, permit, and safe state -> operator and technician test restart -> the maintenance supervisor accepts cause and outcome for closure. Waiting at every handoff is measured. Exception one: when an open work order exists, the coordinator links the event without creating a duplicate. Exception two: when potential product impact appears, the workflow suspends automation and Quality owns assessment and escalation. Exception three: when integration is unavailable, the operator uses the manual fallback and IT reconciles the record. Operations seeks continuity and risks late alerts; maintenance seeks complete diagnosis and risks backlog; Quality seeks traceability and risks improper classification; OT seeks availability and risks uncontrolled access; IT seeks maintainable integration and risks divergent records. Assumptions about data completeness and confirmation time have an owner, test, and date.'
     ),
+    solutionArtifact: {
+      decisions: [
+        {
+          decision: t('Creare o non creare il work order', 'Create or do not create the work order'),
+          inputs: [
+            t('Codice evento, durata e stato della linea', 'Event code, duration, and line state'),
+            t('Osservazione dell’operatore e ordine in esecuzione', 'Operator observation and active production order')
+          ],
+          owner: t('Supervisore di turno Operations', 'Operations shift supervisor')
+        },
+        {
+          decision: t('Assegnare priorità e presa in carico', 'Assign priority and acceptance'),
+          inputs: [
+            t('Criticità dell’asset e sintomi registrati', 'Asset criticality and recorded symptoms'),
+            t('Impatto potenziale su sicurezza, qualità e continuità', 'Potential safety, quality, and continuity impact')
+          ],
+          owner: t('Coordinatore manutenzione', 'Maintenance coordinator')
+        },
+        {
+          decision: t('Autorizzare l’intervento', 'Authorize intervention'),
+          inputs: [
+            t('Diagnosi tecnica e attività proposta', 'Technical diagnosis and proposed work'),
+            t('Permesso applicabile e conferma dello stato sicuro', 'Applicable permit and safe-state confirmation')
+          ],
+          owner: t('Responsabile manutenzione', 'Maintenance manager')
+        },
+        {
+          decision: t('Accettare causa ed esito e chiudere', 'Accept cause and outcome and close'),
+          inputs: [
+            t('Esito della prova di ripartenza', 'Restart-test result'),
+            t('Causa confermata, parti usate e tempo di intervento', 'Confirmed cause, parts used, and intervention time')
+          ],
+          owner: t('Supervisore manutenzione', 'Maintenance supervisor')
+        }
+      ],
+      exceptions: [
+        {
+          condition: t('Esiste già un work order aperto per lo stesso evento e asset.', 'An open work order already exists for the same event and asset.'),
+          response: t('Collegare l’evento al record aperto e non creare un duplicato.', 'Link the event to the open record and do not create a duplicate.'),
+          owner: t('Coordinatore manutenzione', 'Maintenance coordinator')
+        },
+        {
+          condition: t('L’evento indica un possibile impatto sul prodotto.', 'The event indicates potential product impact.'),
+          response: t('Sospendere l’automazione, preservare le evidenze e avviare l’escalation formale.', 'Suspend automation, preserve evidence, and start formal escalation.'),
+          owner: t('Quality', 'Quality')
+        },
+        {
+          condition: t('L’integrazione con il sistema work-order non è disponibile.', 'The work-order system integration is unavailable.'),
+          response: t('Usare il fallback manuale e riconciliare evento e record al ripristino.', 'Use the manual fallback and reconcile event and record after recovery.'),
+          owner: t('IT service owner', 'IT service owner')
+        }
+      ],
+      stakeholders: [
+        { role: t('Operations', 'Operations'), outcome: t('Continuità stabile', 'Stable continuity'), risk: t('Alert tardivi o inutilizzabili', 'Late or unusable alerts') },
+        { role: t('Manutenzione', 'Maintenance'), outcome: t('Diagnosi completa e rapida', 'Complete and timely diagnosis'), risk: t('Backlog o priorità errata', 'Backlog or incorrect priority') },
+        { role: t('Quality', 'Quality'), outcome: t('Tracciabilità e controllo prodotto', 'Traceability and product control'), risk: t('Classificazione impropria', 'Improper classification') },
+        { role: t('OT', 'OT'), outcome: t('Disponibilità e confini sicuri', 'Availability and safe boundaries'), risk: t('Accesso non controllato', 'Uncontrolled access') },
+        { role: t('IT', 'IT'), outcome: t('Integrazione manutenibile', 'Maintainable integration'), risk: t('Record divergenti', 'Divergent records') }
+      ]
+    },
     rubric: [
       t('2 punti: confine end-to-end e almeno due eccezioni; 1: flusso parziale; 0: lista di schermate.', '2 points: end-to-end boundary and at least two exceptions; 1: partial flow; 0: list of screens.'),
       t('2 punti: decision owner e dati per ogni decisione; 1: ownership incompleta; 0: nessuna accountability.', '2 points: decision owner and data for every decision; 1: incomplete ownership; 0: no accountability.'),
@@ -262,41 +329,243 @@ const unitFour = {
     ],
     1
   ),
-  sourceIds: ['pmi-operations', 'isa-95']
+  sourceIds: [
+    'toyota-way-genchi-genbutsu',
+    'lean-enterprise-gemba',
+    'uk-government-stakeholder-mapping',
+    'ahrq-raci-chart',
+    'pmi-operations'
+  ]
 }
 
-const automationMatrix = [
+const automationCriteria = [
+  { id: 'businessValue', weight: 15, label: t('Valore di business', 'Business value'), favorableAnchor: t('5 = perdita grande, misurata e influenzabile', '5 = large, measured, addressable loss') },
+  { id: 'frequencyEffort', weight: 10, label: t('Frequenza e sforzo manuale', 'Frequency and manual effort'), favorableAnchor: t('5 = attività frequente con elevato lavoro ripetitivo', '5 = frequent activity with high repetitive effort') },
+  { id: 'processStability', weight: 10, label: t('Stabilità del processo', 'Process stability'), favorableAnchor: t('5 = regole e varianti note e stabili', '5 = known, stable rules and variants') },
+  { id: 'dataReadiness', weight: 10, label: t('Data readiness', 'Data readiness'), favorableAnchor: t('5 = dati accessibili, completi, contestualizzati e posseduti', '5 = accessible, complete, contextualized, owned data') },
+  { id: 'integrationFeasibility', weight: 10, label: t('Fattibilità di integrazione', 'Integration feasibility'), favorableAnchor: t('5 = interfacce autorizzate e confini semplici', '5 = authorized interfaces and simple boundaries') },
+  { id: 'riskReversibility', weight: 15, label: t('Rischio e reversibilità', 'Risk and reversibility'), favorableAnchor: t('5 = conseguenze contenute e rollback immediato', '5 = contained consequences and immediate rollback') },
+  { id: 'regulatoryQuality', weight: 10, label: t('Impatto regolatorio e qualità', 'Regulatory and quality impact'), favorableAnchor: t('5 = nessuna decisione prodotto e controlli chiari', '5 = no product decision and clear controls') },
+  { id: 'humanJudgment', weight: 10, label: t('Giudizio umano richiesto', 'Required human judgment'), favorableAnchor: t('5 = regole esplicite, giudizio qualificato minimo', '5 = explicit rules, minimal qualified judgment') },
+  { id: 'adoption', weight: 5, label: t('Complessità di adozione', 'Adoption complexity'), favorableAnchor: t('5 = inserimento naturale nel lavoro e basso carico', '5 = natural workflow fit and low burden') },
+  { id: 'timeToValue', weight: 5, label: t('Tempo al valore', 'Time to value'), favorableAnchor: t('5 = test end-to-end rapido e circoscritto', '5 = rapid, bounded end-to-end test') }
+]
+
+const automationHardGates = [
   {
-    candidate: t('Creazione work order di manutenzione', 'Maintenance work-order creation'),
-    scores: { businessValue: 4, frequencyEffort: 5, processStability: 4, dataReadiness: 4, integrationFeasibility: 4, riskReversibility: 5, regulatoryQuality: 4, humanJudgment: 4, adoption: 4, timeToValue: 4 },
-    weightedScore: 85,
-    recommendation: t('Selezionare per un MVP con validazione, autorizzazione e conferma tecnica.', 'Select for an MVP with validation, authorization, and technician confirmation.')
+    id: 'no-autonomous-product-disposition',
+    title: t('Nessuna disposizione autonoma del prodotto', 'No autonomous product disposition'),
+    rule: t('Il candidato deve lasciare rilascio, blocco e disposizione nei controlli formali autorizzati.', 'The candidate must leave release, hold, and disposition within authorized formal controls.'),
+    blocking: true
   },
   {
-    candidate: t('Triage delle deviazioni di qualità', 'Quality deviation triage'),
-    scores: { businessValue: 4, frequencyEffort: 4, processStability: 3, dataReadiness: 3, integrationFeasibility: 3, riskReversibility: 3, regulatoryQuality: 2, humanJudgment: 2, adoption: 3, timeToValue: 3 },
-    weightedScore: 61,
-    recommendation: t('Esplorare come supporto decisionale in shadow mode, senza decisione autonoma.', 'Explore as decision support in shadow mode, without autonomous decisions.')
-  },
-  {
-    candidate: t('Produzione del report di produzione', 'Production reporting'),
-    scores: { businessValue: 2, frequencyEffort: 5, processStability: 5, dataReadiness: 4, integrationFeasibility: 4, riskReversibility: 5, regulatoryQuality: 4, humanJudgment: 5, adoption: 4, timeToValue: 5 },
-    weightedScore: 84,
-    recommendation: t('Tenere nel portafoglio come quick win, chiarendo il valore oltre il tempo amministrativo.', 'Keep in the portfolio as a quick win, clarifying value beyond administrative time.')
-  },
-  {
-    candidate: t('Ricerca di SOP controllate', 'Controlled SOP search'),
-    scores: { businessValue: 3, frequencyEffort: 4, processStability: 4, dataReadiness: 3, integrationFeasibility: 3, riskReversibility: 4, regulatoryQuality: 3, humanJudgment: 3, adoption: 4, timeToValue: 4 },
-    weightedScore: 69,
-    recommendation: t('Preparare data readiness su versioni e permessi prima del pilot.', 'Prepare document-version and permission readiness before a pilot.')
-  },
-  {
-    candidate: t('Decisione autonoma di rilascio prodotto', 'Autonomous product-release decision'),
-    scores: { businessValue: 5, frequencyEffort: 4, processStability: 2, dataReadiness: 3, integrationFeasibility: 2, riskReversibility: 1, regulatoryQuality: 1, humanJudgment: 1, adoption: 1, timeToValue: 1 },
-    weightedScore: 46,
-    recommendation: t('Rifiutare: conseguenze elevate, scarsa reversibilità e giudizio umano qualificato sono requisiti, non attrito da eliminare.', 'Reject: high consequences, poor reversibility, and qualified human judgment are requirements, not friction to remove.')
+    id: 'meaningful-qualified-human-judgment',
+    title: t('Giudizio umano qualificato significativo', 'Meaningful qualified human judgment'),
+    rule: t('Quando la conseguenza richiede competenza qualificata, la persona deve conservare evidenze, tempo, autorità e possibilità di contestare.', 'When consequences require qualified expertise, the person must retain evidence, time, authority, and the ability to challenge.'),
+    blocking: true
   }
 ]
+
+const assessment = (score, confidence, evidenceIt, evidenceEn, rationaleIt, rationaleEn) => ({
+  score,
+  confidence,
+  evidence: t(evidenceIt, evidenceEn),
+  rationale: t(rationaleIt, rationaleEn)
+})
+
+const gateCheck = (gateId, passed, evidenceIt, evidenceEn, rationaleIt, rationaleEn) => ({
+  gateId,
+  passed,
+  evidence: t(evidenceIt, evidenceEn),
+  rationale: t(rationaleIt, rationaleEn)
+})
+
+const eligibleGateChecks = (humanEvidenceIt, humanEvidenceEn, humanRationaleIt, humanRationaleEn) => [
+  gateCheck(
+    'no-autonomous-product-disposition',
+    true,
+    'Il perimetro non rilascia, blocca né dispone il prodotto.',
+    'The scope does not release, hold, or dispose of product.',
+    'Le decisioni sul prodotto restano nel processo formale.',
+    'Product decisions remain in the formal process.'
+  ),
+  gateCheck(
+    'meaningful-qualified-human-judgment',
+    true,
+    humanEvidenceIt,
+    humanEvidenceEn,
+    humanRationaleIt,
+    humanRationaleEn
+  )
+]
+
+const automationCandidateInputs = [
+  {
+    id: 'maintenance-work-order',
+    candidate: t('Creazione work order di manutenzione', 'Maintenance work-order creation'),
+    evidenceBasis: t('Baseline ipotetica del caso: 42 eventi, 18 minuti mediani e 64,3 per cento di record completi.', 'Hypothetical case baseline: 42 events, 18 median minutes, and 64.3 percent complete records.'),
+    assessments: {
+      businessValue: assessment(4, 'high', 'La famiglia causa pesa 480 dei 1.260 minuti e il ritardo informativo è osservato.', 'The cause family accounts for 480 of 1,260 minutes and the information delay is observed.', 'La leva agisce su una perdita rilevante, ma non su tutto il downtime.', 'The lever addresses a material loss, but not all downtime.'),
+      frequencyEffort: assessment(5, 'high', 'Quarantadue eventi in quattro settimane richiedono trascrizione e telefonata.', 'Forty-two events in four weeks require transcription and a phone call.', 'Frequenza e ripetizione rendono significativo il lavoro evitabile.', 'Frequency and repetition make avoidable effort material.'),
+      processStability: assessment(4, 'medium', 'Trigger, campi obbligatori e duplicati hanno regole definite; le eccezioni sono mappate.', 'Trigger, required fields, and duplicates have defined rules; exceptions are mapped.', 'Il flusso è abbastanza stabile per un MVP, con conferma sulle varianti.', 'The flow is stable enough for an MVP, with confirmation for variants.'),
+      dataReadiness: assessment(4, 'high', 'Asset, timestamp, evento e ordine sono disponibili, ma solo 27 record su 42 sono completi.', 'Asset, timestamp, event, and order are available, but only 27 of 42 records are complete.', 'I dati base esistono e la validazione affronta la lacuna di completezza.', 'Core data exists and validation addresses the completeness gap.'),
+      integrationFeasibility: assessment(4, 'medium', 'Il disegno usa una lettura evento e una scrittura autorizzata nel sistema work-order.', 'The design uses event read access and one authorized write to the work-order system.', 'Il confine è limitato, ma API, identità e duplicati vanno provati.', 'The boundary is limited, but API, identity, and duplicates require testing.'),
+      riskReversibility: assessment(5, 'high', 'La bozza richiede conferma e il fallback manuale rimane disponibile.', 'The draft requires confirmation and the manual fallback remains available.', 'Errori e indisponibilità sono contenibili e reversibili.', 'Errors and unavailability are containable and reversible.'),
+      regulatoryQuality: assessment(4, 'high', 'Il workflow non determina lo stato prodotto e conserva audit di input, conferma ed esito.', 'The workflow does not determine product status and audits input, confirmation, and outcome.', 'Il controllo qualità resta separato, pur richiedendo tracciabilità.', 'Quality control remains separate, while traceability is still required.'),
+      humanJudgment: assessment(4, 'high', 'Il tecnico conferma priorità e presa in carico; le regole compilano soltanto la bozza.', 'A technician confirms priority and acceptance; rules only populate the draft.', 'Il giudizio resta su diagnosi e azione, non sulla copiatura dei campi.', 'Judgment remains on diagnosis and action, not field copying.'),
+      adoption: assessment(4, 'medium', 'La bozza entra nel passaggio esistente tra operatore e manutenzione.', 'The draft enters the existing handoff between operator and maintenance.', 'Riduce attrito, ma richiede training di turno e gestione degli override.', 'It reduces friction but requires shift training and override handling.'),
+      timeToValue: assessment(4, 'high', 'Il test è limitato a una linea, una causa e sei settimane.', 'The test is limited to one line, one cause, and six weeks.', 'Il perimetro consente un confronto end-to-end rapido ma credibile.', 'The scope enables a rapid but credible end-to-end comparison.')
+    },
+    hardGateChecks: eligibleGateChecks(
+      'Tecnico e responsabile manutenzione conservano conferma, diagnosi e autorizzazione.',
+      'The technician and maintenance manager retain confirmation, diagnosis, and authorization.',
+      'Il sistema elimina trascrizione, non il giudizio tecnico qualificato.',
+      'The system removes transcription, not qualified technical judgment.'
+    ),
+    eligibleRecommendation: t('Selezionare per un MVP con validazione, autorizzazione e conferma tecnica.', 'Select for an MVP with validation, authorization, and technician confirmation.')
+  },
+  {
+    id: 'quality-deviation-triage',
+    candidate: t('Triage delle deviazioni di qualità', 'Quality deviation triage'),
+    evidenceBasis: t('Scenario discovery da validare con volumi, classi e storico delle decisioni Quality.', 'Discovery scenario to validate with volumes, classes, and Quality decision history.'),
+    assessments: {
+      businessValue: assessment(4, 'medium', 'Il triage può ridurre attese investigative, ma manca una baseline numerica.', 'Triage may reduce investigation waits, but a numeric baseline is missing.', 'Il valore è plausibile e rilevante, non ancora quantificato.', 'Value is plausible and material, but not yet quantified.'),
+      frequencyEffort: assessment(4, 'low', 'Il team riferisce casi ricorrenti e raccolta manuale; il volume deve essere misurato.', 'The team reports recurring cases and manual evidence gathering; volume must be measured.', 'Lo sforzo appare frequente, con confidenza bassa finché manca il conteggio.', 'Effort appears frequent, with low confidence until volume is counted.'),
+      processStability: assessment(3, 'medium', 'Categorie note convivono con eccezioni e contesto tecnico variabile.', 'Known categories coexist with exceptions and variable technical context.', 'Una parte è strutturabile, ma il percorso non è completamente deterministico.', 'Part of the flow is structured, but the path is not fully deterministic.'),
+      dataReadiness: assessment(3, 'low', 'Esistono pratiche storiche, ma qualità delle etichette e completezza non sono profilate.', 'Historical records exist, but label quality and completeness are not profiled.', 'I dati sono potenziali, non ancora pronti per una promessa di performance.', 'Data is potentially useful, not ready for a performance promise.'),
+      integrationFeasibility: assessment(3, 'low', 'Il caso richiede QMS, documenti e contesto di produzione con permessi diversi.', 'The case needs QMS, documents, and production context under different permissions.', 'Le integrazioni sono realizzabili ma più numerose e sensibili.', 'Integrations are feasible but more numerous and sensitive.'),
+      riskReversibility: assessment(3, 'medium', 'Shadow mode e proposta reversibile limitano il rischio; un triage errato può ritardare escalation.', 'Shadow mode and reversible suggestions limit risk; incorrect triage can delay escalation.', 'Il rischio è controllabile soltanto mantenendo revisione e monitoraggio.', 'Risk is manageable only with review and monitoring.'),
+      regulatoryQuality: assessment(2, 'high', 'La classificazione influenza un processo Quality e le sue priorità.', 'Classification influences a Quality process and its priorities.', 'L’impatto richiede controllo formale anche senza rilascio autonomo.', 'The impact requires formal control even without autonomous release.'),
+      humanJudgment: assessment(2, 'high', 'Contesto, gravità e impatto richiedono una valutazione Quality qualificata.', 'Context, severity, and impact require qualified Quality assessment.', 'Il sistema può preparare evidenze, non sostituire il giudizio.', 'The system may prepare evidence, not replace judgment.'),
+      adoption: assessment(3, 'medium', 'I reviewer possono confrontare proposta e fonti, ma serve un workflow di override.', 'Reviewers can compare the suggestion and sources, but an override workflow is needed.', 'L’assistenza può inserirsi nel lavoro con progettazione partecipata.', 'Assistance can fit the work with participatory design.'),
+      timeToValue: assessment(3, 'low', 'Servono campione etichettato, permessi, shadow mode e criteri di escalation.', 'A labeled sample, permissions, shadow mode, and escalation criteria are required.', 'Il pilot è possibile, ma la preparazione supera un quick win.', 'A pilot is possible, but preparation exceeds a quick win.')
+    },
+    hardGateChecks: eligibleGateChecks(
+      'Quality riceve fonti e proposta, poi classifica e approva nel processo formale.',
+      'Quality receives sources and a suggestion, then classifies and approves in the formal process.',
+      'Il perimetro di assistenza preserva autorità, tempo e contestazione.',
+      'The assistance boundary preserves authority, time, and challenge.'
+    ),
+    eligibleRecommendation: t('Esplorare come supporto decisionale in shadow mode, senza decisione autonoma.', 'Explore as decision support in shadow mode, without autonomous decisions.')
+  },
+  {
+    id: 'production-reporting',
+    candidate: t('Produzione del report di produzione', 'Production reporting'),
+    evidenceBasis: t('Quick win ipotetico con frequenza per turno; valore operativo oltre il tempo amministrativo ancora da provare.', 'Hypothetical per-shift quick win; operational value beyond administrative time remains unproven.'),
+    assessments: {
+      businessValue: assessment(2, 'medium', 'È visibile il tempo di compilazione, non una perdita operativa downstream misurata.', 'Reporting time is visible, but no downstream operational loss is measured.', 'Il risparmio amministrativo da solo limita il valore strategico.', 'Administrative savings alone limit strategic value.'),
+      frequencyEffort: assessment(5, 'high', 'Il report viene ricostruito a ogni turno da più sorgenti.', 'The report is reconstructed every shift from multiple sources.', 'Frequenza e copia manuale rendono alto lo sforzo ripetitivo.', 'Frequency and manual copying make repetitive effort high.'),
+      processStability: assessment(5, 'high', 'Template, formule, cadenza e destinatari sono definiti.', 'Template, formulas, cadence, and recipients are defined.', 'Regole stabili favoriscono automazione deterministica.', 'Stable rules favor deterministic automation.'),
+      dataReadiness: assessment(4, 'medium', 'I dati esistono nei sistemi di produzione, con alcune riconciliazioni manuali.', 'Data exists in production systems, with some manual reconciliation.', 'La disponibilità è buona, ma definizioni e missing data vanno allineati.', 'Availability is good, but definitions and missing data need alignment.'),
+      integrationFeasibility: assessment(4, 'medium', 'Sono richieste letture e aggregazioni senza comandi agli asset.', 'Read access and aggregation are required without commands to assets.', 'Il flusso read-only riduce complessità, restano connettori e timestamp.', 'The read-only flow lowers complexity, while connectors and timestamps remain.'),
+      riskReversibility: assessment(5, 'high', 'Il report può essere confrontato e scartato prima della pubblicazione.', 'The report can be compared and discarded before publication.', 'Errori sono facilmente rilevabili, contenibili e reversibili.', 'Errors are readily detectable, containable, and reversible.'),
+      regulatoryQuality: assessment(4, 'medium', 'Il report non dispone prodotto ma deve conservare definizioni e provenienza.', 'The report does not dispose of product but must preserve definitions and provenance.', 'Impatto controllabile con validazione e audit dei calcoli.', 'Impact is manageable through validation and calculation audit.'),
+      humanJudgment: assessment(5, 'high', 'Le formule sono esplicite; la persona esamina soltanto eccezioni e commenti.', 'Formulas are explicit; a person reviews only exceptions and commentary.', 'La maggior parte del compito è deterministica e ripetibile.', 'Most of the task is deterministic and repeatable.'),
+      adoption: assessment(4, 'medium', 'Sostituisce copia e riconciliazione nel rituale già esistente.', 'It replaces copying and reconciliation in an existing routine.', 'Il fit è alto se i destinatari concordano definizioni e fallback.', 'Fit is high if recipients agree on definitions and fallback.'),
+      timeToValue: assessment(5, 'medium', 'Un report parallelo può essere testato senza cambiare decisioni operative.', 'A parallel report can be tested without changing operational decisions.', 'Il confronto rapido rende il caso un possibile quick win.', 'Rapid comparison makes the case a possible quick win.')
+    },
+    hardGateChecks: eligibleGateChecks(
+      'Il responsabile di turno verifica eccezioni e approva la pubblicazione.',
+      'The shift owner reviews exceptions and approves publication.',
+      'Il giudizio resta sui commenti e sulle anomalie, non sui calcoli ripetitivi.',
+      'Judgment remains on commentary and anomalies, not repetitive calculations.'
+    ),
+    eligibleRecommendation: t('Tenere nel portafoglio come quick win, chiarendo il valore oltre il tempo amministrativo.', 'Keep in the portfolio as a quick win, clarifying value beyond administrative time.')
+  },
+  {
+    id: 'controlled-sop-search',
+    candidate: t('Ricerca di SOP controllate', 'Controlled SOP search'),
+    evidenceBasis: t('Caso ipotetico da precedere con inventario di versioni, metadata, permessi e query reali.', 'Hypothetical case requiring an inventory of versions, metadata, permissions, and real queries.'),
+    assessments: {
+      businessValue: assessment(3, 'low', 'Gli utenti riferiscono tempo di ricerca, ma non esiste ancora una baseline.', 'Users report search time, but no baseline exists yet.', 'Il beneficio è plausibile e deve essere misurato con task reali.', 'The benefit is plausible and must be measured with real tasks.'),
+      frequencyEffort: assessment(4, 'low', 'La consultazione è descritta come frequente; mancano log o campionamento.', 'Consultation is described as frequent; logs or sampling are missing.', 'La frequenza probabile giustifica discovery, non un beneficio dichiarato.', 'Likely frequency justifies discovery, not a claimed benefit.'),
+      processStability: assessment(4, 'medium', 'Ricerca, citazione e apertura della fonte seguono un flusso stabile; le SOP cambiano per revisione.', 'Search, citation, and source opening follow a stable flow; SOPs change by revision.', 'Il workflow è stabile se versione e stato sono espliciti.', 'The workflow is stable when version and status are explicit.'),
+      dataReadiness: assessment(3, 'low', 'I documenti controllati esistono, ma metadata e ACL non sono stati profilati.', 'Controlled documents exist, but metadata and ACLs have not been profiled.', 'La presenza dei file non prova readiness per retrieval autorizzato.', 'File existence does not prove readiness for authorized retrieval.'),
+      integrationFeasibility: assessment(3, 'low', 'Repository, identità e motore di ricerca richiedono connettori e filtri.', 'Repository, identity, and search require connectors and filters.', 'Il perimetro è leggibile ma dipende da access control end-to-end.', 'The scope is read-oriented but depends on end-to-end access control.'),
+      riskReversibility: assessment(4, 'medium', 'La risposta è read-only, citata e può rifiutare; una versione errata può comunque fuorviare.', 'The answer is read-only, cited, and may refuse; a wrong version can still mislead.', 'Citazioni e rinvio alla fonte riducono un rischio non nullo.', 'Citations and source referral reduce but do not eliminate risk.'),
+      regulatoryQuality: assessment(3, 'high', 'La risposta può influenzare lavoro regolamentato, mentre la SOP ufficiale resta autorità.', 'The answer may influence regulated work, while the official SOP remains authoritative.', 'Versione, permessi e refusal richiedono controlli espliciti.', 'Version, permissions, and refusal require explicit controls.'),
+      humanJudgment: assessment(3, 'high', 'L’utente deve verificare fonte, revisione e applicabilità al contesto.', 'The user must verify source, revision, and applicability to context.', 'La ricerca assiste la localizzazione, non interpreta ogni caso operativo.', 'Search assists location, not interpretation of every operational case.'),
+      adoption: assessment(4, 'medium', 'La ricerca riduce passaggi se mostra subito documento, revisione e citazione.', 'Search reduces steps when it immediately shows document, revision, and citation.', 'Il fit è buono, con training su limiti e refusal.', 'Fit is good, with training on limitations and refusal.'),
+      timeToValue: assessment(4, 'low', 'Un corpus circoscritto è pilotabile dopo bonifica di metadata e permessi.', 'A bounded corpus can be piloted after metadata and permission cleanup.', 'Il test può essere rapido solo dopo la readiness documentale.', 'The test can be rapid only after document readiness.')
+    },
+    hardGateChecks: eligibleGateChecks(
+      'L’utente vede la fonte ufficiale e decide come applicarla; il sistema può rifiutare.',
+      'The user sees the official source and decides how to apply it; the system may refuse.',
+      'Il confine preserva verifica e contestazione della risposta.',
+      'The boundary preserves verification and challenge of the response.'
+    ),
+    eligibleRecommendation: t('Preparare data readiness su versioni e permessi prima del pilot.', 'Prepare document-version and permission readiness before a pilot.')
+  },
+  {
+    id: 'autonomous-product-release',
+    candidate: t('Decisione autonoma di rilascio prodotto', 'Autonomous product-release decision'),
+    evidenceBasis: t('Ipotesi deliberatamente stressata per mostrare che un punteggio non supera i gate di controllo prodotto.', 'Deliberately stressed hypothesis showing that a score cannot override product-control gates.'),
+    assessments: {
+      businessValue: assessment(5, 'low', 'Una decisione più rapida avrebbe valore potenziale, ma non esiste una baseline validata.', 'A faster decision has potential value, but no validated baseline exists.', 'Il valore teorico è elevato e molto incerto.', 'Theoretical value is high and highly uncertain.'),
+      frequencyEffort: assessment(4, 'low', 'La decisione ricorre per lotti o ordini; il volume reale non è noto.', 'The decision recurs by lot or order; actual volume is unknown.', 'La ripetizione è plausibile ma deve essere misurata.', 'Repetition is plausible but must be measured.'),
+      processStability: assessment(2, 'high', 'Eccezioni, deviazioni ed evidenze contestuali cambiano il percorso decisionale.', 'Exceptions, deviations, and contextual evidence change the decision path.', 'La variabilità limita regole autonome generalizzabili.', 'Variability limits generalizable autonomous rules.'),
+      dataReadiness: assessment(3, 'low', 'Record di qualità possono esistere, ma sufficienza, lineage e completezza non sono provati.', 'Quality records may exist, but sufficiency, lineage, and completeness are unproven.', 'Dati disponibili non equivalgono a evidenza sufficiente per il rilascio.', 'Available data is not equivalent to sufficient release evidence.'),
+      integrationFeasibility: assessment(2, 'low', 'Servirebbero più sistemi qualità e produzione con autorizzazioni ad alta conseguenza.', 'Multiple quality and production systems with high-consequence authorization would be required.', 'Superficie e complessità di integrazione sono elevate.', 'Integration surface and complexity are high.'),
+      riskReversibility: assessment(1, 'high', 'Un rilascio errato può propagare prodotto oltre il controllo immediato.', 'An incorrect release may move product beyond immediate control.', 'La conseguenza è alta e non pienamente reversibile.', 'The consequence is high and not fully reversible.'),
+      regulatoryQuality: assessment(1, 'high', 'Il candidato prenderebbe direttamente una decisione di disposizione prodotto.', 'The candidate would directly make a product-disposition decision.', 'Il perimetro interferisce con un controllo Quality formale.', 'The scope interferes with a formal Quality control.'),
+      humanJudgment: assessment(1, 'high', 'La valutazione richiede evidenze, contesto e accountability di personale qualificato.', 'Assessment requires evidence, context, and accountability from qualified personnel.', 'Il giudizio umano è sostanza della decisione, non attrito amministrativo.', 'Human judgment is the substance of the decision, not administrative friction.'),
+      adoption: assessment(1, 'high', 'Il disegno rimuoverebbe autorità da un ruolo responsabile della decisione.', 'The design would remove authority from a role accountable for the decision.', 'Il cambiamento di responsabilità è inaccettabile nel perimetro proposto.', 'The proposed responsibility change is unacceptable.'),
+      timeToValue: assessment(1, 'high', 'Validazione, change control e dimostrazione di sicurezza sarebbero estesi.', 'Validation, change control, and safety evidence would be extensive.', 'Non è un MVP rapido né reversibile.', 'It is neither a rapid nor reversible MVP.')
+    },
+    hardGateChecks: [
+      gateCheck(
+        'no-autonomous-product-disposition',
+        false,
+        'Il candidato assegna al sistema il rilascio autonomo del prodotto.',
+        'The candidate assigns autonomous product release to the system.',
+        'La proposta oltrepassa il controllo formale di disposizione prodotto.',
+        'The proposal crosses the formal product-disposition control.'
+      ),
+      gateCheck(
+        'meaningful-qualified-human-judgment',
+        false,
+        'Il ruolo qualificato non conserva la decisione finale né un override significativo.',
+        'The qualified role does not retain the final decision or a meaningful override.',
+        'Qualified human judgment is required to interpret evidence and own release.',
+        'Qualified human judgment is required to interpret evidence and own release.'
+      )
+    ],
+    eligibleRecommendation: t('Non applicabile: il candidato fallisce gate bloccanti.', 'Not applicable: the candidate fails blocking gates.')
+  }
+]
+
+const weightedScore = (candidate) => automationCriteria.reduce(
+  (total, criterion) => total + criterion.weight * candidate.assessments[criterion.id].score,
+  0
+) / 5
+
+const evaluatedCandidates = automationCandidateInputs.map((candidate) => {
+  const failedHardGates = candidate.hardGateChecks.filter(({ passed }) => !passed)
+  const { eligibleRecommendation, ...candidateRecord } = candidate
+  return {
+    ...candidateRecord,
+    weightedScore: weightedScore(candidate),
+    failedHardGateIds: failedHardGates.map(({ gateId }) => gateId),
+    recommendation: failedHardGates.length
+      ? t(
+          `Rifiutare: ${failedHardGates.map(({ rationale }) => rationale.it).join(' ')}`,
+          `Reject: ${failedHardGates.map(({ rationale }) => rationale.en).join(' ')}`
+        )
+      : eligibleRecommendation
+  }
+})
+
+const recommendedCandidateId = evaluatedCandidates
+  .filter(({ failedHardGateIds }) => failedHardGateIds.length === 0)
+  .reduce((best, candidate) => candidate.weightedScore > best.weightedScore ? candidate : best)
+  .id
+
+const automationMatrix = evaluatedCandidates.map((candidate) => ({
+  ...candidate,
+  portfolioDecision: candidate.failedHardGateIds.length
+    ? 'rejected'
+    : candidate.id === recommendedCandidateId ? 'selected' : 'deferred'
+}))
 
 const unitFive = {
   id: 'automation-scoring-and-portfolio',
@@ -332,7 +601,13 @@ const unitFive = {
   decisionMatrix: {
     scale: t('1 = sfavorevole, 5 = favorevole', '1 = unfavorable, 5 = favorable'),
     formula: t('Punteggio = somma(peso × voto) / 5', 'Score = sum(weight × rating) / 5'),
-    weights: { businessValue: 15, frequencyEffort: 10, processStability: 10, dataReadiness: 10, integrationFeasibility: 10, riskReversibility: 15, regulatoryQuality: 10, humanJudgment: 10, adoption: 5, timeToValue: 5 },
+    evidencePolicy: t(
+      'Ogni voto separa evidenza, razionale e confidenza. Low indica assunzione da testare, non voto neutrale.',
+      'Every rating separates evidence, rationale, and confidence. Low means an assumption to test, not a neutral score.'
+    ),
+    criteria: automationCriteria,
+    hardGates: automationHardGates,
+    recommendedCandidateId,
     candidates: automationMatrix
   },
   microExamples: [microExample(

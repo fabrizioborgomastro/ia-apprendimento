@@ -244,10 +244,25 @@ test('source catalog retains the required authoritative records and resolves sta
     'pmi-operations',
     'pmi-product-reliability',
     'pmi-annual-report-2025',
-    'pmi-value-report-2025'
+    'pmi-value-report-2025',
+    'oecd-digital-transformation-definitions',
+    'nist-manufacturing-kpi-procedure',
+    'nist-manufacturing-kpi-hierarchy',
+    'nist-manufacturing-performance-baselines',
+    'doe-manufacturing-baseline-normalization',
+    'toyota-way-genchi-genbutsu',
+    'lean-enterprise-gemba',
+    'uk-government-stakeholder-mapping',
+    'ahrq-raci-chart'
   ]
 
   assert.deepEqual(Object.keys(sources), requiredIds)
   for (const id of requiredIds) assert.equal(sourceById(id), sources[id])
   assert.equal(sourceById('missing-source'), undefined)
+})
+
+test('topic-specific educational sources identify the primary records used for verification', () => {
+  assert.equal(sources['lean-enterprise-gemba'].type, 'educational')
+  assert.deepEqual(sources['lean-enterprise-gemba'].verifiedAgainst, ['toyota-way-genchi-genbutsu'])
+  assert.equal(sources['toyota-way-genchi-genbutsu'].type, 'primary')
 })
