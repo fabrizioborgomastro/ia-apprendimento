@@ -11,6 +11,8 @@ const { llmAgentsLesson = null } = await import('../public/content/module-4-llm-
   .catch(() => ({}))
 const { mvpGovernanceLesson = null } = await import('../public/content/module-5-mvp-governance.js')
   .catch(() => ({}))
+const { interviewLabLesson = null } = await import('../public/content/module-6-interview-lab.js')
+  .catch(() => ({}))
 
 export function theoryWords(lesson, locale) {
   return lesson.units
@@ -1702,4 +1704,295 @@ test('Module 5 Italian copy elides articles before vowels', () => {
     JSON.stringify(mvpGovernanceLesson, (key, value) => key === 'en' ? undefined : value),
     missingItalianElision
   )
+})
+
+const MODULE_6_BOUNDARIES = [
+  { id: 'layered-answer-architecture', estimatedMinutes: 9, timeAllocation: { theory: 4, cases: 2, practice: 3 } },
+  { id: 'automation-prioritization-defence', estimatedMinutes: 9, timeAllocation: { theory: 2, cases: 5, practice: 2 } },
+  { id: 'whiteboard-sensor-to-decision', estimatedMinutes: 9, timeAllocation: { theory: 2, cases: 5, practice: 2 } },
+  { id: 'stakeholder-objection-handling', estimatedMinutes: 10, timeAllocation: { theory: 3, cases: 4, practice: 3 } },
+  { id: 'english-answer-bank-core-distinctions', estimatedMinutes: 9, timeAllocation: { theory: 3, cases: 2, practice: 4 } },
+  { id: 'english-delivery-followups-and-recovery', estimatedMinutes: 9, timeAllocation: { theory: 3, cases: 2, practice: 4 } },
+  { id: 'twenty-minute-mock-first-half', estimatedMinutes: 10, timeAllocation: { theory: 1, cases: 3, practice: 6 } },
+  { id: 'scoring-readiness-and-rapid-review', estimatedMinutes: 10, timeAllocation: { theory: 1, cases: 2, practice: 7 } }
+]
+
+const MODULE_6_TOPICS = [
+  'ot-vs-it', 'mes-vs-scada', 'rag', 'agent', 'mcp', 'automation-selection',
+  'mvp', 'kpi', 'risk', 'human-oversight', 'scaling'
+]
+
+const MODULE_6_RUBRIC_CRITERIA = [
+  'structure', 'technical-accuracy', 'business-relevance',
+  'concrete-example', 'trade-offs', 'english-clarity'
+]
+
+test('Module 6 has the approved identity, depth and practical portfolio', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  assert.equal(interviewLabLesson.id, 'interview-lab')
+  assert.equal(interviewLabLesson.slug, 'interview-lab')
+  assert.equal(interviewLabLesson.moduleNumber, 6)
+  assert.equal(interviewLabLesson.durationMinutes, 75)
+  assert.deepEqual(interviewLabLesson.timeBudget, { theory: 19, cases: 25, practice: 31 })
+  assert.equal(interviewLabLesson.units.length, 8)
+  assert.ok(theoryWords(interviewLabLesson, 'it') >= 3420)
+  assert.ok(theoryWords(interviewLabLesson, 'en') >= 2907)
+  assert.equal(countWorkedCases(interviewLabLesson), 2)
+})
+
+test('Module 6 keeps eight approved boundaries and reconciles every engaged minute', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  assert.deepEqual(
+    interviewLabLesson.units.map(({ id, estimatedMinutes, timeAllocation }) => ({
+      id,
+      estimatedMinutes,
+      timeAllocation
+    })),
+    MODULE_6_BOUNDARIES
+  )
+
+  let caseMinutes = 0
+  let practiceMinutes = 0
+  for (const unit of interviewLabLesson.units) {
+    const caseItems = [
+      ...(unit.microExamples || []),
+      ...(unit.caseSegments || []),
+      ...(unit.workedCases || [])
+    ]
+    const unitCaseMinutes = caseItems.reduce((total, item) => total + item.durationMinutes, 0)
+    assert.equal(unitCaseMinutes, unit.timeAllocation.cases, `${unit.id} case minutes must be explicit`)
+    const unitPracticeMinutes = (unit.activities || []).reduce((total, item) => total + item.durationMinutes, 0)
+    assert.equal(unitPracticeMinutes, unit.timeAllocation.practice, `${unit.id} practice minutes must be explicit`)
+    caseMinutes += unitCaseMinutes
+    practiceMinutes += unitPracticeMinutes
+  }
+  assert.equal(caseMinutes, 25)
+  assert.equal(practiceMinutes, 31)
+
+  const timedItems = interviewLabLesson.units.flatMap((unit) => [
+    ...(unit.microExamples || []),
+    ...(unit.caseSegments || [])
+  ])
+  assert.equal(timedItems.length, 6)
+  assert.equal(timedItems.reduce((total, item) => total + item.durationMinutes, 0), 15)
+  for (const item of timedItems) {
+    assert.ok(item.learnerAction?.it && item.learnerAction?.en, `${item.id} needs a learner action`)
+    assert.ok(item.expectedOutput?.it && item.expectedOutput?.en, `${item.id} needs an expected output`)
+    assert.ok(item.modelReasoning?.it && item.modelReasoning?.en, `${item.id} needs model reasoning`)
+    assert.ok(item.responseFormat?.it && item.responseFormat?.en, `${item.id} needs a response format`)
+    assert.ok(item.decisionAid?.columns?.length >= 2 && item.decisionAid?.rows?.length >= 2)
+    assert.equal(item.scope.outputCount, 1)
+    assert.equal(
+      item.scope.decisionCount + item.scope.comparisonCount + item.scope.interpretationCount,
+      item.durationMinutes,
+      `${item.id} workload must justify its declared duration`
+    )
+  }
+})
+
+test('Module 6 rubric scores six criteria from zero to two with behavioral anchors', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const rubric = interviewLabLesson.answerRubric
+  assert.deepEqual(rubric.criteria.map(({ id }) => id), MODULE_6_RUBRIC_CRITERIA)
+  assert.equal(rubric.maxScore, 12)
+  assert.equal(rubric.readinessThreshold, 10)
+  assert.equal(
+    rubric.maxScore,
+    rubric.criteria.length * 2,
+    'maximum score must be derived from the criteria count'
+  )
+  for (const criterion of rubric.criteria) {
+    assert.ok(criterion.name?.it && criterion.name?.en)
+    assert.deepEqual(criterion.anchors.map(({ score }) => score), [0, 1, 2])
+    for (const anchor of criterion.anchors) {
+      assert.ok(anchor.description?.it && anchor.description?.en, `${criterion.id} anchor ${anchor.score} needs a description`)
+    }
+  }
+})
+
+test('Module 6 twenty-minute simulation is complete, timed and reconstructable', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const mock = interviewLabLesson.mockInterviewSimulation
+  assert.equal(mock.totalMinutes, 20)
+  assert.equal(mock.segments.reduce((total, segment) => total + segment.durationMinutes, 0), 20)
+  assert.equal(new Set(mock.segments.map(({ id }) => id)).size, mock.segments.length)
+  assert.equal(mock.withoutNotes, true)
+  for (const segment of mock.segments) {
+    assert.ok(segment.question?.it && segment.question?.en, `${segment.id} needs a localized question`)
+    assert.ok(segment.expectedPoints.length >= 2)
+    assert.ok(segment.expectedPoints.every((point) => point.it && point.en))
+    assert.ok(['unit-7', 'unit-8'].includes(segment.unitRef))
+  }
+  const perUnit = (unitRef) => mock.segments
+    .filter((segment) => segment.unitRef === unitRef)
+    .reduce((total, segment) => total + segment.durationMinutes, 0)
+  assert.equal(perUnit('unit-7'), interviewLabLesson.units[6].estimatedMinutes)
+  assert.equal(perUnit('unit-8'), interviewLabLesson.units[7].estimatedMinutes)
+  assert.deepEqual(
+    [...new Set(mock.segments.flatMap(({ topicIds }) => topicIds))].sort(),
+    [...MODULE_6_TOPICS].sort()
+  )
+})
+
+test('Module 6 readiness is derived from rubric scores and the unaided mock', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const tracker = interviewLabLesson.readinessTracker
+  assert.equal(tracker.threshold, 10)
+  assert.deepEqual(tracker.entries.map(({ topicId }) => topicId).sort(), [...MODULE_6_TOPICS].sort())
+  for (const entry of tracker.entries) {
+    assert.deepEqual(Object.keys(entry.scores).sort(), [...MODULE_6_RUBRIC_CRITERIA].sort())
+    assert.ok(Object.values(entry.scores).every((score) => [0, 1, 2].includes(score)))
+    assert.equal(
+      entry.total,
+      Object.values(entry.scores).reduce((sum, score) => sum + score, 0),
+      `${entry.topicId} total must equal the sum of its criteria`
+    )
+    assert.equal(
+      entry.ready,
+      entry.total >= tracker.threshold && tracker.mockCompletedWithoutNotes === true,
+      `${entry.topicId} readiness must be derived`
+    )
+    assert.ok(entry.gapAction?.it && entry.gapAction?.en)
+  }
+  assert.ok(tracker.entries.some((entry) => entry.ready === false), 'the tracker must model an unmet topic')
+  assert.deepEqual(
+    tracker.notReadyTopicIds.slice().sort(),
+    tracker.entries.filter((entry) => !entry.ready).map(({ topicId }) => topicId).sort()
+  )
+})
+
+test('Module 6 rapid review sheet covers every priority topic in both languages', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const sheet = interviewLabLesson.rapidReviewSheet
+  assert.deepEqual(sheet.entries.map(({ topicId }) => topicId).sort(), [...MODULE_6_TOPICS].sort())
+  for (const entry of sheet.entries) {
+    assert.ok(entry.headline?.it && entry.headline?.en)
+    assert.ok(entry.trap?.it && entry.trap?.en, `${entry.topicId} needs the common trap`)
+    assert.ok(countWords(entry.headline.en) <= 40)
+  }
+})
+
+test('Module 6 answer bank trains every priority topic with short and extended forms', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const answers = interviewLabLesson.interviewAnswers
+  assert.equal(answers.length, MODULE_6_TOPICS.length)
+  assert.deepEqual(answers.map(({ topicId }) => topicId).sort(), [...MODULE_6_TOPICS].sort())
+  for (const answer of answers) {
+    assert.ok(answer.prompt.it && answer.prompt.en)
+    assert.ok(countWords(answer.short.en) >= 55 && countWords(answer.short.en) <= 130, `${answer.topicId} short answer must fit thirty seconds`)
+    assert.ok(countWords(answer.long.en) >= 150, `${answer.topicId} extended answer must fit two minutes`)
+    assert.ok(answer.followUps.length >= 2)
+    assert.ok(answer.followUps.every((followUp) => followUp.it && followUp.en))
+  }
+})
+
+test('Module 6 identity-anchored validator rejects mutations to the lab contracts', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const errorsFor = (mutate) => {
+    const lesson = structuredClone(interviewLabLesson)
+    mutate(lesson)
+    return lessonLocalErrors([
+      digitalTransformationLesson,
+      architectureLesson,
+      dataAiLesson,
+      llmAgentsLesson,
+      mvpGovernanceLesson,
+      lesson
+    ])
+  }
+
+  assert.ok(errorsFor((lesson) => { delete lesson.answerRubric })
+    .some((error) => /answer rubric is required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.mockInterviewSimulation })
+    .some((error) => /mock interview simulation is required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.readinessTracker })
+    .some((error) => /readiness tracker is required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.rapidReviewSheet })
+    .some((error) => /rapid review sheet is required/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.answerRubric.criteria.pop() })
+    .some((error) => /rubric must retain the six approved criteria/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.answerRubric.maxScore = 10 })
+    .some((error) => /maximum score must equal twice the criteria count/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.answerRubric.criteria[0].anchors.shift() })
+    .some((error) => /needs anchors for scores 0, 1 and 2/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.mockInterviewSimulation.segments[0].durationMinutes += 1 })
+    .some((error) => /simulation segments must total 20 minutes/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.mockInterviewSimulation.segments.pop() })
+    .some((error) => /simulation must cover every priority topic/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.mockInterviewSimulation.withoutNotes = false })
+    .some((error) => /simulation must be completed without notes/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.readinessTracker.entries[0].total += 1 })
+    .some((error) => /total must equal the sum of its rubric scores/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.readinessTracker.entries[0].ready = !lesson.readinessTracker.entries[0].ready })
+    .some((error) => /readiness must be derived from the threshold and the unaided mock/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.readinessTracker.notReadyTopicIds = [] })
+    .some((error) => /not-ready topics must list every entry below the threshold/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.readinessTracker.entries.pop() })
+    .some((error) => /readiness tracker must cover every priority topic/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.rapidReviewSheet.entries.pop() })
+    .some((error) => /rapid review sheet must cover every priority topic/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.rapidReviewSheet.entries[0].trap })
+    .some((error) => /needs a localized common trap/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.timeBudget.practice = 30 })
+    .some((error) => /timing must remain eight units and 19 theory, 25 cases, 31 practice minutes/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[0].activities.pop() })
+    .some((error) => /must retain thirteen one-output activities totaling 31 practice minutes/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].learnerAction })
+    .some((error) => /timed case item 1.*learnerAction/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.interviewAnswers.pop() })
+    .some((error) => /answer bank must cover every priority topic/i.test(error)))
+})
+
+test('Module 6 lab validation is anchored to stable lesson identity', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const lesson = structuredClone(interviewLabLesson)
+  delete lesson.answerRubric
+
+  assert.ok(lessonLocalErrors([
+    digitalTransformationLesson,
+    architectureLesson,
+    dataAiLesson,
+    llmAgentsLesson,
+    mvpGovernanceLesson,
+    lesson
+  ]).some((error) => /Module 6 interview lab contract.*answer rubric is required/i.test(error)))
+})
+
+test('Module 6 Italian copy elides articles before vowels', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  assert.doesNotMatch(
+    JSON.stringify(interviewLabLesson, (key, value) => key === 'en' ? undefined : value),
+    missingItalianElision
+  )
+})
+
+test('the assembled six-module curriculum reaches exactly 420 minutes and the depth floor', () => {
+  const lessons = [
+    digitalTransformationLesson,
+    architectureLesson,
+    dataAiLesson,
+    llmAgentsLesson,
+    mvpGovernanceLesson,
+    interviewLabLesson
+  ]
+  assert.ok(lessons.every(Boolean), 'every module must exist')
+  assert.deepEqual(lessons.map(({ id }) => id), [
+    'digital-transformation', 'ot-it-ai-cloud', 'data-ai-use-cases',
+    'llm-agents', 'mvp-governance', 'interview-lab'
+  ])
+  assert.equal(lessons.reduce((total, lesson) => total + lesson.durationMinutes, 0), 420)
+  assert.equal(
+    lessons.reduce((total, lesson) => total + lesson.timeBudget.cases + lesson.timeBudget.practice, 0),
+    231
+  )
+  const italianWords = lessons.reduce((total, lesson) => total + theoryWords(lesson, 'it'), 0)
+  const englishWords = lessons.reduce((total, lesson) => total + theoryWords(lesson, 'en'), 0)
+  assert.ok(italianWords >= 34020, `Italian theory words must reach 34020, received ${italianWords}`)
+  assert.ok(englishWords >= italianWords * 0.85)
+  assert.deepEqual(validateCurriculum(lessons, sources), [])
 })

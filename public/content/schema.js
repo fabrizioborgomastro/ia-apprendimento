@@ -1158,6 +1158,247 @@ function validateModule5GovernanceContracts(lesson, path, errors) {
   }
 }
 
+const MODULE_6_TOPICS = [
+  'ot-vs-it', 'mes-vs-scada', 'rag', 'agent', 'mcp', 'automation-selection',
+  'mvp', 'kpi', 'risk', 'human-oversight', 'scaling'
+]
+
+const MODULE_6_RUBRIC_CRITERIA = [
+  'structure', 'technical-accuracy', 'business-relevance',
+  'concrete-example', 'trade-offs', 'english-clarity'
+]
+
+const sortedIds = (values) => asArray(values).slice().sort().join(',')
+
+function validateAnswerRubric(rubric, contractPath, errors) {
+  if (!isObject(rubric)) {
+    errors.push(`${contractPath} answer rubric is required`)
+    return
+  }
+  const criteria = asArray(rubric.criteria)
+  if (criteria.map((criterion) => criterion?.id).join(',') !== MODULE_6_RUBRIC_CRITERIA.join(',')) {
+    errors.push(`${contractPath} rubric must retain the six approved criteria in order`)
+  }
+  if (rubric.maxScore !== criteria.length * 2) {
+    errors.push(`${contractPath} rubric maximum score must equal twice the criteria count`)
+  }
+  if (rubric.readinessThreshold !== 10) {
+    errors.push(`${contractPath} rubric readiness threshold must remain 10`)
+  }
+  for (const [index, criterion] of criteria.entries()) {
+    const criterionPath = `${contractPath} rubric criterion ${criterion?.id || index + 1}`
+    if (!isLocalized(criterion?.name)) errors.push(`${criterionPath} needs a localized name`)
+    const anchors = asArray(criterion?.anchors)
+    if (anchors.map((anchor) => anchor?.score).join(',') !== '0,1,2') {
+      errors.push(`${criterionPath} needs anchors for scores 0, 1 and 2`)
+    }
+    if (anchors.some((anchor) => !isLocalized(anchor?.description))) {
+      errors.push(`${criterionPath} needs a localized description for every anchor`)
+    }
+  }
+}
+
+function validateMockInterviewSimulation(mock, lesson, contractPath, errors) {
+  if (!isObject(mock)) {
+    errors.push(`${contractPath} mock interview simulation is required`)
+    return
+  }
+  const segments = asArray(mock.segments)
+  if (mock.totalMinutes !== 20) {
+    errors.push(`${contractPath} simulation must declare 20 total minutes`)
+  }
+  if (segments.reduce(
+    (sum, segment) => sum + (isPositiveInteger(segment?.durationMinutes) ? segment.durationMinutes : 0),
+    0
+  ) !== 20) {
+    errors.push(`${contractPath} simulation segments must total 20 minutes`)
+  }
+  if (mock.withoutNotes !== true) {
+    errors.push(`${contractPath} simulation must be completed without notes`)
+  }
+  const segmentIds = new Set()
+  for (const [index, segment] of segments.entries()) {
+    const segmentPath = `${contractPath} simulation segment ${segment?.id || index + 1}`
+    if (!hasNonEmptyString(segment?.id) || !STABLE_SLUG_ID.test(segment.id)) {
+      errors.push(`${segmentPath} needs a stable segment ID`)
+    } else if (segmentIds.has(segment.id)) {
+      errors.push(`${segmentPath} has a duplicate segment ID`)
+    } else {
+      segmentIds.add(segment.id)
+    }
+    if (!isLocalized(segment?.question)) errors.push(`${segmentPath} needs a localized question`)
+    const expectedPoints = asArray(segment?.expectedPoints)
+    if (expectedPoints.length < 2 || !expectedPoints.every(isLocalized)) {
+      errors.push(`${segmentPath} needs at least two localized expected points`)
+    }
+    if (!['unit-7', 'unit-8'].includes(segment?.unitRef)) {
+      errors.push(`${segmentPath} must reference the mock units`)
+    }
+    if (!asArray(segment?.topicIds).length) errors.push(`${segmentPath} needs at least one topic`)
+  }
+  if (sortedIds([...new Set(segments.flatMap((segment) => asArray(segment?.topicIds)))]) !== sortedIds(MODULE_6_TOPICS)) {
+    errors.push(`${contractPath} simulation must cover every priority topic exactly once as a set`)
+  }
+  const units = asArray(lesson.units)
+  const perUnit = (unitRef) => segments
+    .filter((segment) => segment?.unitRef === unitRef)
+    .reduce((sum, segment) => sum + (isPositiveInteger(segment?.durationMinutes) ? segment.durationMinutes : 0), 0)
+  if (perUnit('unit-7') !== units[6]?.estimatedMinutes || perUnit('unit-8') !== units[7]?.estimatedMinutes) {
+    errors.push(`${contractPath} simulation minutes must match the two mock unit durations`)
+  }
+}
+
+function validateReadinessTracker(tracker, contractPath, errors) {
+  if (!isObject(tracker)) {
+    errors.push(`${contractPath} readiness tracker is required`)
+    return
+  }
+  if (tracker.threshold !== 10) errors.push(`${contractPath} readiness threshold must remain 10`)
+  if (typeof tracker.mockCompletedWithoutNotes !== 'boolean') {
+    errors.push(`${contractPath} readiness tracker must record whether the mock was unaided`)
+  }
+  const entries = asArray(tracker.entries)
+  if (sortedIds(entries.map((entry) => entry?.topicId)) !== sortedIds(MODULE_6_TOPICS)) {
+    errors.push(`${contractPath} readiness tracker must cover every priority topic`)
+  }
+  for (const [index, entry] of entries.entries()) {
+    const entryPath = `${contractPath} readiness entry ${entry?.topicId || index + 1}`
+    const scores = entry?.scores
+    if (!isObject(scores) || sortedIds(Object.keys(scores)) !== sortedIds(MODULE_6_RUBRIC_CRITERIA)) {
+      errors.push(`${entryPath} needs a score for every rubric criterion`)
+      continue
+    }
+    const values = Object.values(scores)
+    if (!values.every((score) => [0, 1, 2].includes(score))) {
+      errors.push(`${entryPath} scores must be 0, 1 or 2`)
+      continue
+    }
+    const total = values.reduce((sum, score) => sum + score, 0)
+    if (entry.total !== total) {
+      errors.push(`${entryPath} total must equal the sum of its rubric scores`)
+    }
+    if (entry.ready !== (entry.total >= tracker.threshold && tracker.mockCompletedWithoutNotes === true)) {
+      errors.push(`${entryPath} readiness must be derived from the threshold and the unaided mock`)
+    }
+    if (!isLocalized(entry?.gapAction)) errors.push(`${entryPath} needs a localized gap action`)
+  }
+  if (sortedIds(tracker.notReadyTopicIds) !== sortedIds(
+    entries.filter((entry) => !entry?.ready).map((entry) => entry?.topicId)
+  )) {
+    errors.push(`${contractPath} not-ready topics must list every entry below the threshold`)
+  }
+}
+
+function validateRapidReviewSheet(sheet, contractPath, errors) {
+  if (!isObject(sheet)) {
+    errors.push(`${contractPath} rapid review sheet is required`)
+    return
+  }
+  const entries = asArray(sheet.entries)
+  if (sortedIds(entries.map((entry) => entry?.topicId)) !== sortedIds(MODULE_6_TOPICS)) {
+    errors.push(`${contractPath} rapid review sheet must cover every priority topic`)
+  }
+  for (const [index, entry] of entries.entries()) {
+    const entryPath = `${contractPath} rapid review entry ${entry?.topicId || index + 1}`
+    if (!isLocalized(entry?.headline)) errors.push(`${entryPath} needs a localized headline`)
+    if (!isLocalized(entry?.trap)) errors.push(`${entryPath} needs a localized common trap`)
+  }
+}
+
+function validateModule6InterviewLab(lesson, path, errors) {
+  const contractPath = `${path} Module 6 interview lab contract`
+
+  validateAnswerRubric(lesson.answerRubric, contractPath, errors)
+  validateMockInterviewSimulation(lesson.mockInterviewSimulation, lesson, contractPath, errors)
+  validateReadinessTracker(lesson.readinessTracker, contractPath, errors)
+  validateRapidReviewSheet(lesson.rapidReviewSheet, contractPath, errors)
+  validateTimedCaseItems(lesson, contractPath, 6, 15, errors)
+
+  const units = asArray(lesson.units)
+  const caseMinutes = units.reduce((sum, unit) => sum + [
+    ...asArray(unit?.microExamples),
+    ...asArray(unit?.caseSegments),
+    ...asArray(unit?.workedCases)
+  ].reduce((unitSum, item) => unitSum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0), 0), 0)
+  const activities = units.flatMap((unit) => asArray(unit?.activities))
+  const practiceMinutes = activities.reduce(
+    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
+    0
+  )
+  const budget = lesson.timeBudget
+
+  if (units.length !== 8 || !isObject(budget) ||
+      budget.theory !== 19 || budget.cases !== 25 || budget.practice !== 31) {
+    errors.push(`${contractPath} timing must remain eight units and 19 theory, 25 cases, 31 practice minutes`)
+  }
+  if (caseMinutes !== 25) errors.push(`${contractPath} learner-visible case minutes must total 25`)
+  if (practiceMinutes !== 31 || activities.length !== 13 ||
+      activities.some((item) => !isValidQuickTaskScope(item?.quickTask))) {
+    errors.push(`${contractPath} must retain thirteen one-output activities totaling 31 practice minutes`)
+  }
+
+  const answers = asArray(lesson.interviewAnswers)
+  if (sortedIds(answers.map((answer) => answer?.topicId)) !== sortedIds(MODULE_6_TOPICS)) {
+    errors.push(`${contractPath} answer bank must cover every priority topic`)
+  }
+
+  const matrix = lesson.automationDefenceMatrix
+  if (!isObject(matrix)) {
+    errors.push(`${contractPath} automation defence matrix is required`)
+  } else {
+    const candidates = asArray(matrix.candidates)
+    if (candidates.length < 4) errors.push(`${contractPath} defence matrix needs at least four candidates`)
+    for (const [index, candidate] of candidates.entries()) {
+      const candidatePath = `${contractPath} defence candidate ${candidate?.id || index + 1}`
+      const scores = asArray(candidate?.scores)
+      if (!scores.length || scores.some((score) => (
+        !Number.isInteger(score?.weight) || !Number.isInteger(score?.score)
+      ))) {
+        errors.push(`${candidatePath} needs integer weighted scores`)
+        continue
+      }
+      const computed = scores.reduce((sum, score) => sum + score.weight * score.score, 0)
+      if (candidate.weightedScore !== computed) {
+        errors.push(`${candidatePath} weighted score must equal its criteria total`)
+      }
+      if (candidate.eligible !== (candidate.hardGatePassed === true)) {
+        errors.push(`${candidatePath} eligibility must follow the hard gate`)
+      }
+    }
+    const eligible = candidates.filter((candidate) => candidate?.eligible)
+    const best = eligible.reduce(
+      (top, candidate) => (top && top.weightedScore >= candidate.weightedScore ? top : candidate),
+      null
+    )
+    if (matrix.selectedCandidateId !== best?.id) {
+      errors.push(`${contractPath} defence matrix must select the highest scoring eligible candidate`)
+    }
+    if (!candidates.some((candidate) => candidate?.hardGatePassed === false)) {
+      errors.push(`${contractPath} defence matrix must retain a candidate rejected by the hard gate`)
+    }
+  }
+
+  const pathArtifact = lesson.sensorToDecisionPath
+  if (!isObject(pathArtifact)) {
+    errors.push(`${contractPath} sensor-to-decision path is required`)
+  } else {
+    const hops = asArray(pathArtifact.hops)
+    if (hops.length < 5) errors.push(`${contractPath} sensor-to-decision path needs at least five hops`)
+    if (hops.some((hop) => !isPositiveNumber(hop?.latencySeconds) || !hasNonEmptyString(hop?.owner))) {
+      errors.push(`${contractPath} every hop needs a positive latency and an owner`)
+    } else {
+      const total = hops.reduce((sum, hop) => sum + hop.latencySeconds, 0)
+      if (pathArtifact.endToEndSeconds !== total) {
+        errors.push(`${contractPath} end-to-end latency must equal the sum of its hops`)
+      }
+      const dominant = hops.reduce((top, hop) => (top.latencySeconds >= hop.latencySeconds ? top : hop))
+      if (pathArtifact.dominantHopId !== dominant.id) {
+        errors.push(`${contractPath} dominant hop must be the largest latency contributor`)
+      }
+    }
+  }
+}
+
 function validateCheckpoint(checkpoint, path, errors) {
   if (!checkpoint) {
     errors.push(`${path} is missing a checkpoint`)
@@ -1292,6 +1533,9 @@ export function validateCurriculum(lessons, sources) {
     }
     if (lesson.id === 'mvp-governance') {
       validateModule5GovernanceContracts(lesson, path, errors)
+    }
+    if (lesson.id === 'interview-lab') {
+      validateModule6InterviewLab(lesson, path, errors)
     }
 
     for (const [unitIndex, unit] of units.entries()) {

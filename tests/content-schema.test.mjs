@@ -9,11 +9,13 @@ import {
 import { validateLessons } from '../public/learning.js'
 import { llmAgentsLesson } from '../public/content/module-4-llm-agents.js'
 import { mvpGovernanceLesson } from '../public/content/module-5-mvp-governance.js'
+import { interviewLabLesson } from '../public/content/module-6-interview-lab.js'
 import { sourceById, sources } from '../public/content/sources.js'
 
 const identityAnchoredLessons = {
   'llm-agents': llmAgentsLesson,
-  'mvp-governance': mvpGovernanceLesson
+  'mvp-governance': mvpGovernanceLesson,
+  'interview-lab': interviewLabLesson
 }
 
 const lessonDefinitions = [
