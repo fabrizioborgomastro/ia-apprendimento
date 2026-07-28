@@ -1,3 +1,5 @@
+import { validateCurriculum } from './content/schema.js'
+
 export function calculateScore(results) {
   const total = results.length
   const correct = results.filter(Boolean).length
@@ -20,20 +22,7 @@ export function mergeProgress(local, remote) {
 }
 
 export function validateLessons(lessons) {
-  const errors = []
-  const ids = new Set()
-  for (const lesson of lessons) {
-    if (ids.has(lesson.id)) errors.push(`ID lezione duplicato: ${lesson.id}`)
-    ids.add(lesson.id)
-    if (!lesson.title || !lesson.englishTitle) errors.push(`Titolo bilingue mancante: ${lesson.id}`)
-    if (!lesson.blocks?.length) errors.push(`Contenuto mancante: ${lesson.id}`)
-    for (const question of lesson.quiz || []) {
-      if (!question.explanation?.trim()) errors.push(`Spiegazione mancante: ${lesson.id}/${question.id}`)
-      if (!Array.isArray(question.options) || question.options.length < 2) errors.push(`Opzioni mancanti: ${lesson.id}/${question.id}`)
-      if (question.correctOption < 0 || question.correctOption >= question.options.length) errors.push(`Risposta non valida: ${lesson.id}/${question.id}`)
-    }
-  }
-  return errors
+  return validateCurriculum(lessons, {})
 }
 
 const STORAGE_KEY = 'ai-sprint-progress-v1'
