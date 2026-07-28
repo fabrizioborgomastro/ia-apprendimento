@@ -7,6 +7,7 @@ import {
   validateCurriculum
 } from '../public/content/schema.js'
 import { validateLessons } from '../public/learning.js'
+import { sourceById, sources } from '../public/content/sources.js'
 
 const lessonDefinitions = [
   ['digital-transformation', 'digital-transformation', 50, { theory: 25, cases: 15, practice: 10 }, 5667],
@@ -216,4 +217,37 @@ test('validator requires stable lesson IDs and slugs', () => {
   const lessons = clone(curriculumFixture())
   lessons[0].slug = 'renamed'
   assert.ok(validateCurriculum(lessons, sourcesFixture).some((error) => error.includes('stable ID and slug')))
+})
+
+test('source catalog contains unique complete HTTPS records', () => {
+  const ids = Object.keys(sources)
+  assert.equal(new Set(ids).size, ids.length)
+  for (const source of Object.values(sources)) {
+    assert.ok(source.title && source.organization && source.type)
+    assert.match(source.url, /^https:\/\//)
+    assert.match(source.accessedAt, /^2026-07-28$/)
+  }
+})
+
+test('source catalog retains the required authoritative records and resolves stable IDs', () => {
+  const requiredIds = [
+    'isa-95',
+    'nist-sp-800-82-r3',
+    'opc-ua-part-1',
+    'nist-ai-rmf-1-0',
+    'nist-ai-600-1',
+    'eu-ai-act',
+    'ec-industry-5-0',
+    'attention-is-all-you-need',
+    'retrieval-augmented-generation',
+    'mcp-specification',
+    'pmi-operations',
+    'pmi-product-reliability',
+    'pmi-annual-report-2025',
+    'pmi-value-report-2025'
+  ]
+
+  assert.deepEqual(Object.keys(sources), requiredIds)
+  for (const id of requiredIds) assert.equal(sourceById(id), sources[id])
+  assert.equal(sourceById('missing-source'), undefined)
 })
