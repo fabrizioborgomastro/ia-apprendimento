@@ -1,10 +1,35 @@
 import { mergeProgress } from './learning.js'
+import { lessons } from './content.js'
 
 const config = globalThis.AI_SPRINT_CONFIG || {}
 const sessionKey = 'ai-sprint-session-v1'
 
 export function getSupabaseApiKey(value) {
   return value.supabasePublishableKey || value.supabaseAnonKey || ''
+}
+
+export function deserializeProgress(row) {
+  return {
+    lessonId: row.lesson_id,
+    status: row.status,
+    cursor: row.cursor,
+    bestScore: row.best_score,
+    reviewQuestionIds: row.review_question_ids || [],
+    updatedAt: row.updated_at,
+    contentVersion: row.content_version
+  }
+}
+
+export function serializeProgress(progress) {
+  return {
+    lesson_id: progress.lessonId,
+    status: progress.status,
+    cursor: progress.cursor,
+    best_score: progress.bestScore,
+    review_question_ids: progress.reviewQuestionIds,
+    updated_at: progress.updatedAt,
+    content_version: progress.contentVersion ?? 1
+  }
 }
 
 const apiKey = getSupabaseApiKey(config)
@@ -87,16 +112,11 @@ export async function syncAllProgress(localProgress) {
   const remoteRows = await authRequest('/rest/v1/lesson_progress?select=*')
   const merged = { ...localProgress }
   for (const row of remoteRows) {
-    const remote = {
-      lessonId: row.lesson_id, status: row.status, cursor: row.cursor,
-      bestScore: row.best_score, reviewQuestionIds: row.review_question_ids || [], updatedAt: row.updated_at
-    }
-    merged[row.lesson_id] = mergeProgress(merged[row.lesson_id], remote)
+    const remote = deserializeProgress(row)
+    const lesson = lessons.find((item) => item.id === remote.lessonId)
+    merged[remote.lessonId] = mergeProgress(merged[remote.lessonId], remote, lesson)
   }
-  const rows = Object.values(merged).map((item) => ({
-    lesson_id: item.lessonId, status: item.status, cursor: item.cursor,
-    best_score: item.bestScore, review_question_ids: item.reviewQuestionIds, updated_at: item.updatedAt
-  }))
+  const rows = Object.values(merged).map(serializeProgress)
   if (rows.length) await authRequest('/rest/v1/lesson_progress?on_conflict=user_id,lesson_id', {
     method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows)
   })

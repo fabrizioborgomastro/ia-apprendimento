@@ -17,7 +17,7 @@
  * @typedef {{title:LocalizedText, description:LocalizedText}} ProfessionalArtifact
  * @typedef {{id:string, eyebrow:LocalizedText, title:LocalizedText, estimatedMinutes:number, theory:LocalizedText[], keyPoints:LocalizedText[], microExamples?:MicroExample[], workedCases?:WorkedCase[], activities?:LearningActivity[], artifact?:ProfessionalArtifact, professionalArtifacts?:ProfessionalArtifact[], checkpoint:Checkpoint, sourceIds:string[]}} LearningUnit
  * @typedef {{id:string, slug:string, durationMinutes:number, timeBudget:{theory:number, cases:number, practice:number}, units:LearningUnit[], interviewAnswers:{short:string, long:string}[], microExamples?:MicroExample[], workedCases?:WorkedCase[], activities?:LearningActivity[], artifact?:ProfessionalArtifact, professionalArtifacts?:ProfessionalArtifact[]}} BilingualLesson
- * @typedef {{lessonId:string, status:LessonStatus, cursor:number, bestScore:number, reviewQuestionIds:string[], updatedAt:string, contentVersion?:number}} VersionedLearningProgress
+ * @typedef {{lessonId:string, status:LessonStatus, cursor:number, bestScore:number, reviewQuestionIds:string[], updatedAt:string, contentVersion:number}} VersionedLearningProgress
  */
 
 export {}
