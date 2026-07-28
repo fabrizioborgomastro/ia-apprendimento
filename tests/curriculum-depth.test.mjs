@@ -1861,6 +1861,22 @@ test('Module 6 readiness is derived from rubric scores and the unaided mock', ()
   )
 })
 
+test('Module 6 quoted readiness average is recomputable from the tracker it summarizes', () => {
+  assert.ok(interviewLabLesson, 'Module 6 content must exist')
+  const totals = interviewLabLesson.readinessTracker.entries.map(({ total }) => total)
+  const average = totals.reduce((sum, total) => sum + total, 0) / totals.length
+  const english = average.toFixed(1)
+  const italian = english.replace('.', ',')
+  const serialized = JSON.stringify(interviewLabLesson)
+
+  const quoted = [...serialized.matchAll(/\d+[.,]\d(?= out of 12| su 12)/gu)].map(([value]) => value)
+  assert.ok(quoted.length >= 2, 'the module must quote the average in both languages')
+  assert.ok(
+    quoted.every((value) => value === english || value === italian),
+    `every quoted average must equal the recomputed ${english}, received ${quoted.join(', ')}`
+  )
+})
+
 test('Module 6 rapid review sheet covers every priority topic in both languages', () => {
   assert.ok(interviewLabLesson, 'Module 6 content must exist')
   const sheet = interviewLabLesson.rapidReviewSheet

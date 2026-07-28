@@ -1176,11 +1176,11 @@ const units = [
       {
         learnerAction: ['Interpreta i due criteri e scegli quello che descrive davvero la prontezza.', 'Interpret the two criteria and choose the one that actually describes readiness.'],
         expectedOutput: ['Un criterio scelto con la conseguenza pratica.', 'One selected criterion with its practical consequence.'],
-        modelReasoning: ['Una media di 10,7 nasconde due argomenti a nove, e in colloquio verrà chiesto proprio uno di quelli; la soglia per argomento è il criterio corretto.', 'An average of 10.7 hides two topics at nine, and the interview will ask about exactly one of them; the per-topic threshold is the correct criterion.'],
+        modelReasoning: ['Una media di 10,6 nasconde due argomenti a nove, e in colloquio verrà chiesto proprio uno di quelli; la soglia per argomento è il criterio corretto.', 'An average of 10.6 hides two topics at nine, and the interview will ask about exactly one of them; the per-topic threshold is the correct criterion.'],
         responseFormat: ['Criterio | conseguenza.', 'Criterion | consequence.'],
         columns: [['Criterio', 'Criterion'], ['Esito sul tracciato', 'Result on the record']],
         rows: [
-          ['average', ['Media dei totali', 'Average of totals'], ['10,7 su 12, apparentemente pronto', '10.7 out of 12, apparently ready']],
+          ['average', ['Media dei totali', 'Average of totals'], ['10,6 su 12, apparentemente pronto', '10.6 out of 12, apparently ready']],
           ['threshold', ['Soglia per argomento', 'Per-topic threshold'], ['Due argomenti a 9, non pronto', 'Two topics at 9, not ready']]
         ],
         decisionCount: 1,
@@ -1231,8 +1231,8 @@ const units = [
       )
     ],
     checkpoint: checkpoint(
-      'Un tracciato mostra media 10,7 su 12 con due argomenti a 9. La preparazione è conclusa?',
-      'A record shows an average of 10.7 out of 12 with two topics at 9. Is preparation complete?',
+      'Un tracciato mostra media 10,6 su 12 con due argomenti a 9. La preparazione è conclusa?',
+      'A record shows an average of 10.6 out of 12 with two topics at 9. Is preparation complete?',
       [
         ['Sì, la media supera la soglia di dieci.', 'Yes, the average exceeds the threshold of ten.', 'La media nasconde proprio gli argomenti che verranno chiesti.', 'The average hides exactly the topics that will be asked about.'],
         ['No, la soglia si applica a ogni argomento e due restano sotto.', 'No, the threshold applies per topic and two remain below.', 'Gli argomenti deboli vanno corretti con azioni specifiche.', 'Weak topics need specific corrective actions.'],
