@@ -173,6 +173,17 @@ test('validator reports duration, practical-time, Italian-word, and English-rati
   assert.ok(validateCurriculum(translationLessons, sourcesFixture).some((error) => error.includes('85%')))
 })
 
+test('validator accepts exactly 85 percent English theory and rejects one word below it', () => {
+  const boundaryLessons = clone(curriculumFixture())
+  boundaryLessons[0].units[0].theory[0] = text(words(100, 'italiano'), words(85, 'english'))
+  const exactBoundaryErrors = validateCurriculum(boundaryLessons, sourcesFixture)
+  assert.ok(!exactBoundaryErrors.some((error) => error.includes('85%')))
+
+  const belowBoundaryLessons = clone(boundaryLessons)
+  belowBoundaryLessons[0].units[0].theory[0].en = words(84, 'english')
+  assert.ok(validateCurriculum(belowBoundaryLessons, sourcesFixture).some((error) => error.includes('85%')))
+})
+
 test('educational sources must resolve verified primary sources', () => {
   const sources = { primary: { type: 'primary' }, educational: { type: 'educational', verifiedAgainst: ['missing'] } }
   assert.ok(validateCurriculum(curriculumFixture(), sources).some((error) => error.includes('verified primary source')))
