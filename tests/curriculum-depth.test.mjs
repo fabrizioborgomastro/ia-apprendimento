@@ -171,6 +171,20 @@ test('Module 1 solved activities contain assessable solutions and the gemba solu
     decision.inputs.every((input) => input.it && input.en) &&
     decision.owner.it && decision.owner.en
   )))
+  assert.deepEqual(
+    gembaActivity.solutionArtifact.stakeholders.map(({ role, outcome, risk }) => [
+      role.en,
+      outcome.en,
+      risk.en
+    ]),
+    [
+      ['Operations', 'Stable continuity', 'Late or unusable alerts'],
+      ['Maintenance', 'Complete and timely diagnosis', 'Backlog or incorrect priority'],
+      ['Quality', 'Traceability and product control', 'Improper classification'],
+      ['OT', 'Availability and safe boundaries', 'Uncontrolled access'],
+      ['IT', 'Maintainable integration', 'Divergent records']
+    ]
+  )
 })
 
 test('Module 1 contains all required interview prompts with short and extended answers', () => {

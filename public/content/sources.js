@@ -129,10 +129,10 @@ export const sources = {
     accessedAt
   },
   'doe-manufacturing-baseline-normalization': {
-    title: 'Superior Energy Performance FAQs - Baselines and Normalized Performance',
+    title: 'Energy Intensity Indicators Methodology, Caveats, and Cautions',
     organization: 'United States Department of Energy',
     type: 'primary',
-    url: 'https://www.energy.gov/eere/amo/articles/superior-energy-performance-faqs',
+    url: 'https://www.energy.gov/cmei/energy-intensity-indicators-methodology-caveats-and-cautions',
     accessedAt
   },
   'toyota-way-genchi-genbutsu': {
