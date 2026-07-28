@@ -178,6 +178,15 @@ test('validator accepts exact duration, practical-time, Italian-word, and Englis
   assert.deepEqual(validateCurriculum(curriculumFixture(), sourcesFixture), [])
 })
 
+test('validator preserves generic compatibility for unrelated case artifacts', () => {
+  const lessons = clone(curriculumFixture())
+  lessons[0].units[0].workedCases[0].caseArtifact = {
+    kind: 'decision-log',
+    entries: [{ decision: 'retain manual review' }]
+  }
+  assert.deepEqual(validateCurriculum(lessons, sourcesFixture), [])
+})
+
 test('validator enforces bounded unit duration and reconciled per-mode allocations', () => {
   const lessons = clone(curriculumFixture())
   lessons[0].units[0].estimatedMinutes = 11

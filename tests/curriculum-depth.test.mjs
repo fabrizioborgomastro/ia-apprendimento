@@ -30,6 +30,8 @@ function lessonLocalErrors(lessons) {
     .filter((error) => !ignoredPartialCurriculumErrors.some((prefix) => error.startsWith(prefix)))
 }
 
+const missingItalianElision = /(?:^|[\s"'([{])(?:[Ll]|[Aa]ll|[Dd]all|[DdNn]ell|[Ss]ull)\s+(?=[AEHIOUÀÈÉÌÒÓÙaehiouàèéìòóù])/u
+
 test('Module 1 has the approved time, depth and practical portfolio', () => {
   assert.equal(digitalTransformationLesson.durationMinutes, 50)
   assert.deepEqual(digitalTransformationLesson.timeBudget, { theory: 25, cases: 15, practice: 10 })
@@ -321,6 +323,33 @@ test('Module 2 and its Module 1 dependency pass real lesson-local schema validat
   assert.deepEqual(lessonLocalErrors([digitalTransformationLesson, architectureLesson]), [])
 })
 
+test('validator rejects a declared sensor-to-decision artifact with no edges', () => {
+  const lesson = structuredClone(architectureLesson)
+  lesson.sensorToDecisionArtifact.edges = []
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('sensor-to-decision artifact needs at least one edge'))
+  )
+})
+
+test('validator rejects a declared conduit solution with no conduit rows', () => {
+  const lesson = structuredClone(architectureLesson)
+  lesson.units[5].activities[0].solutionArtifact.conduits = []
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('conduit solution needs at least three rows'))
+  )
+})
+
+test('validator rejects a declared genealogy artifact with no graph edges', () => {
+  const lesson = structuredClone(architectureLesson)
+  lesson.units[3].workedCases[0].caseArtifact.edges = []
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('genealogy artifact needs at least one edge'))
+  )
+})
+
 test('Module 2 conduit solution answers every requested field with capacity and degraded operation', () => {
   const activity = architectureLesson.units[5].activities[0]
   const solution = activity.solutionArtifact
@@ -392,9 +421,16 @@ test('Module 2 cites primary references for alarms, zones and conduits, and the 
   }
 })
 
-test('Module 2 Italian copy does not contain known missing-apostrophe forms', () => {
+test('Italian elision regression recognizes missing apostrophes without a noun allowlist', () => {
+  for (const malformed of ['all originale', 'L operatore', 'dall ambiente', 'nell impianto', 'sull HMI']) {
+    assert.match(malformed, missingItalianElision)
+  }
+  assert.doesNotMatch('Perché ogni AI è vietata?', missingItalianElision)
+})
+
+test('Module 2 Italian copy elides articles and articulated prepositions before vowels', () => {
   assert.doesNotMatch(
     JSON.stringify(architectureLesson, (key, value) => key === 'en' ? undefined : value),
-    /(?:^|[\s"'([{])(?:L|l|dall|nell|all|dell) (?:AI|applicazione|arrivo|artefatto|esito|evento|informazione|ingegnere|integrazione|ordine|output|uso)\b/u
+    missingItalianElision
   )
 })

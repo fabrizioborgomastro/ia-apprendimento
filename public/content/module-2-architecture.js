@@ -241,7 +241,7 @@ const unitFour = {
           id: 'EV-101-RETRY',
           status: 'duplicate-ignored',
           handling: t('La stessa idempotency key di EV-101 impedisce un secondo consumo di 6.000 unità.', 'The same idempotency key as EV-101 prevents a second 6,000-unit consumption.'),
-          evidence: t('Correlation ID C-401 e hash payload uguali all originale.', 'Correlation ID C-401 and payload hash match the original.')
+          evidence: t('Correlation ID C-401 e hash payload uguali all’originale.', 'Correlation ID C-401 and payload hash match the original.')
         },
         {
           id: 'EV-105',
@@ -402,7 +402,7 @@ const unitSix = {
           securityBoundaryCrossing: t('Machine control zone verso supervisory zone tramite allowlist OT.', 'Machine control zone to supervisory zone through an OT allowlist.'),
           monitoring: t('Watchdog di sessione, bad status, queue overflow, clock offset e alarm rate.', 'Session watchdog, bad status, queue overflow, clock offset, and alarm rate.'),
           degradedBehavior: t('PLC, interlock e HMI locale continuano; SCADA marca i valori stale.', 'PLC, interlocks, and local HMI continue; SCADA marks values stale.'),
-          fallback: t('L operatore usa HMI e procedura locale; nessun comando dipende da sistemi enterprise.', 'The operator uses the local HMI and procedure; no command depends on enterprise systems.'),
+          fallback: t('L’operatore usa HMI e procedura locale; nessun comando dipende da sistemi enterprise.', 'The operator uses the local HMI and procedure; no command depends on enterprise systems.'),
           humanAction: t('OT diagnostica la sessione; Operations razionalizza e riconosce gli allarmi.', 'OT diagnoses the session; Operations rationalizes and acknowledges alarms.')
         },
         {
