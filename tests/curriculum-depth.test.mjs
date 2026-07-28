@@ -5,6 +5,9 @@ import { digitalTransformationLesson } from '../public/content/module-1-transfor
 import { architectureLesson } from '../public/content/module-2-architecture.js'
 import { sources } from '../public/content/sources.js'
 
+const { dataAiLesson = null } = await import('../public/content/module-3-data-ai.js')
+  .catch(() => ({}))
+
 export function theoryWords(lesson, locale) {
   return lesson.units
     .flatMap((unit) => unit.theory || [])
@@ -505,5 +508,370 @@ test('Module 2 Italian copy elides articles and articulated prepositions before 
   assert.doesNotMatch(
     JSON.stringify(architectureLesson, (key, value) => key === 'en' ? undefined : value),
     missingItalianElision
+  )
+})
+
+test('Module 3 has the approved identity, depth and practical portfolio', () => {
+  assert.ok(dataAiLesson, 'Module 3 content must exist')
+  assert.equal(dataAiLesson.id, 'data-ai-use-cases')
+  assert.equal(dataAiLesson.slug, 'data-ai-use-cases')
+  assert.equal(dataAiLesson.durationMinutes, 65)
+  assert.deepEqual(dataAiLesson.timeBudget, { theory: 31, cases: 20, practice: 14 })
+  assert.equal(dataAiLesson.units.length, 7)
+  assert.ok(theoryWords(dataAiLesson, 'it') >= 5580)
+  assert.ok(theoryWords(dataAiLesson, 'en') >= 4743)
+  assert.equal(countWorkedCases(dataAiLesson), 2)
+  assert.equal(dataAiLesson.units.flatMap((unit) => unit.activities || []).length, 7)
+  for (const unit of dataAiLesson.units) {
+    const activities = unit.activities || []
+    assert.ok(activities.length >= 1, `${unit.id} must contain active practice`)
+    assert.equal(
+      activities.reduce((sum, activity) => sum + activity.durationMinutes, 0),
+      unit.timeAllocation.practice,
+      `${unit.id} activities must reconcile to practice minutes`
+    )
+    assert.ok(activities.every((activity) => (
+      activity.prompt.it && activity.prompt.en &&
+      activity.modelSolution.it && activity.modelSolution.en &&
+      activity.rubric.length > 0 &&
+      activity.rubric.every((criterion) => criterion.it && criterion.en)
+    )))
+  }
+})
+
+test('Module 3 keeps seven decision-oriented units and reconciles every minute by learning mode', () => {
+  assert.ok(dataAiLesson, 'Module 3 content must exist')
+  assert.deepEqual(
+    dataAiLesson.units.map(({ id, estimatedMinutes, timeAllocation }) => ({
+      id,
+      estimatedMinutes,
+      timeAllocation
+    })),
+    [
+      {
+        id: 'decision-ladder-simplest-adequate-method',
+        estimatedMinutes: 9,
+        timeAllocation: { theory: 5, cases: 2, practice: 2 }
+      },
+      {
+        id: 'data-meaning-quality-lineage-labels',
+        estimatedMinutes: 9,
+        timeAllocation: { theory: 5, cases: 2, practice: 2 }
+      },
+      {
+        id: 'metrics-errors-drift-operational-kpis',
+        estimatedMinutes: 9,
+        timeAllocation: { theory: 5, cases: 2, practice: 2 }
+      },
+      {
+        id: 'predictive-maintenance-decision-case',
+        estimatedMinutes: 10,
+        timeAllocation: { theory: 4, cases: 4, practice: 2 }
+      },
+      {
+        id: 'computer-vision-quality-human-review',
+        estimatedMinutes: 10,
+        timeAllocation: { theory: 4, cases: 4, practice: 2 }
+      },
+      {
+        id: 'forecast-uncertainty-supply-scenarios',
+        estimatedMinutes: 9,
+        timeAllocation: { theory: 4, cases: 3, practice: 2 }
+      },
+      {
+        id: 'data-readiness-use-case-portfolio',
+        estimatedMinutes: 9,
+        timeAllocation: { theory: 4, cases: 3, practice: 2 }
+      }
+    ]
+  )
+
+  const totals = dataAiLesson.units.reduce(
+    (sum, unit) => ({
+      theory: sum.theory + unit.timeAllocation.theory,
+      cases: sum.cases + unit.timeAllocation.cases,
+      practice: sum.practice + unit.timeAllocation.practice
+    }),
+    { theory: 0, cases: 0, practice: 0 }
+  )
+  assert.deepEqual(totals, { theory: 31, cases: 20, practice: 14 })
+  assert.equal(
+    dataAiLesson.units.reduce((sum, unit) => sum + unit.estimatedMinutes, 0),
+    65
+  )
+  assert.ok(dataAiLesson.units.every(({ estimatedMinutes }) => (
+    estimatedMinutes >= 5 && estimatedMinutes <= 10
+  )))
+})
+
+test('Module 3 calculations remain independently reproducible and decision-relevant', () => {
+  assert.ok(dataAiLesson, 'Module 3 content must exist')
+  const examples = dataAiLesson.workedExamples
+
+  const downtime = examples.downtimeCost
+  const expectedBaselineCost = downtime.events * downtime.minutesPerEvent *
+    downtime.costPerDowntimeHour / 60
+  const expectedAvoidableCost = expectedBaselineCost * downtime.avoidableShare
+  assert.equal(downtime.baselineCost, expectedBaselineCost)
+  assert.equal(downtime.avoidableCost, expectedAvoidableCost)
+  assert.ok(downtime.formula.it && downtime.formula.en)
+  assert.ok(downtime.assumptions.it && downtime.assumptions.en)
+
+  const matrix = examples.confusionMatrix
+  assert.equal(matrix.total, matrix.truePositive + matrix.falsePositive +
+    matrix.falseNegative + matrix.trueNegative)
+  assert.equal(matrix.precision, matrix.truePositive /
+    (matrix.truePositive + matrix.falsePositive))
+  assert.equal(matrix.recall, matrix.truePositive /
+    (matrix.truePositive + matrix.falseNegative))
+  assert.ok(matrix.interpretation.it && matrix.interpretation.en)
+
+  const thresholdOptions = examples.asymmetricErrorCost.thresholdOptions
+  for (const option of thresholdOptions) {
+    assert.equal(
+      option.total,
+      option.truePositive + option.falsePositive + option.falseNegative + option.trueNegative
+    )
+    assert.equal(option.referrals, option.truePositive + option.falsePositive)
+    assert.equal(option.referralsPerHour, option.referrals / option.evaluationHours)
+    const expectedCost = option.falsePositive * examples.asymmetricErrorCost.falsePositiveCost +
+      option.falseNegative * examples.asymmetricErrorCost.falseNegativeCost
+    assert.equal(option.expectedCost, expectedCost)
+  }
+  const cheapest = thresholdOptions.reduce((best, option) => (
+    option.expectedCost < best.expectedCost ? option : best
+  ))
+  assert.equal(examples.asymmetricErrorCost.recommendedThresholdId, cheapest.id)
+  const thresholdActivity = dataAiLesson.units[2].activities[0].solutionArtifact
+  assert.equal(thresholdActivity.recommendedThresholdId, cheapest.id)
+  assert.equal(thresholdActivity.expectedReferralsPerHour, cheapest.referralsPerHour)
+
+  const forecast = examples.forecastUncertainty
+  assert.equal(forecast.baseForecast, 1000)
+  assert.deepEqual(
+    forecast.scenarios.map(({ id, demandMultiplier, units }) => [id, demandMultiplier, units]),
+    [
+      ['downside-disruption', 0.8, 800],
+      ['central', 1, 1000],
+      ['upside-recovery', 1.15, 1150]
+    ]
+  )
+  assert.ok(forecast.predictionInterval.lower < forecast.baseForecast)
+  assert.ok(forecast.predictionInterval.upper > forecast.baseForecast)
+  assert.ok(forecast.actions.every((action) => action.trigger.it && action.trigger.en &&
+    action.response.it && action.response.en))
+})
+
+test('Module 3 complete cases connect model evidence to controlled maintenance and quality decisions', () => {
+  assert.ok(dataAiLesson, 'Module 3 content must exist')
+  const cases = dataAiLesson.units.flatMap((unit) => unit.workedCases || [])
+  assert.deepEqual(cases.map(({ id }) => id), [
+    'bearing-degradation-maintenance-window',
+    'seal-inspection-human-review'
+  ])
+
+  for (const workedCase of cases) {
+    for (const field of ['title', 'scenario', 'reasoning', 'decision', 'tradeOff', 'outcome']) {
+      assert.ok(workedCase[field].it && workedCase[field].en, `${workedCase.id} needs ${field}`)
+    }
+    assert.ok(workedCase.assumptions.length >= 3)
+    assert.ok(workedCase.assumptions.every((item) => item.it && item.en))
+    assert.ok(workedCase.analysisSteps.length >= 4)
+    assert.ok(workedCase.analysisSteps.every((item) => item.it && item.en))
+    assert.ok(workedCase.followUps.length >= 2)
+    assert.ok(workedCase.followUps.every((item) => item.it && item.en))
+  }
+
+  const maintenance = cases[0].caseArtifact
+  assert.deepEqual(maintenance.decisionGates.map(({ id, status }) => [id, status]), [
+    ['failure-mode-and-action', 'passed'],
+    ['data-and-label-readiness', 'failed'],
+    ['prospective-performance', 'not-evaluated'],
+    ['economic-and-capacity-value', 'not-evaluated'],
+    ['controlled-deployment', 'not-evaluated']
+  ])
+  assert.ok(maintenance.decisionGates.every((gate) => (
+    gate.evidence.it && gate.evidence.en &&
+    gate.criteria.it && gate.criteria.en &&
+    gate.owner.it && gate.owner.en
+  )))
+  assert.ok(maintenance.decisionGates
+    .filter(({ status }) => status !== 'passed')
+    .every(({ evidence }) => /not yet|non ancora|insufficient|insufficiente/i.test(
+      `${evidence.it} ${evidence.en}`
+    )))
+  assert.equal(maintenance.action.windowHours, 36)
+  assert.equal(maintenance.action.mode, 'advisory-with-human-authorization')
+  assert.ok(maintenance.fallback.it && maintenance.fallback.en)
+
+  const quality = cases[1].caseArtifact
+  assert.equal(quality.humanReview.queueCapacityPerHour, 60)
+  assert.equal(quality.humanReview.expectedReferrals, 120)
+  assert.equal(quality.humanReview.evaluationHours, 2.5)
+  assert.equal(quality.humanReview.expectedReferralsPerHour, 48)
+  assert.equal(
+    quality.humanReview.expectedReferralsPerHour,
+    quality.humanReview.expectedReferrals / quality.humanReview.evaluationHours
+  )
+  assert.ok(quality.humanReview.expectedReferralsPerHour <
+    quality.humanReview.queueCapacityPerHour)
+  assert.deepEqual(quality.humanReview.outcomes, [
+    'accept',
+    'reject',
+    'escalate'
+  ])
+  assert.equal(quality.releaseAuthority, 'qualified-human-only')
+  assert.ok(quality.fallback.it && quality.fallback.en)
+})
+
+test('Module 3 scorecard uses evidence, confidence and hard gates before ranking use cases', () => {
+  assert.ok(dataAiLesson, 'Module 3 content must exist')
+  const artifact = dataAiLesson.dataReadinessUseCaseArtifact
+  const expectedCriteria = [
+    ['business-decision-value', 20],
+    ['data-semantic-readiness', 25],
+    ['label-and-ground-truth-readiness', 20],
+    ['workflow-and-integration-readiness', 20],
+    ['risk-oversight-and-adoption', 15]
+  ]
+  assert.deepEqual(artifact.criteria.map(({ id, weight }) => [id, weight]), expectedCriteria)
+  assert.equal(artifact.criteria.reduce((sum, criterion) => sum + criterion.weight, 0), 100)
+  assert.deepEqual(artifact.hardGates.map(({ id }) => id), [
+    'defined-action-and-owner',
+    'representative-trustworthy-data',
+    'authorized-decision-boundary'
+  ])
+
+  const confidenceLevels = new Set(['low', 'medium', 'high'])
+  for (const candidate of artifact.candidates) {
+    assert.deepEqual(Object.keys(candidate.assessments), expectedCriteria.map(([id]) => id))
+    for (const [criterionId] of expectedCriteria) {
+      const assessment = candidate.assessments[criterionId]
+      assert.ok(Number.isInteger(assessment.score) &&
+        assessment.score >= 1 && assessment.score <= 5)
+      assert.ok(confidenceLevels.has(assessment.confidence))
+      assert.ok(assessment.evidence.it && assessment.evidence.en)
+      assert.ok(assessment.rationale.it && assessment.rationale.en)
+    }
+    const recomputedScore = expectedCriteria.reduce(
+      (sum, [criterionId, weight]) => (
+        sum + candidate.assessments[criterionId].score * weight
+      ),
+      0
+    ) / 5
+    assert.equal(candidate.weightedScore, recomputedScore)
+    assert.deepEqual(
+      candidate.hardGateChecks.map(({ gateId }) => gateId),
+      artifact.hardGates.map(({ id }) => id)
+    )
+    assert.ok(candidate.hardGateChecks.every((gate) => (
+      typeof gate.passed === 'boolean' &&
+      gate.evidence.it && gate.evidence.en &&
+      gate.rationale.it && gate.rationale.en
+    )))
+  }
+
+  const selected = artifact.candidates.find(({ portfolioDecision }) => (
+    portfolioDecision === 'selected'
+  ))
+  const deferred = artifact.candidates.find(({ id }) => (
+    id === 'predictive-maintenance-bearing'
+  ))
+  const rejected = artifact.candidates.find(({ id }) => (
+    id === 'genai-line-threshold-decisions'
+  ))
+  assert.equal(selected.id, artifact.recommendedCandidateId)
+  assert.equal(selected.id, 'vision-seal-review')
+  assert.equal(deferred.portfolioDecision, 'deferred')
+  assert.ok(deferred.hardGateChecks.some(({ passed }) => !passed))
+  assert.equal(rejected.portfolioDecision, 'rejected')
+  assert.match(rejected.recommendation.en, /reject.*rule/i)
+})
+
+test('Module 3 teaches the simplest adequate method and readiness before AI promises', () => {
+  assert.ok(dataAiLesson, 'Module 3 content must exist')
+  const ladder = dataAiLesson.methodSelectionLadder
+  assert.deepEqual(ladder.levels.map(({ id }) => id), [
+    'deterministic-rule',
+    'descriptive-diagnostic-analytics',
+    'predictive-machine-learning',
+    'optimization',
+    'generative-ai'
+  ])
+  assert.deepEqual(
+    ladder.examples.map(({ id, selectedLevelId, disposition }) => [
+      id,
+      selectedLevelId,
+      disposition
+    ]),
+    [
+      ['temperature-limit-alert', 'deterministic-rule', 'select'],
+      ['weekly-loss-pareto', 'descriptive-diagnostic-analytics', 'select'],
+      ['bearing-failure-risk', 'predictive-machine-learning', 'defer-until-ready'],
+      ['production-allocation', 'optimization', 'select'],
+      ['controlled-manual-summary', 'generative-ai', 'pilot-with-controls'],
+      ['line-threshold-decision', 'deterministic-rule', 'reject-genai']
+    ]
+  )
+  assert.ok(ladder.examples.every((example) => (
+    example.rationale.it && example.rationale.en &&
+    example.requiredEvidence.it && example.requiredEvidence.en
+  )))
+
+  const prompts = dataAiLesson.interviewAnswers.map(({ prompt }) => prompt.en)
+  assert.deepEqual(prompts, [
+    'How do you choose the simplest adequate analytical method?',
+    'When would you reject generative AI in favor of rules or classical analytics?',
+    'What must be ready before you promise predictive maintenance?'
+  ])
+  for (const answer of dataAiLesson.interviewAnswers) {
+    for (const field of ['prompt', 'short', 'long']) {
+      assert.ok(answer[field].it && answer[field].en)
+    }
+    assert.ok(countWords(answer.short.it) >= 50)
+    assert.ok(countWords(answer.short.en) >= 50)
+    assert.ok(countWords(answer.long.it) >= 180)
+    assert.ok(countWords(answer.long.en) >= 180)
+    assert.ok(answer.followUps.length >= 2)
+    assert.ok(answer.followUps.every((item) => item.it && item.en))
+  }
+})
+
+test('Module 3 passes lesson-local validation and resolves aligned primary sources', () => {
+  assert.ok(dataAiLesson, 'Module 3 content must exist')
+  assert.deepEqual(
+    lessonLocalErrors([digitalTransformationLesson, architectureLesson, dataAiLesson]),
+    []
+  )
+
+  const sourceIds = new Set(dataAiLesson.units.flatMap((unit) => unit.sourceIds))
+  for (const sourceId of [
+    'nist-ai-rmf-1-0',
+    'nist-sp-500-341',
+    'nist-condition-monitoring-maintenance',
+    'nist-prediction-uncertainty',
+    'isa-95',
+    'pmi-operations'
+  ]) {
+    assert.ok(sourceIds.has(sourceId), `Module 3 must cite ${sourceId}`)
+    assert.equal(sources[sourceId]?.type, 'primary')
+  }
+
+  assert.deepEqual(dataAiLesson.units.map(({ sourceIds }) => sourceIds), [
+    ['nist-ai-rmf-1-0', 'nist-ai-600-1', 'nist-manufacturing-kpi-procedure'],
+    ['isa-95', 'nist-ai-rmf-1-0', 'opc-ua-part-1'],
+    ['nist-sp-500-341', 'nist-ai-rmf-1-0', 'nist-manufacturing-kpi-hierarchy'],
+    ['nist-condition-monitoring-maintenance', 'nist-ai-rmf-1-0', 'pmi-operations'],
+    ['nist-ai-rmf-1-0', 'nist-sp-500-341', 'eu-ai-act', 'pmi-product-reliability'],
+    ['nist-prediction-uncertainty', 'nist-ai-rmf-1-0', 'isa-95', 'pmi-annual-report-2025'],
+    ['nist-ai-rmf-1-0', 'nist-condition-monitoring-maintenance', 'nist-manufacturing-kpi-procedure', 'pmi-operations']
+  ])
+})
+
+test('Module 3 Italian copy elides articles before vowels', () => {
+  const missingElision = /(?:^|[\s"'([{])(?:[Uu]na|[Ll]a|[Aa]lla|[Dd]alla|[Dd]ella|[Nn]ella|[Ss]ulla)\s+(?=[AEHIOUÀÈÉÌÒÓÙaehiouàèéìòóù])/u
+  assert.doesNotMatch(
+    JSON.stringify(dataAiLesson, (key, value) => key === 'en' ? undefined : value),
+    missingElision
   )
 })

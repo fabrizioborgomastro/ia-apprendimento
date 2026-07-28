@@ -8,7 +8,7 @@
  * @typedef {{id:string, slug:string, order:number, title:string, englishTitle:string, durationMinutes:number, prerequisites:string[], masteryThreshold:number, objectives:string[], competencies:string[], blocks:ContentBlock[], glossary:GlossaryTerm[], quiz:Quiz[], interview:InterviewAnswer}} Lesson
  * @typedef {{lessonId:string, status:LessonStatus, cursor:number, bestScore:number, reviewQuestionIds:string[], updatedAt:string}} LearningProgress
  * @typedef {{it:string, en:string}} LocalizedText
- * @typedef {{title:string, organization:string, type:'primary'|'educational', url:string, accessedAt:string, verifiedAgainst?:string[]}} CurriculumSource
+ * @typedef {{title:string, organization:string, type:'primary'|'educational', url:string, accessedAt:string, publicationDate?:string, verifiedAgainst?:string[]}} CurriculumSource
  * @typedef {{it:string, en:string, explanation:LocalizedText}} CheckpointOption
  * @typedef {{prompt:LocalizedText, options:CheckpointOption[], correctOption:number}} Checkpoint
  * @typedef {{decision:LocalizedText, inputs:LocalizedText[], owner:LocalizedText}} GembaDecision

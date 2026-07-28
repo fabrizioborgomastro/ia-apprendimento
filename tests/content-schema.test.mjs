@@ -310,12 +310,17 @@ test('source catalog retains the required authoritative records and resolves sta
     'ahrq-raci-chart',
     'isa-18-alarm-management',
     'isa-iec-62443',
-    'ni-4-20ma-current-loop'
+    'ni-4-20ma-current-loop',
+    'nist-sp-500-341',
+    'nist-condition-monitoring-maintenance',
+    'nist-prediction-uncertainty'
   ]
 
   assert.deepEqual(Object.keys(sources), requiredIds)
   for (const id of requiredIds) assert.equal(sourceById(id), sources[id])
   assert.equal(sourceById('missing-source'), undefined)
+  assert.equal(sources['nist-sp-500-341'].publicationDate, '2023-06')
+  assert.equal(sources['nist-condition-monitoring-maintenance'].publicationDate, '2024-01-08')
 })
 
 test('topic-specific educational sources identify the primary records used for verification', () => {

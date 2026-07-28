@@ -184,6 +184,29 @@ export const sources = {
     type: 'primary',
     url: 'https://www.ni.com/en/shop/data-acquisition/fundamentals--system-design--and-setup-for-the-4-to-20-ma-curren.html',
     accessedAt
+  },
+  'nist-sp-500-341': {
+    title: 'NIST SP 500-341: SATE VI Report - Bug Injection and Collection',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=936867',
+    publicationDate: '2023-06',
+    accessedAt
+  },
+  'nist-condition-monitoring-maintenance': {
+    title: 'Simulation-Based Approach to Assess Condition Monitoring-Enabled Maintenance in Manufacturing',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://www.nist.gov/publications/simulation-based-approach-assess-condition-monitoring-enabled-maintenance-manufacturing',
+    publicationDate: '2024-01-08',
+    accessedAt
+  },
+  'nist-prediction-uncertainty': {
+    title: 'NIST/SEMATECH e-Handbook of Statistical Methods: Prediction',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd132.htm',
+    accessedAt
   }
 }
 
