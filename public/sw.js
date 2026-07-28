@@ -1,5 +1,5 @@
-const CACHE = 'ai-sprint-v1'
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './content.js', './learning.js', './ui.js', './sync.js', './types.js', './config.js', './manifest.webmanifest', './icon.svg']
+const CACHE = 'ai-sprint-v2'
+const ASSETS = ['./', './index.html', './styles.css', './app.js?v=2', './content.js', './learning.js', './ui.js', './sync.js', './types.js', './config.js', './manifest.webmanifest', './icon.svg']
 
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS))))
 self.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))))
