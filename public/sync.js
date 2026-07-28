@@ -3,8 +3,14 @@ import { mergeProgress } from './learning.js'
 const config = globalThis.AI_SPRINT_CONFIG || {}
 const sessionKey = 'ai-sprint-session-v1'
 
+export function getSupabaseApiKey(value) {
+  return value.supabasePublishableKey || value.supabaseAnonKey || ''
+}
+
+const apiKey = getSupabaseApiKey(config)
+
 export function isSyncConfigured() {
-  return Boolean(config.supabaseUrl && config.supabaseAnonKey)
+  return Boolean(config.supabaseUrl && apiKey)
 }
 
 export function readSession() {
@@ -31,7 +37,7 @@ export async function requestMagicLink(email) {
   const redirectTo = new URL('.', import.meta.url).href
   const response = await fetch(`${config.supabaseUrl}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`, {
     method: 'POST',
-    headers: { apikey: config.supabaseAnonKey, 'Content-Type': 'application/json' },
+    headers: { apikey: apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, create_user: true })
   })
   if (!response.ok) throw new Error('Non è stato possibile inviare il magic link. Controlla email e configurazione.')
@@ -43,7 +49,7 @@ async function authRequest(path, options = {}) {
   const response = await fetch(`${config.supabaseUrl}${path}`, {
     ...options,
     headers: {
-      apikey: config.supabaseAnonKey,
+      apikey: apiKey,
       Authorization: `Bearer ${session.accessToken}`,
       'Content-Type': 'application/json',
       ...(options.headers || {})
@@ -59,7 +65,7 @@ async function validSession() {
   if (session.expiresAt > Date.now() + 60_000) return session
   const response = await fetch(`${config.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
     method: 'POST',
-    headers: { apikey: config.supabaseAnonKey, 'Content-Type': 'application/json' },
+    headers: { apikey: apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: session.refreshToken })
   })
   if (!response.ok) {
