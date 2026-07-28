@@ -1185,6 +1185,34 @@ test('Module 4 keeps nine approved boundaries and reconciles every engaged minut
   assert.equal(practiceMinutes, 18)
 })
 
+test('Module 4 timed case segments require substantive localized work proportional to duration', () => {
+  const timedSegments = llmAgentsLesson.units.flatMap((unit) => [
+    ...(unit.microExamples || []),
+    ...(unit.caseSegments || [])
+  ])
+  assert.equal(timedSegments.length, 7)
+  assert.equal(timedSegments.reduce((sum, segment) => sum + segment.durationMinutes, 0), 14)
+
+  for (const segment of timedSegments) {
+    assert.ok(segment.learnerAction?.it && segment.learnerAction?.en)
+    assert.ok(segment.expectedOutput?.it && segment.expectedOutput?.en)
+    assert.ok(segment.modelReasoning?.it && segment.modelReasoning?.en)
+    assert.ok(segment.responseFormat?.it && segment.responseFormat?.en)
+    assert.ok(segment.decisionAid?.columns?.length >= 2)
+    assert.ok(segment.decisionAid?.rows?.length >= 2)
+    assert.ok(segment.decisionAid.rows.every((row) => (
+      row.id && row.cells.length === segment.decisionAid.columns.length &&
+      row.cells.every((cell) => cell.it && cell.en)
+    )))
+    assert.equal(segment.scope.outputCount, 1)
+    assert.equal(
+      segment.scope.decisionCount + segment.scope.comparisonCount + segment.scope.interpretationCount,
+      segment.durationMinutes,
+      `${segment.id} workload must justify its declared duration`
+    )
+  }
+})
+
 test('Module 4 central artifacts make RAG, tool, MCP, and orchestration boundaries auditable', () => {
   assert.ok(llmAgentsLesson, 'Module 4 content must exist')
 
@@ -1233,7 +1261,7 @@ test('Module 4 central artifacts make RAG, tool, MCP, and orchestration boundari
     scenario.measurableBenefit.it && scenario.measurableBenefit.en))
 })
 
-test('Module 4 opt-in validator rejects mutations to central safety contracts', () => {
+test('Module 4 identity-anchored validator rejects mutations to central safety contracts', () => {
   const errorsFor = (mutate) => {
     const lesson = structuredClone(llmAgentsLesson)
     mutate(lesson)
@@ -1255,19 +1283,43 @@ test('Module 4 opt-in validator rejects mutations to central safety contracts', 
     .some((error) => /MCP boundary.*host, client and server/i.test(error)))
   assert.ok(errorsFor((lesson) => { lesson.multiModelDecisionExercise.scenarios.pop() })
     .some((error) => /multi-model exercise.*four patterns/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { delete lesson.ragControlArtifact })
+    .some((error) => /RAG control.*required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.maintenanceToolContract })
+    .some((error) => /tool contract.*required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.mcpBoundary })
+    .some((error) => /MCP boundary.*required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.multiModelDecisionExercise })
+    .some((error) => /multi-model exercise.*required/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].learnerAction })
+    .some((error) => /timed case item 1.*learnerAction/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].expectedOutput })
+    .some((error) => /timed case item 1.*expectedOutput/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].modelReasoning })
+    .some((error) => /timed case item 1.*modelReasoning/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[0].microExamples[0].scope.comparisonCount = 0 })
+    .some((error) => /timed case item 1.*workload.*durationMinutes/i.test(error)))
 })
 
-test('Module 4 safety-contract validation remains opt-in to its RAG marker', () => {
+test('Module 4 safety-contract validation is anchored to stable lesson identity', () => {
   const lesson = structuredClone(llmAgentsLesson)
   delete lesson.ragControlArtifact
-  lesson.maintenanceToolContract.requiredInputs = []
-  lesson.mcpBoundary.participants = []
-  lesson.multiModelDecisionExercise.scenarios = []
 
   assert.ok(lessonLocalErrors([
     digitalTransformationLesson,
     architectureLesson,
     dataAiLesson,
     lesson
-  ]).every((error) => !/Module 4 safety contract/i.test(error)))
+  ]).some((error) => /Module 4 safety contract.*RAG control.*required/i.test(error)))
+})
+
+test('Module 4 routing and multi-agent claims cite local original research', () => {
+  const sourceIds = new Set(llmAgentsLesson.units[8].sourceIds)
+  for (const sourceId of ['routellm', 'autogen-multi-agent', 'agentbench']) {
+    assert.ok(sourceIds.has(sourceId), `Module 4 orchestration unit must cite ${sourceId}`)
+    assert.equal(sources[sourceId]?.type, 'primary')
+    assert.match(sources[sourceId]?.url || '', /^https:\/\/arxiv\.org\/abs\//u)
+  }
 })

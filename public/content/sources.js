@@ -65,6 +65,30 @@ export const sources = {
     url: 'https://arxiv.org/abs/2005.11401',
     accessedAt
   },
+  'routellm': {
+    title: 'RouteLLM: Learning to Route LLMs with Preference Data',
+    organization: 'arXiv',
+    type: 'primary',
+    url: 'https://arxiv.org/abs/2406.18665',
+    publicationDate: '2024-06-26',
+    accessedAt
+  },
+  'autogen-multi-agent': {
+    title: 'AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation',
+    organization: 'arXiv',
+    type: 'primary',
+    url: 'https://arxiv.org/abs/2308.08155',
+    publicationDate: '2023-08-16',
+    accessedAt
+  },
+  'agentbench': {
+    title: 'AgentBench: Evaluating LLMs as Agents',
+    organization: 'arXiv',
+    type: 'primary',
+    url: 'https://arxiv.org/abs/2308.03688',
+    publicationDate: '2023-08-07',
+    accessedAt
+  },
   'mcp-specification': {
     title: 'Model Context Protocol Specification, Protocol Revision 2026-07-28',
     organization: 'Model Context Protocol',

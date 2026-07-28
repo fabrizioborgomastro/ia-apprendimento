@@ -7,6 +7,7 @@ import {
   validateCurriculum
 } from '../public/content/schema.js'
 import { validateLessons } from '../public/learning.js'
+import { llmAgentsLesson } from '../public/content/module-4-llm-agents.js'
 import { sourceById, sources } from '../public/content/sources.js'
 
 const lessonDefinitions = [
@@ -40,6 +41,18 @@ const workedCase = (number) => ({
 
 function curriculumFixture(wordsPerLesson = lessonDefinitions.map((definition) => definition[4])) {
   return lessonDefinitions.map(([id, slug, durationMinutes, timeBudget], lessonIndex) => {
+    if (id === 'llm-agents') {
+      const lesson = structuredClone(llmAgentsLesson)
+      for (const unit of lesson.units) {
+        unit.theory = []
+        unit.sourceIds = ['primary']
+      }
+      lesson.units[0].theory = [text(
+        words(wordsPerLesson[lessonIndex], 'italiano'),
+        words(Math.ceil(wordsPerLesson[lessonIndex] * 0.85), 'english')
+      )]
+      return lesson
+    }
     const unitCount = Math.max(6, Math.ceil(durationMinutes / 10))
     const baseMinutes = Math.floor(durationMinutes / unitCount)
     const extraMinutes = durationMinutes % unitCount
@@ -294,6 +307,9 @@ test('source catalog retains the required authoritative records and resolves sta
     'ec-industry-5-0',
     'attention-is-all-you-need',
     'retrieval-augmented-generation',
+    'routellm',
+    'autogen-multi-agent',
+    'agentbench',
     'mcp-specification',
     'pmi-operations',
     'pmi-product-reliability',

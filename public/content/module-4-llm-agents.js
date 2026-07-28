@@ -32,11 +32,39 @@ const activity = (id, promptIt, promptEn, artifactIt, artifactEn, contextIt, con
   rubric: [t(rubricIt, rubricEn)]
 })
 
-const caseSegment = (id, durationMinutes, titleIt, titleEn, scenarioIt, scenarioEn) => ({
+const caseEngagement = ({
+  learnerAction,
+  expectedOutput,
+  modelReasoning,
+  responseFormat,
+  columns,
+  rows,
+  decisionCount,
+  comparisonCount,
+  interpretationCount
+}) => ({
+  learnerAction: t(...learnerAction),
+  expectedOutput: t(...expectedOutput),
+  modelReasoning: t(...modelReasoning),
+  responseFormat: t(...responseFormat),
+  decisionAid: {
+    columns: columns.map((column) => t(...column)),
+    rows: rows.map(([id, ...cells]) => ({ id, cells: cells.map((cell) => t(...cell)) }))
+  },
+  scope: {
+    outputCount: 1,
+    decisionCount,
+    comparisonCount,
+    interpretationCount
+  }
+})
+
+const caseSegment = (id, durationMinutes, titleIt, titleEn, scenarioIt, scenarioEn, engagement) => ({
   id,
   durationMinutes,
   title: t(titleIt, titleEn),
-  scenario: t(scenarioIt, scenarioEn)
+  scenario: t(scenarioIt, scenarioEn),
+  ...caseEngagement(engagement)
 })
 
 export const ragControlArtifact = {
@@ -324,16 +352,16 @@ const theoryNine = [
     `Multi-model orchestration can mean four distinct patterns. One model uses a single model for the task and remains the default while meeting quality, latency, and cost. Model routing selects among models using observable properties such as language, complexity, risk, or confidence while preserving one contract. Deterministic orchestration assigns fixed steps to different models or services, such as classifier, retrieval, generator, and validator. Multiple agents assign objectives to separate loops with state, tools, and handoffs. Calling all of these "multi-agent" obscures control. Every level adds deployment, evaluation, tracing, and failure modes. Choose the minimum pattern delivering measurable benefit. One model summarizing an already retrieved SOP needs no agents. A router may send simple requests to a small model and complex ones to a large model when routing error and savings are measured. A work-order transaction follows deterministic orchestration because gates are known. Multiple agents become candidates only for truly decomposable investigations with role boundaries, evidence handoffs, and useful parallelism.`
   ),
   t(
-    `Il routing contract definisce input features consentite, route, fallback e evaluation. Un complexity classifier non usa attributi sensibili non necessari. Può valutare token length, task type, required tool e risk class deterministica. Ogni route ha lo stesso output schema o un adapter. Il router stesso viene testato con confusion matrix: false simple invia un caso difficile a un modello insufficiente; false complex spreca costo. Si misura end-to-end accepted outcome, non router accuracy isolata. Confidence-based escalation richiede calibration; una confidence auto-dichiarata dal modello non basta. Fallback gestisce unavailable model e rate limit senza inviare dati a provider non autorizzato. Sticky version mantiene coerenza in una sessione quando necessario. Il routing decision viene loggato con reason code, model version, latency e result quality. A/B test limita popolazione e conserva hard gate. Se il costo scende 35 per cento ma citation correctness peggiora due punti oltre tolerance, il routing non passa. Un route per lingua deve dimostrare qualità italiana e inglese, non presumere che un modello multilingue sia equivalente.`,
-    `A routing contract defines permitted input features, routes, fallback, and evaluation. A complexity classifier does not use unnecessary sensitive attributes. It may use token length, task type, required tool, and deterministic risk class. Routes share an output schema or adapter. The router itself receives a confusion matrix: a false-simple route sends a hard case to an insufficient model, while false-complex wastes cost. Measure accepted end-to-end outcomes rather than router accuracy alone. Confidence escalation requires calibration; a model's self-declared confidence is insufficient. Fallback handles unavailable models and rate limits without sending data to unauthorized providers. Sticky versions preserve session consistency where needed. Routing decisions are logged with reason code, model version, latency, and result quality. A/B tests limit population and retain hard gates. If cost falls 35 percent but citation correctness drops two points beyond tolerance, routing does not pass. Language routes require demonstrated Italian and English quality rather than assuming multilingual equivalence.`
+    `Il routing contract definisce input features consentite, route, fallback e evaluation. RouteLLM offre un esempio originale di router appresi da preference data per scegliere tra un modello più forte e uno più economico, valutando insieme costo e qualità; il risultato del paper motiva un esperimento, non garantisce trasferibilità al nostro workflow. Un complexity classifier non usa attributi sensibili non necessari. Può valutare token length, task type, required tool e risk class deterministica. Ogni route ha lo stesso output schema o un adapter. Il router stesso viene testato con confusion matrix: false simple invia un caso difficile a un modello insufficiente; false complex spreca costo. Si misura end-to-end accepted outcome, non router accuracy isolata. Confidence-based escalation richiede calibration; una confidence auto-dichiarata dal modello non basta. Fallback gestisce unavailable model e rate limit senza inviare dati a provider non autorizzato. Sticky version mantiene coerenza in una sessione quando necessario. Il routing decision viene loggato con reason code, model version, latency e result quality. A/B test limita popolazione e conserva hard gate. Se il costo scende 35 per cento ma citation correctness peggiora due punti oltre tolerance, il routing non passa. Un route per lingua deve dimostrare qualità italiana e inglese, non presumere che un modello multilingue sia equivalente.`,
+    `A routing contract defines permitted input features, routes, fallback, and evaluation. RouteLLM provides an original example of routers learned from preference data to choose between a stronger and a cheaper model while jointly considering cost and quality; its paper motivates an experiment rather than guaranteeing transfer to our workflow. A complexity classifier does not use unnecessary sensitive attributes. It may use token length, task type, required tool, and deterministic risk class. Routes share an output schema or adapter. The router itself receives a confusion matrix: a false-simple route sends a hard case to an insufficient model, while false-complex wastes cost. Measure accepted end-to-end outcomes rather than router accuracy alone. Confidence escalation requires calibration; a model's self-declared confidence is insufficient. Fallback handles unavailable models and rate limits without sending data to unauthorized providers. Sticky versions preserve session consistency where needed. Routing decisions are logged with reason code, model version, latency, and result quality. A/B tests limit population and retain hard gates. If cost falls 35 percent but citation correctness drops two points beyond tolerance, routing does not pass. Language routes require demonstrated Italian and English quality rather than assuming multilingual equivalence.`
   ),
   t(
     `Un handoff trasferisce un contratto, non una conversazione indefinita. Contiene task ID, objective, scope, facts con provenance, assumptions, open questions, completed checks, prohibited actions, budget e acceptance criteria. Il ricevente valida schema e può rifiutare handoff incompleto. Una sintesi generata senza evidence IDs perde auditabilità. Per esempio un retrieval specialist consegna passage IDs e versioni a un answer specialist; quest’ultimo non riapre l’intero corpus. In un’investigazione, un agent per maintenance history e uno per sensor evidence possono lavorare in parallelo read-only. Un synthesizer riceve due evidence bundle e segnala conflitti. Nessun agent crea un work order; il passaggio a decision owner avviene come proposta. Stop condition globali: evidence sufficiente rispetto alla rubric, budget esaurito, no progress per due turni, conflitto non risolvibile, tool error ripetuto o richiesta di azione non autorizzata. Local stop evita che un agent continui dopo aver completato il deliverable. Handoff count e rework misurano coordinamento. Se gran parte del tempo serve a tradurre output tra agenti, la decomposizione è sbagliata.`,
     `A handoff transfers a contract, not an indefinite conversation. It contains task ID, objective, scope, facts with provenance, assumptions, open questions, completed checks, prohibited actions, budget, and acceptance criteria. The receiver validates schema and may reject an incomplete handoff. A generated summary without evidence IDs loses auditability. For example, a retrieval specialist hands passage IDs and versions to an answer specialist, which does not reopen the whole corpus. In an investigation, one agent for maintenance history and another for sensor evidence may work in parallel read-only. A synthesizer receives two evidence bundles and reports conflicts. No agent creates a work order; the decision owner receives a proposal. Global stop conditions include evidence sufficient under the rubric, exhausted budget, no progress for two turns, unresolved conflict, repeated tool error, or unauthorized requested action. Local stop ends an agent after its deliverable. Handoff count and rework measure coordination. If most time goes to translating outputs among agents, decomposition is wrong.`
   ),
   t(
-    `La multiple-agent evaluation usa scenari dove il parallelismo dovrebbe aiutare e baseline più semplici. Si confrontano one model con tutti i tool, deterministic orchestration e più agenti sullo stesso case set. Metriche: task success adjudicato, evidence completeness, unsupported claim, tool errors, elapsed time, total tokens, handoff failures, reviewer time e variance. La baseline non viene resa artificialmente debole. Un vantaggio medio deve essere sufficientemente grande e stabile da compensare superficie operativa. Si eseguono fault injection: un agent timeout, evidence contraddittoria, duplicate message, stale handoff e budget exhaustion. Il coordinator deve degradare in modo definito. L’indipendenza vera richiede tool scope separati e deliverable combinabili; due agenti con identico prompt e identici dati spesso producono solo costo e falsa diversità. Un debate può aumentare verbosità senza migliorare correctness. La selezione non si basa su impressione di sofisticazione. Un no motivato è outcome valido: se un solo modello con checklist raggiunge la soglia e gli errori multi-agent non sono inferiori, si mantiene il sistema semplice.`,
-    `Multiple-agent evaluation uses scenarios where parallelism should help and compares simpler baselines. Run one model with all tools, deterministic orchestration, and multiple agents on the same case set. Metrics include adjudicated task success, evidence completeness, unsupported claims, tool errors, elapsed time, total tokens, handoff failures, reviewer time, and variance. Do not make the baseline artificially weak. Average benefit must be large and stable enough to offset operational surface. Fault injection covers one agent timing out, contradictory evidence, duplicate messages, stale handoff, and budget exhaustion. The coordinator should degrade predictably. Genuine independence requires separate tool scopes and composable deliverables. Two agents with identical prompts and data often add cost and false diversity. Debate may increase verbosity without correctness. Selection is not based on sophistication. A justified no is valid: if one model plus checklist reaches threshold and multi-agent errors are not lower, retain the simpler system.`
+    `La multiple-agent evaluation usa scenari dove il parallelismo dovrebbe aiutare e baseline più semplici. AutoGen documenta un’infrastruttura originale per agenti conversazionali personalizzabili con LLM, input umani e tool; AgentBench mostra perché le capacità agentiche vanno misurate in ambienti interattivi e analizzate per failure mode. Nessuno dei due dimostra automaticamente valore nel nostro caso. Si confrontano one model con tutti i tool, deterministic orchestration e più agenti sullo stesso case set. Metriche: task success adjudicato, evidence completeness, unsupported claim, tool errors, elapsed time, total tokens, handoff failures, reviewer time e variance. La baseline non viene resa artificialmente debole. Un vantaggio medio deve essere sufficientemente grande e stabile da compensare superficie operativa. Si eseguono fault injection: un agent timeout, evidence contraddittoria, duplicate message, stale handoff e budget exhaustion. Il coordinator deve degradare in modo definito. Scope di tool separati sono una tecnica forte di isolamento, ma task di evidence indipendenti possono condividere capability read-only se permission e provenance restano esplicite; due agenti con identico incarico e identici dati spesso producono solo costo e falsa diversità. Un debate può aumentare verbosità senza migliorare correctness. La selezione non si basa su impressione di sofisticazione. Un no motivato è outcome valido: se un solo modello con checklist raggiunge la soglia e gli errori multi-agent non sono inferiori, si mantiene il sistema semplice.`,
+    `Multiple-agent evaluation uses scenarios where parallelism should help and compares simpler baselines. AutoGen documents an original infrastructure for customizable conversable agents using LLMs, human input, and tools; AgentBench shows why agent capabilities must be measured in interactive environments and analyzed by failure mode. Neither automatically demonstrates value in our case. Run one model with all tools, deterministic orchestration, and multiple agents on the same case set. Metrics include adjudicated task success, evidence completeness, unsupported claims, tool errors, elapsed time, total tokens, handoff failures, reviewer time, and variance. Do not make the baseline artificially weak. Average benefit must be large and stable enough to offset operational surface. Fault injection covers one agent timing out, contradictory evidence, duplicate messages, stale handoff, and budget exhaustion. The coordinator should degrade predictably. Separate tool scopes are a strong isolation technique, but independently assigned evidence tasks may share read-only capabilities when permissions and provenance remain explicit; two agents with the same assignment and data often add cost and false diversity. Debate may increase verbosity without correctness. Selection is not based on sophistication. A justified no is valid: if one model plus checklist reaches threshold and multi-agent errors are not lower, retain the simpler system.`
   ),
   t(
     `L’operating model assegna owner per router, ogni model endpoint, prompt, evaluator, handoff schema e coordinator. Version compatibility è testata prima del rilascio. Un model registry registra intended use, prohibited use, data region, retention, benchmark e expiry. Cost budget include worst-case fan-out: quattro agenti per sei step possono moltiplicare chiamate rapidamente. Rate limits e backpressure impediscono che un incident saturi servizi. Tracing usa un correlation ID e span per route, agent, tool e handoff. Privacy minimizza ciò che ogni ruolo riceve. Incident containment può disabilitare una route o un agent mantenendo la baseline single-model. Change management valuta se gli utenti comprendono chi propone e chi decide. La UI non mostra personaggi antropomorfi quando confondono accountability; mostra stato, fonte e owner. Nel colloquio, una risposta forte non promette "un team di agenti". Spiega il problema, sceglie il pattern minimo, definisce confini, valuta contro baseline e prevede stop e fallback. L’orchestrazione è buona quando la complessità è invisibile all’utente ma completamente visibile all’operatore.`,
@@ -387,11 +415,12 @@ export const multiModelDecisionExercise = {
   ]
 }
 
-const microExample = (id, durationMinutes, titleIt, titleEn, explanationIt, explanationEn) => ({
+const microExample = (id, durationMinutes, titleIt, titleEn, explanationIt, explanationEn, engagement) => ({
   id,
   durationMinutes,
   title: t(titleIt, titleEn),
-  explanation: t(explanationIt, explanationEn)
+  explanation: t(explanationIt, explanationEn),
+  ...caseEngagement(engagement)
 })
 
 const controlledSopCase = {
@@ -510,7 +539,27 @@ const units = [
     timeAllocation: { theory: 4, cases: 2, practice: 2 },
     theory: theoryOne,
     terminology: [t('Autoregressive decoding: generazione iterativa di un token alla volta.', 'Autoregressive decoding: iterative generation one token at a time.')],
-    microExamples: [microExample('context-budget-sop', 2, 'Budget di contesto per una SOP', 'Context budget for an SOP', 'Istruzioni, ACL context, quattro passage, tool schema e output competono nella stessa finestra.', 'Instructions, ACL context, four passages, tool schema, and output compete in the same window.')],
+    microExamples: [microExample(
+      'context-budget-sop', 2,
+      'Budget di contesto per una SOP', 'Context budget for an SOP',
+      'Istruzioni, ACL context, quattro passage, tool schema e output competono nella stessa finestra.',
+      'Instructions, ACL context, four passages, tool schema, and output compete in the same window.',
+      {
+        learnerAction: ['Confronta i due budget, scegli quello adatto e identifica il rischio rimosso.', 'Compare the two budgets, choose the suitable one, and identify the removed risk.'],
+        expectedOutput: ['Una scelta tra Lean e Overloaded con una motivazione.', 'One choice between Lean and Overloaded with one rationale.'],
+        modelReasoning: ['Lean conserva istruzioni, ACL, quattro passage distinti e spazio di output; Overloaded duplica evidence e rischia truncation.', 'Lean preserves instructions, ACLs, four distinct passages, and output space; Overloaded duplicates evidence and risks truncation.'],
+        responseFormat: ['Pattern scelto | rischio evitato.', 'Selected pattern | avoided risk.'],
+        columns: [['Voce', 'Item'], ['Lean', 'Lean'], ['Overloaded', 'Overloaded']],
+        rows: [
+          ['evidence', ['Evidence', 'Evidence'], ['4 passage distinti', '4 distinct passages'], ['12 passage, 6 duplicati', '12 passages, 6 duplicates']],
+          ['output', ['Spazio output', 'Output allowance'], ['800 token riservati', '800 tokens reserved'], ['Nessuna quota', 'No allowance']],
+          ['risk', ['Rischio', 'Risk'], ['Citation set verificabile', 'Verifiable citation set'], ['Truncation di warning', 'Warning truncation']]
+        ],
+        decisionCount: 1,
+        comparisonCount: 1,
+        interpretationCount: 0
+      }
+    )],
     activities: [activity('explain-probability-not-cognition', 'Scrivi una frase che distingua next-token probability da conoscenza o cognizione.', 'Write one sentence distinguishing next-token probability from knowledge or cognition.', 'Una frase tecnica.', 'One technical sentence.', 'Il modello assegna probabilità alle continuazioni date parametri e contesto.', 'The model assigns probabilities to continuations given parameters and context.', 'Una frase: meccanismo più conseguenza di verifica.', 'One sentence: mechanism plus verification consequence.', 'Il modello stima continuazioni probabili, non la verità; perciò l’applicazione verifica claim e side effect con fonti e controlli esterni.', 'The model estimates likely continuations, not truth, so the application verifies claims and side effects against external sources and controls.', 'Distingue probabilità, verità e responsabilità applicativa.', 'Distinguishes probability, truth, and application responsibility.', 0, 0)],
     checkpoint: checkpoint('Che cosa esprime la probabilità del prossimo token?', 'What does next-token probability express?', [
       ['La certezza che una frase sia vera.', 'Certainty that a sentence is true.', 'La distribution ottimizza continuazioni, non verifica la verità.', 'The distribution optimizes continuations, not truth.'],
@@ -528,7 +577,26 @@ const units = [
     timeAllocation: { theory: 5, cases: 2, practice: 2 },
     theory: theoryTwo,
     terminology: [t('Query-key-value: proiezioni che calcolano score e aggregano informazione.', 'Query-key-value: projections calculating scores and aggregating information.')],
-    microExamples: [microExample('bearing-context', 2, 'Due significati di bearing', 'Two meanings of bearing', 'Il contesto distingue un cuscinetto surriscaldato da una capacità portante senza una voce di dizionario fissa.', 'Context distinguishes an overheated bearing from load-bearing capacity without a fixed dictionary entry.')],
+    microExamples: [microExample(
+      'bearing-context', 2,
+      'Due significati di bearing', 'Two meanings of bearing',
+      'Il contesto distingue un cuscinetto surriscaldato da una capacità portante senza una voce di dizionario fissa.',
+      'Context distinguishes an overheated bearing from load-bearing capacity without a fixed dictionary entry.',
+      {
+        learnerAction: ['Interpreta il percorso e scegli quale claim sui pesi di attention è giustificato.', 'Interpret the path and choose which claim about attention weights is justified.'],
+        expectedOutput: ['Un claim selezionato con il limite esplicito.', 'One selected claim with its explicit limitation.'],
+        modelReasoning: ['Il percorso mostra aggregazione contestuale; un peso alto è un contributo locale, non una spiegazione causale completa.', 'The path shows contextual aggregation; a high weight is a local contribution, not a complete causal explanation.'],
+        responseFormat: ['Claim | limite.', 'Claim | limitation.'],
+        columns: [['Passo', 'Step'], ['Osservazione', 'Observation'], ['Interpretazione consentita', 'Permitted interpretation']],
+        rows: [
+          ['qkv', ['Query-key-value', 'Query-key-value'], ['"bearing" pesa il contesto vicino', '"bearing" weights nearby context'], ['Relazione appresa in quel head', 'Learned relation in that head']],
+          ['layer', ['Layer successivo', 'Next layer'], ['La rappresentazione cambia ancora', 'The representation changes again'], ['Il singolo peso non spiega l’output finale', 'One weight does not explain final output']]
+        ],
+        decisionCount: 1,
+        comparisonCount: 0,
+        interpretationCount: 1
+      }
+    )],
     activities: [activity('attention-boundary-note', 'Correggi l’affermazione: "attention mostra esattamente perché il modello ha deciso".', 'Correct the statement: "attention shows exactly why the model decided."', 'Una correzione.', 'One correction.', 'I pesi appartengono a head e layer e non sono una spiegazione causale completa.', 'Weights belong to heads and layers and are not a complete causal explanation.', 'Una frase con limite e prova necessaria.', 'One sentence with limitation and required evidence.', 'I pesi di attention mostrano contributi interni parziali; la spiegazione operativa richiede test, context trace e verifica delle fonti.', 'Attention weights show partial internal contributions; an operational explanation requires tests, context traces, and source verification.', 'Evita antropomorfismo e non sovrainterpreta i pesi.', 'Avoids anthropomorphism and does not over-interpret weights.', 0, 0)],
     checkpoint: checkpoint('Qual è il ruolo intuitivo delle value?', 'What is the intuitive role of values?', [
       ['Contengono informazione da combinare con i pesi.', 'They contain information to combine using the weights.', 'Query e key determinano score, le value vengono aggregate.', 'Queries and keys determine scores, while values are aggregated.'],
@@ -546,7 +614,27 @@ const units = [
     timeAllocation: { theory: 5, cases: 2, practice: 2 },
     theory: theoryThree,
     terminology: [t('Cost per accepted outcome: costo totale diviso per risultati che superano i gate.', 'Cost per accepted outcome: total cost divided by results passing the gates.')],
-    microExamples: [microExample('small-model-routing', 2, 'Classificazione ripetitiva', 'Repetitive classification', 'Un modello piccolo passa il benchmark e riduce p95; un modello grande resta fallback per casi ambigui.', 'A small model passes the benchmark and reduces p95; a large model remains fallback for ambiguous cases.')],
+    microExamples: [microExample(
+      'small-model-routing', 2,
+      'Classificazione ripetitiva', 'Repetitive classification',
+      'Un modello piccolo passa il benchmark e riduce p95; un modello grande resta fallback per casi ambigui.',
+      'A small model passes the benchmark and reduces p95; a large model remains fallback for ambiguous cases.',
+      {
+        learnerAction: ['Confronta le due route e decidi dove inviare un caso semplice con confidence calibrata 0,94.', 'Compare the routes and decide where to send a simple case with calibrated confidence 0.94.'],
+        expectedOutput: ['Una route con il KPI che resta protetto.', 'One route with the KPI that remains protected.'],
+        modelReasoning: ['Il modello piccolo supera il gate sui casi semplici con costo e p95 inferiori; il grande resta escalation per confidence sotto 0,85.', 'The small model passes the simple-case gate at lower cost and p95; the large model remains escalation below 0.85 confidence.'],
+        responseFormat: ['Route | evidenza | fallback.', 'Route | evidence | fallback.'],
+        columns: [['Metrica', 'Metric'], ['Modello piccolo', 'Small model'], ['Modello grande', 'Large model']],
+        rows: [
+          ['quality', ['Accepted outcome, casi semplici', 'Accepted outcome, simple cases'], ['96%', '96%'], ['97%', '97%']],
+          ['latency', ['p95', 'p95'], ['0,8 s', '0.8 s'], ['2,6 s', '2.6 s']],
+          ['cost', ['Costo relativo', 'Relative cost'], ['1x', '1x'], ['7x', '7x']]
+        ],
+        decisionCount: 1,
+        comparisonCount: 1,
+        interpretationCount: 0
+      }
+    )],
     activities: [activity('latency-intervention', 'Scegli un intervento per una risposta SOP corretta ma con p95 troppo alta per un prompt ridondante.', 'Choose one intervention for a correct SOP answer whose p95 is too high because of a redundant prompt.', 'Una decisione.', 'One decision.', 'La qualità è già accettabile; il trace mostra passaggi duplicati e tool inutilizzati.', 'Quality already passes; tracing shows duplicate passages and unused tools.', 'Intervento più metrica da proteggere.', 'Intervention plus metric to protect.', 'Ridurre e deduplicare contesto e tool, poi rieseguire il benchmark proteggendo citation correctness e misurando p95 e costo per risposta accettata.', 'Reduce and deduplicate context and tools, then rerun the benchmark while protecting citation correctness and measuring p95 and cost per accepted answer.', 'Collega la causa misurata a un esperimento controllato.', 'Connects the measured cause to a controlled experiment.')],
     checkpoint: checkpoint('Quando il fine-tuning è una cattiva prima risposta?', 'When is fine-tuning a poor first response?', [
       ['Quando il problema è una revisione SOP che cambia e può essere recuperata.', 'When the issue is a changing SOP revision that can be retrieved.', 'Versioned retrieval è più aggiornabile e auditabile.', 'Versioned retrieval is more updateable and auditable.'],
@@ -564,7 +652,28 @@ const units = [
     timeAllocation: { theory: 4, cases: 3, practice: 2 },
     theory: theoryFour,
     terminology: [t('Citation entailment: il passaggio citato sostiene davvero il claim.', 'Citation entailment: the cited passage truly supports the claim.')],
-    caseSegments: [caseSegment('evaluation-gate-review', 3, 'Review di un gate set', 'Gate-set review', 'Il reviewer confronta answerable, unauthorized, obsolete e conflict cases e rifiuta una media che nasconde un access leak.', 'A reviewer compares answerable, unauthorized, obsolete, and conflict cases and rejects an average hiding one access leak.')],
+    caseSegments: [caseSegment(
+      'evaluation-gate-review', 3,
+      'Review di un gate set', 'Gate-set review',
+      'Il reviewer confronta answerable, unauthorized, obsolete e conflict cases e rifiuta una media che nasconde un access leak.',
+      'A reviewer compares answerable, unauthorized, obsolete, and conflict cases and rejects an average hiding one access leak.',
+      {
+        learnerAction: ['Interpreta i quattro esiti, confronta media e hard gate, poi emetti go/no-go.', 'Interpret the four outcomes, compare the average with hard gates, then issue a go or no-go.'],
+        expectedOutput: ['Una decisione go/no-go con failure dominante e stop action.', 'One go or no-go decision with the dominant failure and stop action.'],
+        modelReasoning: ['Tre risposte corrette non compensano l’access leak: il gate non è una media e il pilot va sospeso.', 'Three correct answers do not offset an access leak: the gate is not an average and the pilot must stop.'],
+        responseFormat: ['Decisione | failure dominante | azione.', 'Decision | dominant failure | action.'],
+        columns: [['Caso', 'Case'], ['Esito', 'Outcome'], ['Gate atteso', 'Expected gate']],
+        rows: [
+          ['answerable', ['Answerable', 'Answerable'], ['Corretta, citation valida', 'Correct, valid citation'], ['Pass', 'Pass']],
+          ['unauthorized', ['Unauthorized', 'Unauthorized'], ['Risposta con titolo protetto', 'Answer exposes protected title'], ['Fail: leakage zero', 'Fail: zero leakage']],
+          ['obsolete', ['Superseded distractor', 'Superseded distractor'], ['Rifiutato correttamente', 'Correctly refused'], ['Pass', 'Pass']],
+          ['conflict', ['Conflict', 'Conflict'], ['Escalation a Document Control', 'Escalated to Document Control'], ['Pass', 'Pass']]
+        ],
+        decisionCount: 1,
+        comparisonCount: 1,
+        interpretationCount: 1
+      }
+    )],
     activities: [activity('evaluation-hard-gate', 'Definisci un hard gate per l’assistente SOP.', 'Define one hard gate for the SOP assistant.', 'Un gate misurabile.', 'One measurable gate.', 'Il set contiene domande autorizzate e non autorizzate con corpus atteso.', 'The set contains authorized and unauthorized questions with expected corpora.', 'Una soglia più una stop action.', 'One threshold plus a stop action.', 'ACL leakage deve essere zero sul gate set; una sola esposizione sospende il pilot e avvia containment e review della policy.', 'ACL leakage must be zero on the gate set; one exposure suspends the pilot and starts containment and policy review.', 'Soglia, popolazione e conseguenza sono esplicite.', 'Threshold, population, and consequence are explicit.')],
     checkpoint: checkpoint('Perché una citation presente non basta?', 'Why is citation presence insufficient?', [
       ['Il passaggio potrebbe non sostenere il claim.', 'The passage may not support the claim.', 'Occorre valutare entailment e completeness.', 'Entailment and completeness must be evaluated.'],
@@ -582,7 +691,27 @@ const units = [
     timeAllocation: { theory: 5, cases: 2, practice: 2 },
     theory: theoryFive,
     terminology: [t('Hybrid retrieval: combinazione di segnali lexical e dense prima del reranking.', 'Hybrid retrieval: combining lexical and dense signals before reranking.')],
-    microExamples: [microExample('revision-filter-before-vector', 2, 'Filtro prima della similarity', 'Filter before similarity', 'La query cerca soltanto revisioni effettive e autorizzate; il modello non vede la revisione superseded più simile.', 'The query searches only effective authorized revisions; the model never sees the more similar superseded revision.')],
+    microExamples: [microExample(
+      'revision-filter-before-vector', 2,
+      'Filtro prima della similarity', 'Filter before similarity',
+      'La query cerca soltanto revisioni effettive e autorizzate; il modello non vede la revisione superseded più simile.',
+      'The query searches only effective authorized revisions; the model never sees the more similar superseded revision.',
+      {
+        learnerAction: ['Confronta i candidati e scegli il passaggio che può entrare nel reranking.', 'Compare the candidates and choose the passage allowed to enter reranking.'],
+        expectedOutput: ['Un passage ID con due gate superati.', 'One passage ID with two passed gates.'],
+        modelReasoning: ['P17 ha score leggermente inferiore ma è autorizzato ed effettivo; P09 e P31 sono esclusi prima del ranking finale.', 'P17 has a slightly lower score but is authorized and effective; P09 and P31 are excluded before final ranking.'],
+        responseFormat: ['Passage ID | permission | versione.', 'Passage ID | permission | version.'],
+        columns: [['Candidato', 'Candidate'], ['Similarity', 'Similarity'], ['ACL', 'ACL'], ['Stato revisione', 'Revision status']],
+        rows: [
+          ['p09', ['P09', 'P09'], ['0,94', '0.94'], ['Negata', 'Denied'], ['Effettiva', 'Effective']],
+          ['p17', ['P17', 'P17'], ['0,88', '0.88'], ['Consentita', 'Allowed'], ['Effettiva', 'Effective']],
+          ['p31', ['P31', 'P31'], ['0,96', '0.96'], ['Consentita', 'Allowed'], ['Superseded', 'Superseded']]
+        ],
+        decisionCount: 1,
+        comparisonCount: 1,
+        interpretationCount: 0
+      }
+    )],
     activities: [activity('chunk-metadata-record', 'Scrivi il metadata minimo di un chunk procedurale.', 'Write the minimum metadata for a procedural chunk.', 'Una riga metadata.', 'One metadata row.', 'Servono lineage, validità, scope e permesso oltre al testo.', 'Lineage, validity, scope, and permission are needed beyond text.', 'Elenco compatto di campi.', 'Compact field list.', 'documentId, revisionId, effectiveFrom/To, status, site, assetScope, sectionAnchor, fileHash e aclLabel.', 'documentId, revisionId, effectiveFrom/To, status, site, assetScope, sectionAnchor, fileHash, and aclLabel.', 'Include identità, tempo, scope, citazione e accesso.', 'Includes identity, time, scope, citation, and access.', 0, 0)],
     checkpoint: checkpoint('Che cosa non dimostra un alto vector similarity score?', 'What does a high vector similarity score not prove?', [
       ['Che il passaggio è autorizzato ed effettivo.', 'That the passage is authorized and effective.', 'Similarity non applica ACL o version control.', 'Similarity does not enforce ACLs or version control.'],
@@ -636,7 +765,27 @@ const units = [
     timeAllocation: { theory: 5, cases: 2, practice: 2 },
     theory: theoryEight,
     terminology: [t('MCP host: applicazione AI che coordina uno o più client.', 'MCP host: AI application coordinating one or more clients.')],
-    microExamples: [microExample('workflow-not-agent', 2, 'Creazione ordine senza agent loop', 'Order creation without an agent loop', 'Validation, policy, approval, write e confirmation hanno un ordine noto: un workflow è più controllabile.', 'Validation, policy, approval, write, and confirmation have a known order, so workflow is more controllable.')],
+    microExamples: [microExample(
+      'workflow-not-agent', 2,
+      'Creazione ordine senza agent loop', 'Order creation without an agent loop',
+      'Validation, policy, approval, write e confirmation hanno un ordine noto: un workflow è più controllabile.',
+      'Validation, policy, approval, write, and confirmation have a known order, so workflow is more controllable.',
+      {
+        learnerAction: ['Confronta i due control flow e scegli quello appropriato per la transazione.', 'Compare the two control flows and choose the appropriate one for the transaction.'],
+        expectedOutput: ['Un pattern con una motivazione legata ai side effect.', 'One pattern with a rationale tied to side effects.'],
+        modelReasoning: ['Il workflow espone ordine, retry e approval; il loop aggiunge libertà non necessaria a passi già enumerabili.', 'The workflow exposes order, retry, and approval; the loop adds unnecessary freedom to already enumerable steps.'],
+        responseFormat: ['Pattern | controllo decisivo.', 'Pattern | decisive control.'],
+        columns: [['Dimensione', 'Dimension'], ['Workflow', 'Workflow'], ['Agent loop', 'Agent loop']],
+        rows: [
+          ['path', ['Percorso', 'Path'], ['Cinque gate predefiniti', 'Five predefined gates'], ['Scelto iterativamente', 'Chosen iteratively']],
+          ['side-effect', ['Side effect', 'Side effect'], ['Solo dopo approval', 'Only after approval'], ['Richiede barriera esterna', 'Requires external barrier']],
+          ['recovery', ['Recovery', 'Recovery'], ['Stato e retry espliciti', 'Explicit state and retry'], ['Trace variabile', 'Variable trace']]
+        ],
+        decisionCount: 1,
+        comparisonCount: 1,
+        interpretationCount: 0
+      }
+    )],
     activities: [activity('mcp-role-map', 'Assegna il ruolo corretto a UI AI, connessione dedicata e servizio documentale.', 'Assign the correct role to the AI UI, dedicated connection, and document service.', 'Una mappa a tre ruoli.', 'One three-role mapping.', 'Le opzioni sono host, client e server.', 'Options are host, client, and server.', 'UI=..., connessione=..., servizio=...', 'UI=..., connection=..., service=...', 'UI AI = host; connessione dedicata = client; servizio documentale = server.', 'AI UI = host; dedicated connection = client; document service = server.', 'Mappa senza confondere client con host.', 'Maps roles without confusing client and host.', 0, 0)],
     checkpoint: checkpoint('Quale affermazione descrive correttamente MCP?', 'Which statement correctly describes MCP?', [
       ['Il protocollo decide quali work order approvare.', 'The protocol decides which work orders to approve.', 'La business authorization resta applicativa.', 'Business authorization remains application-specific.'],
@@ -654,14 +803,35 @@ const units = [
     timeAllocation: { theory: 4, cases: 1, practice: 2 },
     theory: theoryNine,
     terminology: [t('Handoff contract: facts, provenance, scope, budget e acceptance criteria trasferiti.', 'Handoff contract: transferred facts, provenance, scope, budget, and acceptance criteria.')],
-    caseSegments: [caseSegment('four-pattern-comparison', 1, 'Confronto di quattro pattern', 'Four-pattern comparison', 'Chi studia confronta gli stessi KPI per one model, routing, workflow deterministico e agenti, senza premiare la complessità.', 'The learner compares one model, routing, deterministic workflow, and agents on the same KPIs without rewarding complexity.')],
+    caseSegments: [caseSegment(
+      'four-pattern-comparison', 1,
+      'Confronto di quattro pattern', 'Four-pattern comparison',
+      'Chi studia confronta gli stessi KPI per one model, routing, workflow deterministico e agenti, senza premiare la complessità.',
+      'The learner compares one model, routing, deterministic workflow, and agents on the same KPIs without rewarding complexity.',
+      {
+        learnerAction: ['Scegli il pattern per riassumere una sola SOP già recuperata e autorizzata.', 'Choose the pattern for summarizing one already retrieved and authorized SOP.'],
+        expectedOutput: ['Un solo pattern, senza analisi aggiuntive.', 'One pattern only, with no additional analysis.'],
+        modelReasoning: ['One model soddisfa il contratto; routing, workflow multi-step e agenti non aggiungono beneficio al task già delimitato.', 'One model satisfies the contract; routing, multi-step workflow, and agents add no benefit to the bounded task.'],
+        responseFormat: ['Nome del pattern.', 'Pattern name.'],
+        columns: [['Pattern', 'Pattern'], ['Quando serve', 'When it fits']],
+        rows: [
+          ['one', ['One model', 'One model'], ['Un task linguistico già delimitato', 'One already bounded language task']],
+          ['routing', ['Routing', 'Routing'], ['Popolazioni con trade-off misurato', 'Populations with a measured trade-off']],
+          ['workflow', ['Workflow', 'Workflow'], ['Passi e gate distinti', 'Distinct steps and gates']],
+          ['agents', ['Multiple agents', 'Multiple agents'], ['Task indipendenti e beneficio provato', 'Independent tasks and proven benefit']]
+        ],
+        decisionCount: 1,
+        comparisonCount: 0,
+        interpretationCount: 0
+      }
+    )],
     activities: [activity('orchestration-pattern-choice', 'Per la creazione work-order, scegli uno dei quattro pattern e giustifica il rifiuto degli agenti.', 'For work-order creation, choose one of four patterns and justify rejecting agents.', 'Una decisione architetturale.', 'One architecture decision.', 'Validation, authorization, idempotenza e ordine dei passi sono noti.', 'Validation, authorization, idempotency, and step order are known.', 'Pattern più una ragione.', 'Pattern plus one reason.', 'Scegliere deterministic orchestration: i gate sono enumerabili e i side effect richiedono controllo; agenti multipli aggiungerebbero handoff senza beneficio misurabile.', 'Choose deterministic orchestration: gates are enumerable and side effects require control; multiple agents would add handoffs without measurable benefit.', 'Seleziona il pattern minimo e lega il rifiuto ai confini.', 'Selects the minimum pattern and ties rejection to boundaries.')],
     checkpoint: checkpoint('Quando sono giustificati più agenti?', 'When are multiple agents justified?', [
       ['Quando il nome suona più innovativo.', 'When the name sounds more innovative.', 'La sofisticazione non è un outcome.', 'Sophistication is not an outcome.'],
       ['Quando ruoli indipendenti e handoff verificabili migliorano KPI contro baseline semplici.', 'When independent roles and verifiable handoffs improve KPIs over simpler baselines.', 'Confini e beneficio misurato giustificano la complessità.', 'Boundaries and measured benefit justify complexity.'],
       ['Per ogni sequenza deterministica con side effect.', 'For every deterministic side-effect sequence.', 'Questi casi favoriscono workflow controllati.', 'Those cases favor controlled workflows.']
     ], 1),
-    sourceIds: ['mcp-specification', 'nist-ai-600-1']
+    sourceIds: ['mcp-specification', 'nist-ai-600-1', 'routellm', 'autogen-multi-agent', 'agentbench']
   }
 ]
 

@@ -665,10 +665,14 @@ function validateModule4SafetyContracts(lesson, path, errors) {
     'generate-with-citations',
     'verify-claims-or-refuse'
   ]
-  const actualRagStepIds = asArray(lesson.ragControlArtifact?.pipeline).map((step) => step?.id)
-  if (actualRagStepIds.length !== ragStepIds.length ||
-      actualRagStepIds.some((id, index) => id !== ragStepIds[index])) {
-    errors.push(`${contractPath} RAG control must keep six ordered steps`)
+  if (!isObject(lesson.ragControlArtifact)) {
+    errors.push(`${contractPath} RAG control artifact is required`)
+  } else {
+    const actualRagStepIds = asArray(lesson.ragControlArtifact.pipeline).map((step) => step?.id)
+    if (actualRagStepIds.length !== ragStepIds.length ||
+        actualRagStepIds.some((id, index) => id !== ragStepIds[index])) {
+      errors.push(`${contractPath} RAG control must keep six ordered steps`)
+    }
   }
 
   const tool = lesson.maintenanceToolContract
@@ -677,29 +681,37 @@ function validateModule4SafetyContracts(lesson, path, errors) {
     'requestedWindowStart', 'requestedWindowEnd', 'requesterId', 'authorizationContext',
     'sourceEvidenceIds', 'idempotencyKey'
   ]
-  const actualToolInputs = asArray(tool?.requiredInputs)
-  for (const field of requiredToolInputs) {
-    if (!actualToolInputs.includes(field)) {
-      errors.push(`${contractPath} tool contract must retain ${field}`)
+  if (!isObject(tool)) {
+    errors.push(`${contractPath} tool contract is required`)
+  } else {
+    const actualToolInputs = asArray(tool.requiredInputs)
+    for (const field of requiredToolInputs) {
+      if (!actualToolInputs.includes(field)) {
+        errors.push(`${contractPath} tool contract must retain ${field}`)
+      }
+    }
+    if (!asArray(tool.auditFields).includes('idempotencyKey')) {
+      errors.push(`${contractPath} tool contract audit must retain idempotencyKey`)
+    }
+    if (asArray(tool.validationRules).length < 5 || asArray(tool.failureModes).length < 3) {
+      errors.push(`${contractPath} tool contract needs validation and failure handling`)
     }
   }
-  if (!asArray(tool?.auditFields).includes('idempotencyKey')) {
-    errors.push(`${contractPath} tool contract audit must retain idempotencyKey`)
-  }
-  if (asArray(tool?.validationRules).length < 5 || asArray(tool?.failureModes).length < 3) {
-    errors.push(`${contractPath} tool contract needs validation and failure handling`)
-  }
 
-  const participantIds = asArray(lesson.mcpBoundary?.participants).map((item) => item?.id)
-  if (participantIds.join(',') !== 'host,client,server') {
-    errors.push(`${contractPath} MCP boundary must retain host, client and server`)
-  }
-  const primitiveIds = asArray(lesson.mcpBoundary?.serverPrimitives).map((item) => item?.id)
-  if (primitiveIds.join(',') !== 'resources,tools,prompts') {
-    errors.push(`${contractPath} MCP boundary must retain resources, tools and prompts`)
-  }
-  if (lesson.mcpBoundary?.protocolRevision !== '2026-07-28') {
-    errors.push(`${contractPath} MCP boundary must identify protocol revision 2026-07-28`)
+  if (!isObject(lesson.mcpBoundary)) {
+    errors.push(`${contractPath} MCP boundary artifact is required`)
+  } else {
+    const participantIds = asArray(lesson.mcpBoundary.participants).map((item) => item?.id)
+    if (participantIds.join(',') !== 'host,client,server') {
+      errors.push(`${contractPath} MCP boundary must retain host, client and server`)
+    }
+    const primitiveIds = asArray(lesson.mcpBoundary.serverPrimitives).map((item) => item?.id)
+    if (primitiveIds.join(',') !== 'resources,tools,prompts') {
+      errors.push(`${contractPath} MCP boundary must retain resources, tools and prompts`)
+    }
+    if (lesson.mcpBoundary.protocolRevision !== '2026-07-28') {
+      errors.push(`${contractPath} MCP boundary must identify protocol revision 2026-07-28`)
+    }
   }
 
   const expectedPatterns = [
@@ -708,19 +720,50 @@ function validateModule4SafetyContracts(lesson, path, errors) {
     ['maintenance-order-transaction', 'deterministic-orchestration'],
     ['ambiguous-cross-domain-investigation', 'multiple-agents']
   ]
-  const scenarios = asArray(lesson.multiModelDecisionExercise?.scenarios)
-  if (scenarios.length !== expectedPatterns.length || expectedPatterns.some(
-    ([id, pattern], index) => scenarios[index]?.id !== id || scenarios[index]?.recommendedPattern !== pattern
-  )) {
-    errors.push(`${contractPath} multi-model exercise must retain all four patterns`)
-  }
-  for (const [index, scenario] of scenarios.entries()) {
-    if (!hasLocalizedFields(scenario, ['modelSolution', 'handoff', 'stopCondition', 'measurableBenefit'])) {
-      errors.push(`${contractPath} multi-model exercise scenario ${index + 1} needs localized decision evidence`)
+  if (!isObject(lesson.multiModelDecisionExercise)) {
+    errors.push(`${contractPath} multi-model exercise artifact is required`)
+  } else {
+    const scenarios = asArray(lesson.multiModelDecisionExercise.scenarios)
+    if (scenarios.length !== expectedPatterns.length || expectedPatterns.some(
+      ([id, pattern], index) => scenarios[index]?.id !== id || scenarios[index]?.recommendedPattern !== pattern
+    )) {
+      errors.push(`${contractPath} multi-model exercise must retain all four patterns`)
+    }
+    for (const [index, scenario] of scenarios.entries()) {
+      if (!hasLocalizedFields(scenario, ['modelSolution', 'handoff', 'stopCondition', 'measurableBenefit'])) {
+        errors.push(`${contractPath} multi-model exercise scenario ${index + 1} needs localized decision evidence`)
+      }
     }
   }
 
   const units = asArray(lesson.units)
+  const timedCaseItems = units.flatMap((unit) => [
+    ...asArray(unit?.microExamples),
+    ...asArray(unit?.caseSegments)
+  ])
+  for (const [index, item] of timedCaseItems.entries()) {
+    const itemPath = `${contractPath} timed case item ${index + 1}`
+    for (const field of ['learnerAction', 'expectedOutput', 'modelReasoning', 'responseFormat']) {
+      if (!isLocalized(item?.[field])) errors.push(`${itemPath} needs localized ${field}`)
+    }
+    const columns = asArray(item?.decisionAid?.columns)
+    const rows = asArray(item?.decisionAid?.rows)
+    if (columns.length < 2 || !columns.every(isLocalized) || rows.length < 2 || rows.some((row) => (
+      !hasNonEmptyString(row?.id) || asArray(row?.cells).length !== columns.length ||
+      !asArray(row?.cells).every(isLocalized)
+    ))) {
+      errors.push(`${itemPath} needs a localized decision aid with at least two rows and columns`)
+    }
+    const scope = item?.scope
+    const scopeCounts = ['decisionCount', 'comparisonCount', 'interpretationCount']
+    const validScope = isObject(scope) && scope.outputCount === 1 && scopeCounts.every(
+      (field) => Number.isInteger(scope[field]) && scope[field] >= 0
+    )
+    if (!validScope || scopeCounts.reduce((sum, field) => sum + (scope?.[field] || 0), 0) !== item?.durationMinutes) {
+      errors.push(`${itemPath} workload must equal durationMinutes and retain one output`)
+    }
+  }
+
   const caseMinutes = units.reduce((sum, unit) => sum + [
     ...asArray(unit?.microExamples),
     ...asArray(unit?.caseSegments),
@@ -737,6 +780,12 @@ function validateModule4SafetyContracts(lesson, path, errors) {
     errors.push(`${contractPath} timing must remain nine units and 40 theory, 22 cases, 18 practice minutes`)
   }
   if (caseMinutes !== 22) errors.push(`${contractPath} learner-visible case minutes must total 22`)
+  if (timedCaseItems.length !== 7 || timedCaseItems.reduce(
+    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
+    0
+  ) !== 14) {
+    errors.push(`${contractPath} must retain seven substantive timed case items totaling 14 minutes`)
+  }
   if (activities.length !== 9 || practiceMinutes !== 18 ||
       activities.some((item) => item?.durationMinutes !== 2 || !isValidQuickTaskScope(item?.quickTask))) {
     errors.push(`${contractPath} must retain nine two-minute one-output activities`)
@@ -872,7 +921,7 @@ export function validateCurriculum(lessons, sources) {
       )
       validateModule3EngagedTime(lesson, path, errors)
     }
-    if ('ragControlArtifact' in lesson) {
+    if (lesson.id === 'llm-agents') {
       validateModule4SafetyContracts(lesson, path, errors)
     }
 
