@@ -162,9 +162,23 @@ Content uses the following source hierarchy:
 2. Regulators and government institutions.
 3. Original peer-reviewed or foundational research papers.
 4. Official PMI reports, operations pages, and public disclosures for company context.
-5. Official vendor documentation only for product-specific behavior.
+5. Reputable educational material from universities, recognized professional bodies, established technical educators, and well-regarded technical books or courses.
+6. Official vendor documentation for product-specific behavior and implementation guidance.
 
-Generic blogs, unsourced summaries, SEO articles, and vendor marketing claims are not used as foundations for technical or regulatory statements.
+Clarity and learning effectiveness are explicit selection criteria. A high-quality educational source may be used to introduce an analogy, visual model, worked example, or accessible explanation when a standard or research paper is too compressed for teaching. Its factual claims are checked against primary material before inclusion. Educational sources do not replace primary sources for legal obligations, safety requirements, protocol behavior, standard definitions, or claims about PMI.
+
+Generic blogs, anonymous summaries, SEO articles, copied content, and unsupported vendor marketing claims are not used as foundations for lessons. A secondary source is included only when its authorship, institutional context, teaching quality, and technical consistency can be evaluated.
+
+Each difficult concept is taught through a progression designed for comprehension rather than citation density:
+
+1. Plain-language intuition and analogy.
+2. Precise technical definition.
+3. Visual or step-by-step mechanism.
+4. Worked manufacturing example.
+5. Boundary conditions and common misconceptions.
+6. Application exercise and interview transfer.
+
+The final learning objective takes precedence over maximizing the number of references. Sources support the explanation; they do not substitute for a complete explanation written inside the course.
 
 The initial authoritative catalog includes:
 
