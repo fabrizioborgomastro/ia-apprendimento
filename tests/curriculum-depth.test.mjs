@@ -7,6 +7,8 @@ import { sources } from '../public/content/sources.js'
 
 const { dataAiLesson = null } = await import('../public/content/module-3-data-ai.js')
   .catch(() => ({}))
+const { llmAgentsLesson = null } = await import('../public/content/module-4-llm-agents.js')
+  .catch(() => ({}))
 
 export function theoryWords(lesson, locale) {
   return lesson.units
@@ -1105,4 +1107,167 @@ test('Module 3 Italian copy elides articles before vowels', () => {
     JSON.stringify(dataAiLesson, (key, value) => key === 'en' ? undefined : value),
     missingElision
   )
+})
+
+test('Module 4 has the approved identity, depth, sources, and practical portfolio', () => {
+  assert.ok(llmAgentsLesson, 'Module 4 content must exist')
+  assert.equal(llmAgentsLesson.id, 'llm-agents')
+  assert.equal(llmAgentsLesson.slug, 'llm-agents')
+  assert.equal(llmAgentsLesson.durationMinutes, 80)
+  assert.deepEqual(llmAgentsLesson.timeBudget, { theory: 40, cases: 22, practice: 18 })
+  assert.equal(llmAgentsLesson.units.length, 9)
+  assert.ok(theoryWords(llmAgentsLesson, 'it') >= 7200)
+  assert.ok(theoryWords(llmAgentsLesson, 'en') >= 6120)
+  assert.equal(countWorkedCases(llmAgentsLesson), 2)
+
+  const sourceIds = new Set(llmAgentsLesson.units.flatMap(({ sourceIds }) => sourceIds))
+  for (const sourceId of [
+    'attention-is-all-you-need',
+    'retrieval-augmented-generation',
+    'nist-ai-600-1',
+    'mcp-specification'
+  ]) {
+    assert.ok(sourceIds.has(sourceId), `Module 4 must cite ${sourceId}`)
+    assert.equal(sources[sourceId]?.type, 'primary')
+  }
+})
+
+test('Module 4 keeps nine approved boundaries and reconciles every engaged minute', () => {
+  assert.ok(llmAgentsLesson, 'Module 4 content must exist')
+  assert.deepEqual(
+    llmAgentsLesson.units.map(({ id, estimatedMinutes, timeAllocation }) => ({
+      id,
+      estimatedMinutes,
+      timeAllocation
+    })),
+    [
+      { id: 'tokens-context-probability', estimatedMinutes: 8, timeAllocation: { theory: 4, cases: 2, practice: 2 } },
+      { id: 'transformer-attention-representation', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+      { id: 'training-inference-tradeoffs', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+      { id: 'limitations-task-specific-evaluation', estimatedMinutes: 9, timeAllocation: { theory: 4, cases: 3, practice: 2 } },
+      { id: 'retrieval-embeddings-access', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+      { id: 'controlled-sop-rag-case', estimatedMinutes: 10, timeAllocation: { theory: 4, cases: 4, practice: 2 } },
+      { id: 'safe-maintenance-tool-call', estimatedMinutes: 10, timeAllocation: { theory: 4, cases: 4, practice: 2 } },
+      { id: 'agent-loop-workflow-mcp', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+      { id: 'multi-model-routing-handoffs', estimatedMinutes: 7, timeAllocation: { theory: 4, cases: 1, practice: 2 } }
+    ]
+  )
+
+  const totals = { theory: 0, cases: 0, practice: 0 }
+  let caseMinutes = 0
+  let practiceMinutes = 0
+  for (const unit of llmAgentsLesson.units) {
+    assert.ok(unit.estimatedMinutes >= 5 && unit.estimatedMinutes <= 10)
+    for (const mode of Object.keys(totals)) totals[mode] += unit.timeAllocation[mode]
+
+    const caseItems = [
+      ...(unit.microExamples || []),
+      ...(unit.caseSegments || []),
+      ...(unit.workedCases || [])
+    ]
+    assert.ok(caseItems.length > 0, `${unit.id} needs learner-visible case content`)
+    assert.equal(
+      caseItems.reduce((sum, item) => sum + item.durationMinutes, 0),
+      unit.timeAllocation.cases
+    )
+    caseMinutes += caseItems.reduce((sum, item) => sum + item.durationMinutes, 0)
+
+    const activities = unit.activities || []
+    assert.equal(activities.length, 1, `${unit.id} needs one bounded activity`)
+    assert.equal(activities[0].durationMinutes, 2)
+    assert.equal(activities[0].quickTask.outputCount, 1)
+    assert.ok(activities[0].quickTask.decisionCount + activities[0].quickTask.calculationCount <= 1)
+    practiceMinutes += activities[0].durationMinutes
+  }
+
+  assert.deepEqual(totals, { theory: 40, cases: 22, practice: 18 })
+  assert.equal(caseMinutes, 22)
+  assert.equal(practiceMinutes, 18)
+})
+
+test('Module 4 central artifacts make RAG, tool, MCP, and orchestration boundaries auditable', () => {
+  assert.ok(llmAgentsLesson, 'Module 4 content must exist')
+
+  const rag = llmAgentsLesson.ragControlArtifact
+  assert.deepEqual(rag.pipeline.map(({ id }) => id), [
+    'authorize-query',
+    'resolve-effective-version',
+    'retrieve-filtered-passages',
+    'rerank-and-threshold',
+    'generate-with-citations',
+    'verify-claims-or-refuse'
+  ])
+  assert.ok(rag.pipeline.every((step) => step.owner.it && step.owner.en &&
+    step.evidence.it && step.evidence.en && step.failureAction.it && step.failureAction.en))
+
+  const tool = llmAgentsLesson.maintenanceToolContract
+  assert.deepEqual(tool.requiredInputs, [
+    'assetId', 'siteId', 'symptomCode', 'description', 'priority',
+    'requestedWindowStart', 'requestedWindowEnd', 'requesterId', 'authorizationContext',
+    'sourceEvidenceIds', 'idempotencyKey'
+  ])
+  assert.ok(tool.validationRules.length >= 5)
+  assert.ok(tool.auditFields.includes('idempotencyKey'))
+  assert.ok(tool.failureModes.every((failure) => failure.detect.it && failure.detect.en &&
+    failure.response.it && failure.response.en))
+
+  assert.deepEqual(llmAgentsLesson.mcpBoundary.participants.map(({ id }) => id), [
+    'host', 'client', 'server'
+  ])
+  assert.deepEqual(llmAgentsLesson.mcpBoundary.serverPrimitives.map(({ id }) => id), [
+    'resources', 'tools', 'prompts'
+  ])
+  assert.equal(llmAgentsLesson.mcpBoundary.protocolRevision, '2026-07-28')
+
+  const decisions = llmAgentsLesson.multiModelDecisionExercise.scenarios
+  assert.deepEqual(decisions.map(({ id, recommendedPattern }) => [id, recommendedPattern]), [
+    ['single-controlled-summary', 'one-model'],
+    ['mixed-volume-classification', 'model-routing'],
+    ['maintenance-order-transaction', 'deterministic-orchestration'],
+    ['ambiguous-cross-domain-investigation', 'multiple-agents']
+  ])
+  assert.match(decisions[0].modelSolution.en, /reject.*multi-agent/i)
+  assert.match(decisions[2].modelSolution.en, /reject.*multi-agent/i)
+  assert.ok(decisions.every((scenario) => scenario.handoff.it && scenario.handoff.en &&
+    scenario.stopCondition.it && scenario.stopCondition.en &&
+    scenario.measurableBenefit.it && scenario.measurableBenefit.en))
+})
+
+test('Module 4 opt-in validator rejects mutations to central safety contracts', () => {
+  const errorsFor = (mutate) => {
+    const lesson = structuredClone(llmAgentsLesson)
+    mutate(lesson)
+    return lessonLocalErrors([
+      digitalTransformationLesson,
+      architectureLesson,
+      dataAiLesson,
+      lesson
+    ])
+  }
+
+  assert.ok(errorsFor((lesson) => { lesson.ragControlArtifact.pipeline.shift() })
+    .some((error) => /RAG control.*six ordered steps/i.test(error)))
+  assert.ok(errorsFor((lesson) => {
+    lesson.maintenanceToolContract.requiredInputs = lesson.maintenanceToolContract.requiredInputs
+      .filter((field) => field !== 'idempotencyKey')
+  }).some((error) => /tool contract.*idempotencyKey/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.mcpBoundary.participants.pop() })
+    .some((error) => /MCP boundary.*host, client and server/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.multiModelDecisionExercise.scenarios.pop() })
+    .some((error) => /multi-model exercise.*four patterns/i.test(error)))
+})
+
+test('Module 4 safety-contract validation remains opt-in to its RAG marker', () => {
+  const lesson = structuredClone(llmAgentsLesson)
+  delete lesson.ragControlArtifact
+  lesson.maintenanceToolContract.requiredInputs = []
+  lesson.mcpBoundary.participants = []
+  lesson.multiModelDecisionExercise.scenarios = []
+
+  assert.ok(lessonLocalErrors([
+    digitalTransformationLesson,
+    architectureLesson,
+    dataAiLesson,
+    lesson
+  ]).every((error) => !/Module 4 safety contract/i.test(error)))
 })

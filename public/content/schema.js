@@ -655,6 +655,94 @@ function validateModule3EngagedTime(lesson, path, errors) {
   if (lesson.durationMinutes !== 65) errors.push(`${path} durationMinutes must remain 65`)
 }
 
+function validateModule4SafetyContracts(lesson, path, errors) {
+  const contractPath = `${path} Module 4 safety contract`
+  const ragStepIds = [
+    'authorize-query',
+    'resolve-effective-version',
+    'retrieve-filtered-passages',
+    'rerank-and-threshold',
+    'generate-with-citations',
+    'verify-claims-or-refuse'
+  ]
+  const actualRagStepIds = asArray(lesson.ragControlArtifact?.pipeline).map((step) => step?.id)
+  if (actualRagStepIds.length !== ragStepIds.length ||
+      actualRagStepIds.some((id, index) => id !== ragStepIds[index])) {
+    errors.push(`${contractPath} RAG control must keep six ordered steps`)
+  }
+
+  const tool = lesson.maintenanceToolContract
+  const requiredToolInputs = [
+    'assetId', 'siteId', 'symptomCode', 'description', 'priority',
+    'requestedWindowStart', 'requestedWindowEnd', 'requesterId', 'authorizationContext',
+    'sourceEvidenceIds', 'idempotencyKey'
+  ]
+  const actualToolInputs = asArray(tool?.requiredInputs)
+  for (const field of requiredToolInputs) {
+    if (!actualToolInputs.includes(field)) {
+      errors.push(`${contractPath} tool contract must retain ${field}`)
+    }
+  }
+  if (!asArray(tool?.auditFields).includes('idempotencyKey')) {
+    errors.push(`${contractPath} tool contract audit must retain idempotencyKey`)
+  }
+  if (asArray(tool?.validationRules).length < 5 || asArray(tool?.failureModes).length < 3) {
+    errors.push(`${contractPath} tool contract needs validation and failure handling`)
+  }
+
+  const participantIds = asArray(lesson.mcpBoundary?.participants).map((item) => item?.id)
+  if (participantIds.join(',') !== 'host,client,server') {
+    errors.push(`${contractPath} MCP boundary must retain host, client and server`)
+  }
+  const primitiveIds = asArray(lesson.mcpBoundary?.serverPrimitives).map((item) => item?.id)
+  if (primitiveIds.join(',') !== 'resources,tools,prompts') {
+    errors.push(`${contractPath} MCP boundary must retain resources, tools and prompts`)
+  }
+  if (lesson.mcpBoundary?.protocolRevision !== '2026-07-28') {
+    errors.push(`${contractPath} MCP boundary must identify protocol revision 2026-07-28`)
+  }
+
+  const expectedPatterns = [
+    ['single-controlled-summary', 'one-model'],
+    ['mixed-volume-classification', 'model-routing'],
+    ['maintenance-order-transaction', 'deterministic-orchestration'],
+    ['ambiguous-cross-domain-investigation', 'multiple-agents']
+  ]
+  const scenarios = asArray(lesson.multiModelDecisionExercise?.scenarios)
+  if (scenarios.length !== expectedPatterns.length || expectedPatterns.some(
+    ([id, pattern], index) => scenarios[index]?.id !== id || scenarios[index]?.recommendedPattern !== pattern
+  )) {
+    errors.push(`${contractPath} multi-model exercise must retain all four patterns`)
+  }
+  for (const [index, scenario] of scenarios.entries()) {
+    if (!hasLocalizedFields(scenario, ['modelSolution', 'handoff', 'stopCondition', 'measurableBenefit'])) {
+      errors.push(`${contractPath} multi-model exercise scenario ${index + 1} needs localized decision evidence`)
+    }
+  }
+
+  const units = asArray(lesson.units)
+  const caseMinutes = units.reduce((sum, unit) => sum + [
+    ...asArray(unit?.microExamples),
+    ...asArray(unit?.caseSegments),
+    ...asArray(unit?.workedCases)
+  ].reduce((subtotal, item) => subtotal + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0), 0), 0)
+  const activities = units.flatMap((unit) => asArray(unit?.activities))
+  const practiceMinutes = activities.reduce(
+    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
+    0
+  )
+  if (units.length !== 9 || lesson.durationMinutes !== 80 ||
+      lesson.timeBudget?.theory !== 40 || lesson.timeBudget?.cases !== 22 ||
+      lesson.timeBudget?.practice !== 18) {
+    errors.push(`${contractPath} timing must remain nine units and 40 theory, 22 cases, 18 practice minutes`)
+  }
+  if (caseMinutes !== 22) errors.push(`${contractPath} learner-visible case minutes must total 22`)
+  if (activities.length !== 9 || practiceMinutes !== 18 ||
+      activities.some((item) => item?.durationMinutes !== 2 || !isValidQuickTaskScope(item?.quickTask))) {
+    errors.push(`${contractPath} must retain nine two-minute one-output activities`)
+  }
+}
+
 function validateCheckpoint(checkpoint, path, errors) {
   if (!checkpoint) {
     errors.push(`${path} is missing a checkpoint`)
@@ -783,6 +871,9 @@ export function validateCurriculum(lessons, sources) {
         errors
       )
       validateModule3EngagedTime(lesson, path, errors)
+    }
+    if ('ragControlArtifact' in lesson) {
+      validateModule4SafetyContracts(lesson, path, errors)
     }
 
     for (const [unitIndex, unit] of units.entries()) {

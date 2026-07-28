@@ -66,10 +66,11 @@ export const sources = {
     accessedAt
   },
   'mcp-specification': {
-    title: 'Model Context Protocol Specification: Architecture',
+    title: 'Model Context Protocol Specification, Protocol Revision 2026-07-28',
     organization: 'Model Context Protocol',
     type: 'primary',
-    url: 'https://modelcontextprotocol.io/specification/2025-06-18/architecture',
+    url: 'https://modelcontextprotocol.io/specification/2026-07-28',
+    publicationDate: '2026-07-28',
     accessedAt
   },
   'pmi-operations': {
