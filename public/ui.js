@@ -9,6 +9,13 @@ export function parseRoute(pathname) {
   return { name: 'dashboard' }
 }
 
+export function normalizeAppHref(href, basePath) {
+  if (!href?.startsWith('/')) return href
+  const normalizedBase = basePath.endsWith('/') ? basePath : `${basePath}/`
+  if (normalizedBase === '/' || href === normalizedBase.slice(0, -1) || href.startsWith(normalizedBase)) return href
+  return `${normalizedBase}${href.slice(1)}`
+}
+
 export function getDashboardState(lessons, progress) {
   const completedCount = lessons.filter((lesson) => progress[lesson.id]?.status === 'completed').length
   const nextLesson = lessons.find((lesson) => progress[lesson.id]?.status !== 'completed') || lessons.at(-1)

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { getDashboardState, parseRoute, quizFeedback } from '../public/ui.js'
+import { getDashboardState, normalizeAppHref, parseRoute, quizFeedback } from '../public/ui.js'
 import { lessons } from '../public/content.js'
 
 test('parseRoute identifies a lesson deep link', () => {
@@ -11,6 +11,13 @@ test('parseRoute recognizes primary application destinations', () => {
   assert.deepEqual(parseRoute('/review'), { name: 'review' })
   assert.deepEqual(parseRoute('/interview'), { name: 'interview' })
   assert.deepEqual(parseRoute('/unknown'), { name: 'dashboard' })
+})
+
+test('normalizeAppHref does not duplicate the GitHub Pages base path', () => {
+  assert.equal(normalizeAppHref('/', '/ia-apprendimento/'), '/ia-apprendimento/')
+  assert.equal(normalizeAppHref('/sprint', '/ia-apprendimento/'), '/ia-apprendimento/sprint')
+  assert.equal(normalizeAppHref('/ia-apprendimento/sprint', '/ia-apprendimento/'), '/ia-apprendimento/sprint')
+  assert.equal(normalizeAppHref('#quiz', '/ia-apprendimento/'), '#quiz')
 })
 
 test('getDashboardState returns the first unfinished lesson and true completion percentage', () => {

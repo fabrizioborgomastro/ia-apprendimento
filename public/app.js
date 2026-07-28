@@ -1,6 +1,6 @@
 import { allGlossary, interviewQuestions, lessons } from './content.js'
 import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js'
-import { getDashboardState, parseRoute, quizFeedback } from './ui.js'
+import { getDashboardState, normalizeAppHref, parseRoute, quizFeedback } from './ui.js'
 import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js'
 
 const main = document.querySelector('#main')
@@ -59,7 +59,7 @@ function toAppPath(pathname) {
 function normalizeLinks() {
   document.querySelectorAll('a[data-link]').forEach((link) => {
     const route = link.getAttribute('href')
-    if (route?.startsWith('/')) link.href = `${BASE_PATH}${route.slice(1)}`
+    link.setAttribute('href', normalizeAppHref(route, BASE_PATH))
   })
 }
 
