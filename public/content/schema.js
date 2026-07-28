@@ -25,7 +25,7 @@ export function countWords(value) {
 }
 
 export function lessonPlannedMinutes(lesson) {
-  return Object.values(lesson.timeBudget).reduce((sum, minutes) => sum + minutes, 0)
+  return TIME_BUDGET_KEYS.reduce((sum, key) => sum + (lesson.timeBudget[key] || 0), 0)
 }
 
 function collectLocalizedErrors(value, path, errors) {
@@ -47,7 +47,7 @@ function collectLocalizedErrors(value, path, errors) {
 function lessonItems(lesson, field) {
   return [
     ...asArray(lesson[field]),
-    ...asArray(lesson.units).flatMap((unit) => asArray(unit[field]))
+    ...asArray(lesson.units).flatMap((unit) => asArray(unit?.[field]))
   ]
 }
 
@@ -56,8 +56,8 @@ function lessonArtifacts(lesson) {
     ...(lesson.artifact ? [lesson.artifact] : []),
     ...asArray(lesson.professionalArtifacts),
     ...asArray(lesson.units).flatMap((unit) => [
-      ...(unit.artifact ? [unit.artifact] : []),
-      ...asArray(unit.professionalArtifacts)
+      ...(unit?.artifact ? [unit.artifact] : []),
+      ...asArray(unit?.professionalArtifacts)
     ])
   ]
 }
@@ -69,6 +69,31 @@ function theoryWords(lesson, locale) {
 
 function validateSource(sourceId, sources, path, errors) {
   if (!sourceId || !sources?.[sourceId]) errors.push(`${path} references a missing source: ${sourceId || '(none)'}`)
+}
+
+function isLocalized(value) {
+  return isObject(value) && typeof value.it === 'string' && value.it.trim() && typeof value.en === 'string' && value.en.trim()
+}
+
+function hasLocalizedFields(value, fields) {
+  return isObject(value) && fields.every((field) => isLocalized(value[field]))
+}
+
+function isMicroExample(value) {
+  return hasLocalizedFields(value, ['title', 'explanation'])
+}
+
+function isWorkedCase(value) {
+  return hasLocalizedFields(value, ['title', 'scenario', 'reasoning', 'decision', 'tradeOff', 'outcome'])
+}
+
+function isSolvedActivity(value) {
+  const solution = value?.solution || value?.modelSolution
+  return isObject(value) && isLocalized(value.prompt) && isLocalized(solution) && asArray(value.rubric).length > 0 && value.rubric.every(isLocalized)
+}
+
+function isProfessionalArtifact(value) {
+  return hasLocalizedFields(value, ['title', 'description'])
 }
 
 function validateCheckpoint(checkpoint, path, errors) {
@@ -87,26 +112,8 @@ function validateCheckpoint(checkpoint, path, errors) {
   }
 }
 
-function validateLegacyLessons(lessons) {
-  const errors = []
-  const ids = new Set()
-  for (const lesson of lessons) {
-    if (ids.has(lesson.id)) errors.push(`ID lezione duplicato: ${lesson.id}`)
-    ids.add(lesson.id)
-    if (!lesson.title || !lesson.englishTitle) errors.push(`Titolo bilingue mancante: ${lesson.id}`)
-    if (!lesson.blocks?.length) errors.push(`Contenuto mancante: ${lesson.id}`)
-    for (const question of lesson.quiz || []) {
-      if (!question.explanation?.trim()) errors.push(`Spiegazione mancante: ${lesson.id}/${question.id}`)
-      if (!Array.isArray(question.options) || question.options.length < 2) errors.push(`Opzioni mancanti: ${lesson.id}/${question.id}`)
-      if (question.correctOption < 0 || question.correctOption >= question.options.length) errors.push(`Risposta non valida: ${lesson.id}/${question.id}`)
-    }
-  }
-  return errors
-}
-
 export function validateCurriculum(lessons, sources) {
   if (!Array.isArray(lessons)) return ['Curriculum lessons must be an array']
-  if (lessons.some((lesson) => !Array.isArray(lesson.units))) return validateLegacyLessons(lessons)
 
   const errors = []
   const ids = new Set()
@@ -131,6 +138,8 @@ export function validateCurriculum(lessons, sources) {
     if (!isObject(timeBudget) || TIME_BUDGET_KEYS.some((key) => !Number.isFinite(timeBudget[key]) || timeBudget[key] < 0)) {
       errors.push(`${path} must define non-negative theory, cases and practice minutes`)
     } else {
+      const unknownTimeBudgetKeys = Object.keys(timeBudget).filter((key) => !TIME_BUDGET_KEYS.includes(key))
+      if (unknownTimeBudgetKeys.length) errors.push(`${path} has unknown time budget fields: ${unknownTimeBudgetKeys.join(', ')}`)
       const plannedMinutes = lessonPlannedMinutes(lesson)
       totalMinutes += plannedMinutes
       practicalMinutes += timeBudget.cases + timeBudget.practice
@@ -154,20 +163,20 @@ export function validateCurriculum(lessons, sources) {
       errors.push(`${path} English theory must contain at least 85% of its Italian word count`)
     }
 
-    const workedCases = lessonItems(lesson, 'workedCases')
-    if (workedCases.length < 2) errors.push(`${path} needs at least two worked cases`)
+    const workedCases = lessonItems(lesson, 'workedCases').filter(isWorkedCase)
+    if (workedCases.length < 2) errors.push(`${path} needs at least two valid worked cases`)
     for (const [caseIndex, workedCase] of workedCases.entries()) {
       if (workedCase?.pmiCase && (!workedCase.hypothetical || !workedCase.publicContext)) {
         errors.push(`${path} worked case ${caseIndex + 1} must be hypothetical and use public context`)
       }
     }
 
-    if (lessonItems(lesson, 'microExamples').length < 4) errors.push(`${path} needs at least four micro-examples`)
-    const solvedActivities = lessonItems(lesson, 'activities').filter((activity) => activity?.solution || activity?.modelSolution)
-    if (solvedActivities.filter((activity) => activity?.rubric).length < 2) {
+    const microExamples = lessonItems(lesson, 'microExamples').filter(isMicroExample)
+    if (microExamples.length < 4) errors.push(`${path} needs at least four valid micro-examples`)
+    if (lessonItems(lesson, 'activities').filter(isSolvedActivity).length < 2) {
       errors.push(`${path} needs at least two solved activities with rubrics`)
     }
-    if (!lessonArtifacts(lesson).length) errors.push(`${path} needs one professional artifact`)
+    if (!lessonArtifacts(lesson).some(isProfessionalArtifact)) errors.push(`${path} needs one valid professional artifact`)
 
     const answers = asArray(lesson.interviewAnswers).length ? lesson.interviewAnswers : [lesson.interview]
     if (!answers.some((answer) => typeof answer?.short === 'string' && answer.short.trim() && typeof answer?.long === 'string' && answer.long.trim())) {
@@ -188,8 +197,16 @@ export function validateCurriculum(lessons, sources) {
   if (italianWords < 34000) errors.push(`Curriculum Italian theory must contain at least 34000 words; received ${italianWords}`)
 
   for (const [sourceId, source] of Object.entries(sources || {})) {
-    if (source?.type === 'educational' && !asArray(source.verifiedAgainst).length) {
-      errors.push(`Educational source ${sourceId} must identify primary sources used for verification`)
+    if (source?.type === 'educational') {
+      const verifiedAgainst = asArray(source.verifiedAgainst)
+      if (!verifiedAgainst.length) {
+        errors.push(`Educational source ${sourceId} must identify verified primary sources`)
+      }
+      for (const primarySourceId of verifiedAgainst) {
+        if (sources[primarySourceId]?.type !== 'primary') {
+          errors.push(`Educational source ${sourceId} must reference a verified primary source: ${primarySourceId}`)
+        }
+      }
     }
   }
 
