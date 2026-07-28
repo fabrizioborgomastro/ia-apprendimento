@@ -18,6 +18,18 @@ export function countWorkedCases(lesson) {
   ].length
 }
 
+const ignoredPartialCurriculumErrors = [
+  'Curriculum requires exactly 6 lessons',
+  'Curriculum planned duration must equal 420 minutes',
+  'Curriculum cases and practice must equal 231 minutes',
+  'Curriculum Italian theory must contain at least 34000 words'
+]
+
+function lessonLocalErrors(lessons) {
+  return validateCurriculum(lessons, sources)
+    .filter((error) => !ignoredPartialCurriculumErrors.some((prefix) => error.startsWith(prefix)))
+}
+
 test('Module 1 has the approved time, depth and practical portfolio', () => {
   assert.equal(digitalTransformationLesson.durationMinutes, 50)
   assert.deepEqual(digitalTransformationLesson.timeBudget, { theory: 25, cases: 15, practice: 10 })
@@ -49,16 +61,7 @@ test('Module 1 keeps the six approved unit boundaries and exact minute allocatio
 })
 
 test('Module 1 passes every lesson-local schema rule against the real source catalog', () => {
-  const wholeCurriculumErrors = [
-    'Curriculum requires exactly 6 lessons',
-    'Curriculum planned duration must equal 420 minutes',
-    'Curriculum cases and practice must equal 231 minutes',
-    'Curriculum Italian theory must contain at least 34000 words'
-  ]
-  const lessonLocalErrors = validateCurriculum([digitalTransformationLesson], sources)
-    .filter((error) => !wholeCurriculumErrors.some((prefix) => error.startsWith(prefix)))
-
-  assert.deepEqual(lessonLocalErrors, [])
+  assert.deepEqual(lessonLocalErrors([digitalTransformationLesson]), [])
 })
 
 test('Module 1 resolves topic-specific sources for terminology, measurement, gemba and stakeholders', () => {
@@ -189,14 +192,21 @@ test('Module 1 solved activities contain assessable solutions and the gemba solu
 })
 
 test('Module 1 contains all required interview prompts with short and extended answers', () => {
-  assert.deepEqual(digitalTransformationLesson.interviewAnswers.map(({ prompt }) => prompt), [
+  assert.deepEqual(digitalTransformationLesson.interviewAnswers.map(({ prompt }) => prompt.en), [
     'How do you decide which processes to automate?',
     'Can you give me an example of applying digital transformation in manufacturing?',
     'How do you distinguish a technology project from transformation?'
   ])
   for (const answer of digitalTransformationLesson.interviewAnswers) {
-    assert.ok(countWords(answer.short) >= 50)
-    assert.ok(countWords(answer.long) >= 180)
+    for (const field of ['prompt', 'short', 'long']) {
+      assert.ok(answer[field].it && answer[field].en)
+    }
+    assert.ok(countWords(answer.short.it) >= 50)
+    assert.ok(countWords(answer.short.en) >= 50)
+    assert.ok(countWords(answer.long.it) >= 180)
+    assert.ok(countWords(answer.long.en) >= 180)
+    assert.ok(answer.followUps.length >= 1)
+    assert.ok(answer.followUps.every((followUp) => followUp.it && followUp.en))
   }
 })
 
@@ -217,7 +227,7 @@ test('Module 2 has the approved time, depth and practical portfolio', () => {
   assert.ok(referencedIds.has('nist-sp-800-82-r3'))
 })
 
-test('Module 2 keeps the eight approved unit boundaries and exact minute allocation', () => {
+test('Module 2 keeps the eight approved unit boundaries and reconciles every minute by learning mode', () => {
   assert.ok(architectureLesson, 'Module 2 content must exist')
   assert.deepEqual(
     architectureLesson.units.map(({ title, estimatedMinutes }) => ({
@@ -230,50 +240,161 @@ test('Module 2 keeps the eight approved unit boundaries and exact minute allocat
       { title: 'Historian, timestamps, event context, and time-series quality', estimatedMinutes: 9 },
       { title: 'MES/MOM responsibilities and production genealogy', estimatedMinutes: 9 },
       { title: 'ERP, planning, logistics, and the MES/ERP boundary', estimatedMinutes: 9 },
-      { title: 'ISA-95, Purdue, zones, conduits, and the industrial DMZ', estimatedMinutes: 9 },
+      { title: 'ISA-95, Purdue, zones, conduits, and the industrial DMZ', estimatedMinutes: 10 },
       { title: 'Edge, cloud, data platforms, APIs, event streaming, and AI serving', estimatedMinutes: 10 },
-      { title: 'Worked case: sensor-to-human-decision architecture and failure modes', estimatedMinutes: 11 }
+      { title: 'Worked case: sensor-to-human-decision architecture and failure modes', estimatedMinutes: 10 }
     ]
   )
-  assert.equal(
-    architectureLesson.units.reduce((total, unit) => total + unit.estimatedMinutes, 0),
-    75
-  )
+  const totals = { theory: 0, cases: 0, practice: 0 }
+  for (const unit of architectureLesson.units) {
+    assert.ok(unit.estimatedMinutes >= 5 && unit.estimatedMinutes <= 10)
+    assert.deepEqual(Object.keys(unit.timeAllocation), ['theory', 'cases', 'practice'])
+    assert.equal(Object.values(unit.timeAllocation).reduce((sum, minutes) => sum + minutes, 0), unit.estimatedMinutes)
+    for (const mode of Object.keys(totals)) totals[mode] += unit.timeAllocation[mode]
+  }
+  assert.deepEqual(totals, architectureLesson.timeBudget)
+  assert.equal(architectureLesson.units.reduce((total, unit) => total + unit.estimatedMinutes, 0), 75)
 })
 
-test('Module 2 artifact makes ownership, timing, trust and action explicit at every hop', () => {
+test('Module 2 artifact defines nine ordered source-to-destination edges with recomputable latency', () => {
   assert.ok(architectureLesson, 'Module 2 content must exist')
   const artifact = architectureLesson.sensorToDecisionArtifact
   assert.ok(artifact)
-  assert.ok(artifact.hops.length >= 8)
+  assert.deepEqual(artifact.edges.map(({ id, order }) => [id, order]), [
+    ['sensor-to-acquisition', 1],
+    ['acquisition-to-edge-feature', 2],
+    ['edge-feature-to-opcua', 3],
+    ['opcua-to-historian', 4],
+    ['historian-to-dmz', 5],
+    ['dmz-to-event-broker', 6],
+    ['event-broker-to-ai-serving', 7],
+    ['ai-serving-to-decision-workflow', 8],
+    ['decision-workflow-to-reliability-engineer', 9]
+  ])
 
-  for (const hop of artifact.hops) {
+  for (const edge of artifact.edges) {
     for (const field of [
-      'label',
+      'source',
+      'destination',
+      'interface',
+      'cadence',
       'dataOwner',
-      'latency',
-      'protocol',
-      'securityBoundary',
+      'securityBoundaryCrossing',
       'fallback',
       'humanAction'
     ]) {
-      assert.ok(hop[field]?.it && hop[field]?.en, `${hop.id} must localize ${field}`)
+      assert.ok(edge[field]?.it && edge[field]?.en, `${edge.id} must localize ${field}`)
     }
+    assert.ok(Number.isInteger(edge.latencyBudgetMs) && edge.latencyBudgetMs > 0)
   }
+  assert.equal(artifact.totalLatencyBudgetMs, 57000)
+  assert.equal(
+    artifact.edges.reduce((total, edge) => total + edge.latencyBudgetMs, 0),
+    artifact.totalLatencyBudgetMs
+  )
 })
 
 test('Module 2 trains the four architecture interview distinctions with natural timed answers', () => {
   assert.ok(architectureLesson, 'Module 2 content must exist')
-  assert.deepEqual(architectureLesson.interviewAnswers.map(({ prompt }) => prompt), [
+  assert.deepEqual(architectureLesson.interviewAnswers.map(({ prompt }) => prompt.en), [
     'How do OT and IT differ?',
     'How do MES and SCADA differ?',
     'When would you choose edge rather than cloud?',
     'Why must an AI model not directly close a safety-critical control loop?'
   ])
   for (const answer of architectureLesson.interviewAnswers) {
-    assert.ok(countWords(answer.short) >= 50)
-    assert.ok(countWords(answer.short) <= 90)
-    assert.ok(countWords(answer.long) >= 180)
-    assert.ok(countWords(answer.long) <= 340)
+    for (const field of ['prompt', 'short', 'long']) {
+      assert.ok(answer[field].it && answer[field].en)
+    }
+    assert.ok(countWords(answer.short.it) >= 50)
+    assert.ok(countWords(answer.short.en) >= 50)
+    assert.ok(countWords(answer.short.en) <= 90)
+    assert.ok(countWords(answer.long.it) >= 180)
+    assert.ok(countWords(answer.long.en) >= 180)
+    assert.ok(countWords(answer.long.en) <= 340)
+    assert.ok(answer.followUps.length >= 1)
+    assert.ok(answer.followUps.every((followUp) => followUp.it && followUp.en))
   }
+})
+
+test('Module 2 and its Module 1 dependency pass real lesson-local schema validation together', () => {
+  assert.deepEqual(lessonLocalErrors([digitalTransformationLesson, architectureLesson]), [])
+})
+
+test('Module 2 conduit solution answers every requested field with capacity and degraded operation', () => {
+  const activity = architectureLesson.units[5].activities[0]
+  const solution = activity.solutionArtifact
+  assert.deepEqual(solution.conduits.map(({ id }) => id), [
+    'plc-to-scada',
+    'historian-to-dmz',
+    'dmz-to-enterprise-broker'
+  ])
+  for (const conduit of solution.conduits) {
+    for (const field of [
+      'source',
+      'destination',
+      'interface',
+      'dataOwner',
+      'securityBoundaryCrossing',
+      'monitoring',
+      'degradedBehavior',
+      'fallback',
+      'humanAction'
+    ]) assert.ok(conduit[field].it && conduit[field].en)
+    assert.ok(Number.isInteger(conduit.latencyBudgetMs) && conduit.latencyBudgetMs > 0)
+  }
+  const capacity = solution.capacityCalculation
+  assert.equal(capacity.requiredBytes, capacity.tagCount * capacity.bytesPerSample * capacity.samplesPerSecond * capacity.bufferSeconds)
+  assert.equal(capacity.requiredBytes, 51840000000)
+  assert.equal(capacity.requiredGigabytes, 51.84)
+  assert.equal(capacity.provisionedGigabytes, 68)
+  assert.ok(activity.rubric.length >= 4)
+})
+
+test('Module 2 genealogy case reconstructs concrete split and rework scope despite late and duplicate events', () => {
+  const workedCase = architectureLesson.units[3].workedCases[0]
+  const artifact = workedCase.caseArtifact
+  assert.deepEqual(artifact.inputLots.map(({ id, units }) => [id, units]), [['COMP-A17', 10000]])
+  assert.deepEqual(artifact.outputLots.map(({ id, units }) => [id, units]), [
+    ['FG-701', 3900],
+    ['FG-702', 1850]
+  ])
+  assert.deepEqual(artifact.edges.map(({ id, from, to, units }) => [id, from, to, units]), [
+    ['consume-a17', 'COMP-A17', 'SFG-401', 6000],
+    ['split-a', 'SFG-401', 'SFG-401-A', 4000],
+    ['split-b', 'SFG-401', 'SFG-401-B', 2000],
+    ['pack-701', 'SFG-401-A', 'FG-701', 3900],
+    ['rework-b', 'SFG-401-B', 'RW-401-B', 1900],
+    ['pack-702', 'RW-401-B', 'FG-702', 1850]
+  ])
+  assert.deepEqual(artifact.eventExceptions.map(({ id, status }) => [id, status]), [
+    ['EV-101-RETRY', 'duplicate-ignored'],
+    ['EV-105', 'late-reconciled']
+  ])
+  assert.equal(artifact.scopeCalculation.affectedInputUnits, 6000)
+  assert.equal(artifact.scopeCalculation.affectedOutputUnits, 5750)
+  assert.equal(artifact.scopeCalculation.scrapAndLossUnits, 250)
+  assert.equal(artifact.scopeCalculation.outputYieldPercent, 95.83)
+  assert.ok(artifact.reconstructionSteps.length >= 5)
+  assert.ok(artifact.failureHandling.length >= 3)
+  assert.ok(workedCase.followUps.length >= 2)
+})
+
+test('Module 2 cites primary references for alarms, zones and conduits, and the 4-20 mA loop', () => {
+  const expectedByUnit = [
+    [0, 'ni-4-20ma-current-loop'],
+    [1, 'isa-18-alarm-management'],
+    [5, 'isa-iec-62443']
+  ]
+  for (const [unitIndex, sourceId] of expectedByUnit) {
+    assert.ok(architectureLesson.units[unitIndex].sourceIds.includes(sourceId))
+    assert.equal(sources[sourceId].type, 'primary')
+  }
+})
+
+test('Module 2 Italian copy does not contain known missing-apostrophe forms', () => {
+  assert.doesNotMatch(
+    JSON.stringify(architectureLesson, (key, value) => key === 'en' ? undefined : value),
+    /(?:^|[\s"'([{])(?:L|l|dall|nell|all|dell) (?:AI|applicazione|arrivo|artefatto|esito|evento|informazione|ingegnere|integrazione|ordine|output|uso)\b/u
+  )
 })

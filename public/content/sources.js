@@ -163,6 +163,27 @@ export const sources = {
     type: 'primary',
     url: 'https://www.ahrq.gov/patient-safety/settings/hospital/resource/pressureinjury/guide/apa.html',
     accessedAt
+  },
+  'isa-18-alarm-management': {
+    title: 'ISA-18 Series of Standards: Alarm Management',
+    organization: 'International Society of Automation',
+    type: 'primary',
+    url: 'https://www.isa.org/standards-and-publications/isa-standards/isa-18-series-of-standards',
+    accessedAt
+  },
+  'isa-iec-62443': {
+    title: 'ISA/IEC 62443 Series of Standards: Industrial Automation and Control Systems Security',
+    organization: 'International Society of Automation',
+    type: 'primary',
+    url: 'https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards',
+    accessedAt
+  },
+  'ni-4-20ma-current-loop': {
+    title: '4-20 mA Current Loop Fundamentals, System Design, and Setup',
+    organization: 'National Instruments',
+    type: 'primary',
+    url: 'https://www.ni.com/en/shop/data-acquisition/fundamentals--system-design--and-setup-for-the-4-to-20-ma-curren.html',
+    accessedAt
   }
 }
 

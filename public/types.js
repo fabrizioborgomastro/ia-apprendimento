@@ -15,9 +15,14 @@
  * @typedef {{condition:LocalizedText, response:LocalizedText, owner:LocalizedText}} GembaException
  * @typedef {{role:LocalizedText, outcome:LocalizedText, risk:LocalizedText}} GembaStakeholder
  * @typedef {{decisions:GembaDecision[], exceptions:GembaException[], stakeholders:GembaStakeholder[]}} GembaSolutionArtifact
- * @typedef {{prompt:LocalizedText, hints:LocalizedText[], solution?:LocalizedText, modelSolution?:LocalizedText, solutionArtifact?:GembaSolutionArtifact, rubric:LocalizedText[]}} LearningActivity
+ * @typedef {{theory:number, cases:number, practice:number}} UnitTimeAllocation
+ * @typedef {{prompt:LocalizedText, short:LocalizedText, long:LocalizedText, followUps:LocalizedText[]}} ProfessionalAnswer
+ * @typedef {{id:string, source:LocalizedText, destination:LocalizedText, interface:LocalizedText, dataOwner:LocalizedText, latencyBudgetMs:number, securityBoundaryCrossing:LocalizedText, monitoring:LocalizedText, degradedBehavior:LocalizedText, fallback:LocalizedText, humanAction:LocalizedText}} ConduitSolutionRow
+ * @typedef {{tagCount:number, bytesPerSample:number, samplesPerSecond:number, bufferSeconds:number, requiredBytes:number, requiredGigabytes:number, marginFactor:number, provisionedGigabytes:number, formula:LocalizedText}} CapacityCalculation
+ * @typedef {{conduits:ConduitSolutionRow[], capacityCalculation:CapacityCalculation}} ConduitSolutionArtifact
+ * @typedef {{prompt:LocalizedText, hints?:LocalizedText[], durationMinutes?:number, solution?:LocalizedText, modelSolution?:LocalizedText, solutionArtifact?:GembaSolutionArtifact|ConduitSolutionArtifact, rubric:LocalizedText[]}} LearningActivity
  * @typedef {{title:LocalizedText, explanation:LocalizedText}} MicroExample
- * @typedef {{title:LocalizedText, scenario:LocalizedText, reasoning:LocalizedText, decision:LocalizedText, tradeOff:LocalizedText, outcome:LocalizedText, pmiCase?:boolean, hypothetical?:boolean, publicContext?:boolean}} WorkedCase
+ * @typedef {{title:LocalizedText, scenario:LocalizedText, assumptions?:LocalizedText, reasoning:LocalizedText, decision:LocalizedText, tradeOff:LocalizedText, outcome:LocalizedText, followUps?:LocalizedText[], caseArtifact?:object, pmiCase?:boolean, hypothetical?:boolean, publicContext?:boolean}} WorkedCase
  * @typedef {{title:LocalizedText, description:LocalizedText}} ProfessionalArtifact
  * @typedef {'low'|'medium'|'high'} EvidenceConfidence
  * @typedef {{id:string, weight:number, label:LocalizedText, favorableAnchor:LocalizedText}} AutomationCriterion
@@ -27,8 +32,10 @@
  * @typedef {'selected'|'deferred'|'rejected'} PortfolioDecision
  * @typedef {{id:string, candidate:LocalizedText, evidenceBasis:LocalizedText, assessments:Record<string, AutomationAssessment>, hardGateChecks:AutomationHardGateCheck[], weightedScore:number, failedHardGateIds:string[], recommendation:LocalizedText, portfolioDecision:PortfolioDecision}} AutomationCandidate
  * @typedef {{scale:LocalizedText, formula:LocalizedText, evidencePolicy:LocalizedText, criteria:AutomationCriterion[], hardGates:AutomationHardGate[], recommendedCandidateId:string, candidates:AutomationCandidate[]}} AutomationDecisionMatrix
- * @typedef {{id:string, eyebrow:LocalizedText, title:LocalizedText, estimatedMinutes:number, theory:LocalizedText[], keyPoints:LocalizedText[], microExamples?:MicroExample[], workedCases?:WorkedCase[], activities?:LearningActivity[], artifact?:ProfessionalArtifact, professionalArtifacts?:ProfessionalArtifact[], decisionMatrix?:AutomationDecisionMatrix, checkpoint:Checkpoint, sourceIds:string[]}} LearningUnit
- * @typedef {{id:string, slug:string, durationMinutes:number, timeBudget:{theory:number, cases:number, practice:number}, units:LearningUnit[], interviewAnswers:{prompt:string, short:string, long:string}[], microExamples?:MicroExample[], workedCases?:WorkedCase[], activities?:LearningActivity[], artifact?:ProfessionalArtifact, professionalArtifacts?:ProfessionalArtifact[]}} BilingualLesson
+ * @typedef {{id:string, order:number, source:LocalizedText, destination:LocalizedText, interface:LocalizedText, latencyBudgetMs:number, cadence:LocalizedText, securityBoundaryCrossing:LocalizedText, dataOwner:LocalizedText, fallback:LocalizedText, humanAction:LocalizedText}} ArchitectureEdge
+ * @typedef {{title:LocalizedText, description:LocalizedText, totalLatencyBudgetMs:number, edges:ArchitectureEdge[]}} SensorToDecisionArtifact
+ * @typedef {{id:string, eyebrow:LocalizedText, title:LocalizedText, estimatedMinutes:number, timeAllocation:UnitTimeAllocation, theory:LocalizedText[], keyPoints:LocalizedText[], microExamples?:MicroExample[], workedCases?:WorkedCase[], activities?:LearningActivity[], artifact?:ProfessionalArtifact, professionalArtifacts?:ProfessionalArtifact[], decisionMatrix?:AutomationDecisionMatrix, checkpoint:Checkpoint, sourceIds:string[]}} LearningUnit
+ * @typedef {{id:string, slug:string, durationMinutes:number, timeBudget:{theory:number, cases:number, practice:number}, units:LearningUnit[], interviewAnswers:ProfessionalAnswer[], microExamples?:MicroExample[], workedCases?:WorkedCase[], activities?:LearningActivity[], artifact?:ProfessionalArtifact, professionalArtifacts?:ProfessionalArtifact[], sensorToDecisionArtifact?:SensorToDecisionArtifact}} BilingualLesson
  * @typedef {{lessonId:string, status:LessonStatus, cursor:number, bestScore:number, reviewQuestionIds:string[], updatedAt:string, contentVersion:number}} VersionedLearningProgress
  */
 

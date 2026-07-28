@@ -28,6 +28,7 @@ const unitOne = {
     'Explain how a physical quantity becomes usable data and assess measurement, sampling, and actuation errors before designing analytics or AI.'
   ),
   estimatedMinutes: 9,
+  timeAllocation: { theory: 5, cases: 2, practice: 2 },
   theory: [
     t(
       `Un'architettura industriale comincia dal processo fisico, non dal cloud. Temperatura, pressione, portata, coppia, vibrazione, posizione e presenza sono grandezze continue o discrete che descrivono uno stato reale. Un sensore le trasduce in un segnale elettrico o digitale; un trasmettitore può condizionare, linearizzare e convertire quel segnale; un modulo di ingresso lo acquisisce; la logica di controllo gli attribuisce un significato operativo. Ogni passaggio introduce un'incertezza. Accuratezza indica quanto la misura è vicina al valore vero, precisione quanto le ripetizioni sono tra loro vicine, risoluzione il più piccolo cambiamento distinguibile, deriva la variazione nel tempo e isteresi la dipendenza dalla direzione con cui si raggiunge un valore. Un dato con molte cifre non è necessariamente accurato. In una linea ad alta velocità, un sensore fotoelettrico che conta confezioni può perdere impulsi per sporco, riflessi, disallineamento o durata dell'impulso inferiore alla scansione. Prima di attribuire un calo di conteggio a una perdita di produzione bisogna verificare principio di misura, posizione, range, taratura, diagnostica e condizioni ambientali. Anche l'identità conta: il tag P101_PV deve avere unità, asset, versione, owner e stato di qualità, non soltanto un numero. OPC UA, secondo la specifica OPC Foundation, non è semplicemente un canale di byte: consente di esporre nodi tipizzati, attributi, relazioni e metadati in un information model. Questa semantica riduce interpretazioni locali, ma non corregge un sensore installato male. La catena di fiducia resta fisica, metrologica, logica e organizzativa.`,
@@ -63,7 +64,7 @@ const unitOne = {
     ],
     1
   ),
-  sourceIds: ['opc-ua-part-1', 'nist-sp-800-82-r3']
+  sourceIds: ['ni-4-20ma-current-loop', 'opc-ua-part-1', 'nist-sp-800-82-r3']
 }
 
 const unitTwo = {
@@ -74,10 +75,11 @@ const unitTwo = {
     'PLC, DCS, HMI, SCADA, alarms, and control-loop constraints'
   ),
   objective: t(
-    'Distinguere controllo, supervisione e supporto decisionale e spiegare perché latenza, determinismo e conseguenza limitano il ruolo dell AI.',
+    'Distinguere controllo, supervisione e supporto decisionale e spiegare perché latenza, determinismo e conseguenza limitano il ruolo dell’AI.',
     'Distinguish control, supervision, and decision support and explain why latency, determinism, and consequence constrain AI roles.'
   ),
   estimatedMinutes: 9,
+  timeAllocation: { theory: 5, cases: 3, practice: 1 },
   theory: [
     t(
       `PLC, DCS, HMI e SCADA non sono sinonimi. Un programmable logic controller esegue logica ciclica, sequenze, interlock e controllo di macchina vicino al processo, con comportamento progettato e tempi prevedibili. Un distributed control system coordina molti loop continui e unità di processo con configurazione, ridondanza e supervisione integrate. Un human-machine interface presenta stato e comandi agli operatori per una macchina o area. Uno SCADA acquisisce e supervisiona processi distribuiti, gestisce visualizzazioni, eventi, allarmi e comandi autorizzati, spesso su una scala più ampia. I confini reali variano tra prodotti e impianti, quindi in colloquio conviene descrivere responsabilità e requisiti, non trasformare le sigle in livelli rigidi. La domanda fondamentale è dove deve vivere una funzione in base a tempo di risposta, disponibilità, rischio e contesto. Un interlock che arresta un motore quando manca lubrificazione deve funzionare anche se historian, rete enterprise o servizio AI sono indisponibili. Una raccomandazione di manutenzione che confronta settimane di vibrazione può attendere secondi o minuti e beneficiare di dati più ampi. OT e IT condividono principi di engineering e cybersecurity, ma ottimizzano priorità differenti. OT protegge un processo fisico dove indisponibilità o comando errato possono danneggiare persone, ambiente, prodotto e impianto; richiede finestre di modifica, test, compatibilità e recovery disciplinati. IT gestisce informazione, servizi e transazioni enterprise con maggiore elasticità e cicli di aggiornamento spesso più rapidi. La differenza non giustifica silos: impone una collaborazione che rispetti conseguenze fisiche, ownership e lifecycle. NIST SP 800-82 Rev. 3 tratta OT come sistemi programmabili che interagiscono con l'ambiente fisico e sottolinea requisiti peculiari di prestazione, affidabilità e sicurezza.`,
@@ -108,7 +110,7 @@ const unitTwo = {
     ],
     1
   ),
-  sourceIds: ['nist-sp-800-82-r3', 'isa-95']
+  sourceIds: ['isa-18-alarm-management', 'nist-sp-800-82-r3', 'isa-95']
 }
 
 const unitThree = {
@@ -123,6 +125,7 @@ const unitThree = {
     'Assess whether a time series retains sufficient time, quality, and context for reliable diagnosis, KPIs, and models.'
   ),
   estimatedMinutes: 9,
+  timeAllocation: { theory: 5, cases: 2, practice: 2 },
   theory: [
     t(
       `Un process historian è una memoria specializzata per dati temporali industriali. Raccoglie valori, qualità, timestamp ed eventi da sistemi di controllo e li rende interrogabili per trend, analisi e reporting. Non è una registrazione perfetta di tutto ciò che è accaduto. La configurazione può applicare deadband, exception reporting, compressione, aggregazione e retention diverse per tag. Se una temperatura oscilla di meno della soglia configurata, alcuni campioni non vengono conservati; se la rete si interrompe, un collector può bufferizzare e inoltrare più tardi; se un tag cambia definizione, la stessa serie può avere semantica diversa prima e dopo la modifica. Per usare lo storico come evidenza bisogna conoscere il percorso. Il timestamp può rappresentare source time, server time o ingest time. Source time indica quando il dispositivo o la sorgente ha osservato il valore; server time quando il server lo ha ricevuto o elaborato; ingest time quando la piattaforma a valle lo ha acquisito. Confonderli trasforma ritardo di rete in ritardo di processo. OPC UA prevede timestamp e status associati ai valori e il suo modello supporta subscription e monitored items, ma la configurazione effettiva determina sampling interval, queue, publish interval e comportamento in caso di perdita. Il consumer deve preservare status code e sequenza, non appiattire ogni valore in coppia tempo-numero. In un'indagine su un microfermo, sapere che un valore è Bad o Uncertain è più utile che interpolarlo come se fosse valido. Il principio è semplice: missing, stale, substituted e good sono stati diversi. La qualità non è un fastidio da pulire automaticamente, ma informazione sul processo di misura e trasmissione.`,
@@ -168,6 +171,7 @@ const unitFour = {
     'Place MES/MOM between control and business and design genealogy supporting execution, quality, and investigation.'
   ),
   estimatedMinutes: 9,
+  timeAllocation: { theory: 4, cases: 4, practice: 1 },
   theory: [
     t(
       `Manufacturing operations management descrive l'insieme di attività che gestiscono l'esecuzione delle operazioni di produzione; MES è il termine comunemente usato per sistemi che implementano una parte significativa di tali capacità. ISA-95, pubblicato come serie ISA-95 e IEC 62264, fornisce modelli e terminologia per integrare enterprise e control. Il valore del riferimento non è disegnare cinque scatole e assegnare ogni prodotto a una scatola. È definire attività, informazioni e confini in modo che ordini, materiali, personale, equipment, segmenti di processo e performance abbiano significato condiviso. Nella rappresentazione funzionale, le attività di manufacturing operations management includono tipicamente production, maintenance, quality e inventory operations management. Un MES può dispatchare lavoro, verificare readiness, guidare esecuzione, raccogliere dichiarazioni, gestire eccezioni, calcolare performance e costruire genealogia. Non sostituisce il PLC nel controllo deterministico, né l'ERP nella pianificazione finanziaria e di supply chain. SCADA mostra e supervisiona il processo, mentre MES risponde a quale ordine è in esecuzione, con quali risorse e materiali, secondo quale definizione, con quale stato e risultato. Il confine concreto dipende dall'architettura, ma la responsabilità deve essere unica. Se ordine e stato vengono modificati sia in SCADA sia in MES senza una regola autorevole, nasce una doppia verità. Un buon design stabilisce system of record per ogni oggetto, eventi di transizione, idempotenza, gestione errori e riconciliazione. L'integrazione non è un trasferimento di tabelle: è un contratto sul ciclo di vita. Per esempio Released, Dispatched, Started, Held, Completed e Closed hanno precondizioni, owner e conseguenze differenti.`,
@@ -211,9 +215,75 @@ const unitFour = {
       'Greater granularity narrows scope but requires stronger identity, storage, reconciliation, and operating discipline.'
     ),
     outcome: t(
-      'Il mock recall riduce il tempo di ricostruzione da quattro ore a quarantacinque minuti, senza affermare che la tecnologia sostituisca i controlli regolamentati.',
-      'The mock recall reduces reconstruction time from four hours to forty-five minutes without claiming that technology replaces regulated controls.'
+      'La ricostruzione collega 6.000 unità consumate a 5.750 unità finite potenzialmente coinvolte e 250 unità di scarto o perdita, con yield del 95,83 per cento. Rispetto a un hold iniziale di 10.000 unità, il perimetro finito si riduce del 42,5 per cento; Quality conserva la decisione.',
+      'The reconstruction links 6,000 consumed units to 5,750 potentially affected finished units and 250 scrap or loss units, for a 95.83 percent yield. Against an initial 10,000-unit hold, the finished scope narrows by 42.5 percent; Quality retains the decision.'
     ),
+    caseArtifact: {
+      inputLots: [{
+        id: 'COMP-A17',
+        units: 10000,
+        evidence: t('Ricevimento approvato GR-017 e material master MM-A.', 'Approved receipt GR-017 and material master MM-A.')
+      }],
+      outputLots: [
+        { id: 'FG-701', units: 3900, evidence: t('Dichiarazione MES PROD-701 e pallet range P701-001/P701-039.', 'MES declaration PROD-701 and pallet range P701-001/P701-039.') },
+        { id: 'FG-702', units: 1850, evidence: t('Dichiarazione MES PROD-702 e record rilavorazione RW-55.', 'MES declaration PROD-702 and rework record RW-55.') }
+      ],
+      edges: [
+        { id: 'consume-a17', from: 'COMP-A17', to: 'SFG-401', units: 6000, operation: t('Consumo su ordine O-401', 'Consumption on order O-401'), evidence: t('Evento originale EV-101, scanner SC-04.', 'Original event EV-101, scanner SC-04.') },
+        { id: 'split-a', from: 'SFG-401', to: 'SFG-401-A', units: 4000, operation: t('Split verso linea 1', 'Split to line 1'), evidence: t('Evento EV-102 e handling unit HU-401-A.', 'Event EV-102 and handling unit HU-401-A.') },
+        { id: 'split-b', from: 'SFG-401', to: 'SFG-401-B', units: 2000, operation: t('Split verso rilavorazione', 'Split toward rework'), evidence: t('Evento EV-103 e handling unit HU-401-B.', 'Event EV-103 and handling unit HU-401-B.') },
+        { id: 'pack-701', from: 'SFG-401-A', to: 'FG-701', units: 3900, operation: t('Confezionamento su linea 1', 'Packaging on line 1'), evidence: t('Evento EV-104, 100 unità scarto dichiarate.', 'Event EV-104, with 100 scrap units declared.') },
+        { id: 'rework-b', from: 'SFG-401-B', to: 'RW-401-B', units: 1900, operation: t('Rilavorazione su linea 2', 'Rework on line 2'), evidence: t('Evento tardivo EV-105 riconciliato con RW-55; 100 unità scarto.', 'Late event EV-105 reconciled with RW-55; 100 scrap units.') },
+        { id: 'pack-702', from: 'RW-401-B', to: 'FG-702', units: 1850, operation: t('Confezionamento dopo rilavorazione', 'Packaging after rework'), evidence: t('Evento EV-106; 50 unità scarto dichiarate.', 'Event EV-106; 50 scrap units declared.') }
+      ],
+      eventExceptions: [
+        {
+          id: 'EV-101-RETRY',
+          status: 'duplicate-ignored',
+          handling: t('La stessa idempotency key di EV-101 impedisce un secondo consumo di 6.000 unità.', 'The same idempotency key as EV-101 prevents a second 6,000-unit consumption.'),
+          evidence: t('Correlation ID C-401 e hash payload uguali all originale.', 'Correlation ID C-401 and payload hash match the original.')
+        },
+        {
+          id: 'EV-105',
+          status: 'late-reconciled',
+          handling: t('L’evento arriva dopo la chiusura, viene posto in eccezione e collegato solo dopo approvazione del data steward.', 'The event arrives after closure, is quarantined, and is linked only after data-steward approval.'),
+          evidence: t('Source timestamp precedente a EV-106, record RW-55 e sequence attesa.', 'Source timestamp before EV-106, record RW-55, and expected sequence.')
+        }
+      ],
+      reconstructionSteps: [
+        t('1. Verificare identità COMP-A17 e consumo originale EV-101; ignorare il retry duplicato.', '1. Verify COMP-A17 identity and original consumption EV-101; ignore the duplicate retry.'),
+        t('2. Seguire SFG-401 nei due split HU-401-A e HU-401-B e riconciliare 4.000 + 2.000 = 6.000.', '2. Follow SFG-401 into split units HU-401-A and HU-401-B and reconcile 4,000 + 2,000 = 6,000.'),
+        t('3. Collegare il ramo A a FG-701 e registrare 100 unità di scarto.', '3. Link branch A to FG-701 and record 100 scrap units.'),
+        t('4. Validare l’evento tardivo EV-105 contro RW-55 prima di collegare il ramo B alla rilavorazione.', '4. Validate late event EV-105 against RW-55 before linking branch B to rework.'),
+        t('5. Collegare RW-401-B a FG-702 e riconciliare altre 150 unità di perdita e scarto.', '5. Link RW-401-B to FG-702 and reconcile another 150 units of loss and scrap.'),
+        t('6. Consegnare a Quality 5.750 unità finite, evidenze, eccezioni e gap; non eseguire disposizione automatica.', '6. Provide Quality with 5,750 finished units, evidence, exceptions, and gaps; make no automated disposition.')
+      ],
+      scopeCalculation: {
+        affectedInputUnits: 6000,
+        affectedOutputUnits: 5750,
+        scrapAndLossUnits: 250,
+        outputYieldPercent: 95.83,
+        initialHoldUnits: 10000,
+        scopeReductionPercent: 42.5,
+        formula: t(
+          'Yield = 5.750 / 6.000 = 95,83%; riduzione scope = (10.000 - 5.750) / 10.000 = 42,5%.',
+          'Yield = 5,750 / 6,000 = 95.83%; scope reduction = (10,000 - 5,750) / 10,000 = 42.5%.'
+        )
+      },
+      evidence: [
+        t('Ricevimento, scanner, source timestamp, handling unit, MES declaration e record rilavorazione.', 'Receipt, scanner, source timestamp, handling unit, MES declaration, and rework record.'),
+        t('Assunzione didattica: ogni unità è discreta e le quantità di scarto sono già approvate nel sistema autorevole.', 'Teaching assumption: every unit is discrete and scrap quantities are already approved in the authoritative system.')
+      ],
+      failureHandling: [
+        t('Duplicato: idempotency key e payload hash impediscono doppio consumo.', 'Duplicate: the idempotency key and payload hash prevent double consumption.'),
+        t('Evento tardivo: quarantena, verifica sequence/source time e approvazione steward prima del link.', 'Late event: quarantine, sequence/source-time verification, and steward approval before linking.'),
+        t('Gap irrisolto: ampliare il perimetro e segnalarlo a Quality; non inferire un collegamento.', 'Unresolved gap: widen scope and disclose it to Quality; do not infer a link.')
+      ]
+    },
+    followUps: [
+      t('Come cambierebbe il perimetro se EV-105 non fosse verificabile?', 'How would scope change if EV-105 could not be verified?'),
+      t('Quale sistema deve autorizzare una correzione genealogica?', 'Which system should authorize a genealogy correction?')
+    ],
     pmiCase: true,
     hypothetical: true,
     publicContext: true
@@ -243,6 +313,7 @@ const unitFive = {
     'Define the contract between enterprise planning and industrial execution without duplicating ownership or losing events.'
   ),
   estimatedMinutes: 9,
+  timeAllocation: { theory: 5, cases: 3, practice: 1 },
   theory: [
     t(
       `L'ERP integra processi enterprise come domanda, acquisti, inventario contabile, ordini, costi, vendite e finanza. La pianificazione traduce domanda e vincoli in fabbisogni e ordini; schedulazione e operations trasformano quelli autorizzati in lavoro eseguibile. ISA-95 aiuta a descrivere lo scambio tra business planning and logistics e manufacturing operations management. La distinzione non equivale a ERP sopra e MES sotto in ogni dettaglio tecnico. È un confine di responsabilità e orizzonte. ERP governa generalmente che cosa deve essere prodotto, quantità, data, materiale e implicazioni enterprise; MES governa come l'ordine viene dispatchato ed eseguito con risorse, istruzioni, dichiarazioni ed eccezioni di fabbrica. Il contratto tipico invia verso MES production schedule o work request con identificatori, prodotto, quantità, priorità, date, routing o riferimenti applicabili. MES restituisce performance effettiva: inizio, fine, quantità buona, scarto, consumo, stato e motivi. Le definizioni devono essere precise. Se ERP considera completato un ordine quando riceve quantità e MES soltanto dopo verifica finale, una notifica precoce crea disponibilità fittizia. Se entrambe le applicazioni possono cambiare quantità o materiale senza workflow, la riconciliazione diventa manuale. Un'architettura robusta assegna master ownership: ERP può essere autorevole per material master commerciale e ordine rilasciato; MES per stato di esecuzione e genealogia; warehouse management per movimenti logistici dettagliati; Quality system per decisioni di stato applicabili. L'organizzazione reale può scegliere diversamente, ma ogni oggetto necessita una sola autorità e regole per repliche.`,
@@ -287,7 +358,8 @@ const unitSix = {
     'Usare i modelli come linguaggio di comunicazione e progettare zone, conduit e DMZ in base a rischio e flussi autorizzati.',
     'Use models as a communication language and design zones, conduits, and a DMZ around risk and authorized flows.'
   ),
-  estimatedMinutes: 9,
+  estimatedMinutes: 10,
+  timeAllocation: { theory: 5, cases: 2, practice: 3 },
   theory: [
     t(
       `ISA-95 e il cosiddetto Purdue model vengono spesso rappresentati con livelli. Questa vista è utile per conversare, ma diventa pericolosa se viene scambiata per una topologia obbligatoria. ISA-95 riguarda l'integrazione enterprise-control attraverso modelli di attività e informazione. Una mappa didattica colloca processo fisico al livello 0, sensing e attuazione al livello 1, controllo e supervisione al livello 2, manufacturing operations management al livello 3 e business planning and logistics al livello 4. Il numero non garantisce sicurezza, ownership o latenza e non determina che ogni funzione sia un server separato. Sistemi moderni distribuiti, edge e servizi cloud attraversano rappresentazioni semplici. Il modello resta utile per chiedere: quale decisione appartiene a quale attività, quali dati attraversano il confine, con quale direzione e conseguenza? NIST SP 800-82 Rev. 3 raccomanda di comprendere architettura, dipendenze e requisiti OT e tratta segmentazione, defense in depth, access control, monitoraggio e risposta con attenzione a performance, safety e disponibilità. Una zona raggruppa asset con requisiti di sicurezza e rischio simili; un conduit è il percorso controllato di comunicazione tra zone. La progettazione non parte dal vendor firewall, ma da inventory, criticality, trust, flussi minimi e failure mode. Una cella di confezionamento, i safety systems, il MES di sito, la DMZ industriale e la rete enterprise possono richiedere zone distinte. Dentro una zona non tutto è automaticamente fidato: least privilege, autenticazione, hardening, backup e monitoraggio restano necessari.`,
@@ -309,18 +381,77 @@ const unitSix = {
     'At 600,000 bytes/s, 20 GB covers about 9.3 hours; a 24-hour requirement needs at least 51.8 GB plus overhead and margin.'
   )],
   activities: [{
+    durationMinutes: 3,
     prompt: t(
       'Progetta le conduit per PLC/SCADA, historian/DMZ ed enterprise broker. Per ciascuna specifica sorgente, destinazione, protocollo, data owner, latency, security boundary, fallback, monitoraggio e ruolo umano. Dimensiona poi un buffer di 24 ore per il flusso calcolato.',
       'Design conduits for PLC/SCADA, historian/DMZ, and the enterprise broker. For each, specify source, destination, protocol, data owner, latency, security boundary, fallback, monitoring, and human role. Then size a 24-hour buffer for the calculated flow.'
     ),
     modelSolution: t(
-      'PLC e SCADA comunicano nella control zone con protocollo industriale approvato e budget locale; OT è owner, la perdita mantiene interlock e HMI locale. Historian replica verso un aggregator OPC UA nella DMZ con certificati, allowlist e buffer; OT e data owner verificano qualità. Il broker riceve soltanto eventi approvati dalla DMZ; IT opera il servizio e il process owner decide l’uso. A 600.000 byte/s per 86.400 s servono 51,84 GB applicativi, da aumentare per overhead, picchi e soglia di sicurezza. Nessun conduit offre scrittura cloud al PLC.',
-      'PLC and SCADA communicate inside the control zone using an approved industrial protocol and local timing budget; OT owns the path, and loss preserves interlocks and local HMI. The historian replicates to an OPC UA aggregator in the DMZ with certificates, allowlists, and buffering; OT and the data owner verify quality. The broker receives approved events only from the DMZ; IT operates the service and the process owner decides use. At 600,000 bytes/s for 86,400 seconds, application capacity is 51.84 GB, increased for overhead, peaks, and safety margin. No conduit offers cloud-to-PLC write access.'
+      'La tabella definisce tre conduit complete. Il flusso applicativo è 5.000 × 120 × 1 = 600.000 byte/s; per 86.400 secondi servono 51.840.000.000 byte, cioè 51,84 GB decimali. Applicando margine 1,3 si ottengono 67,392 GB e si provisionano 68 GB. Ogni riga mantiene controllo locale, monitoraggio, owner e degraded mode specifici; nessuna offre scrittura enterprise verso PLC.',
+      'The table defines three complete conduits. Application traffic is 5,000 × 120 × 1 = 600,000 bytes/s; 86,400 seconds require 51,840,000,000 bytes, or 51.84 decimal GB. Applying a 1.3 margin gives 67.392 GB, rounded up to 68 GB provisioned. Every row retains specific local control, monitoring, ownership, and degraded behavior; none provides an enterprise-to-PLC write path.'
     ),
+    solutionArtifact: {
+      conduits: [
+        {
+          id: 'plc-to-scada',
+          source: t('PLC di confezionamento PLC-201', 'Packaging PLC PLC-201'),
+          destination: t('SCADA e server OPC UA OPC-201', 'SCADA and OPC UA server OPC-201'),
+          interface: t('PROFINET cyclic I/O verso SCADA gateway con OPC UA SignAndEncrypt', 'PROFINET cyclic I/O to a SCADA gateway with OPC UA SignAndEncrypt'),
+          dataOwner: t('Operations possiede stati e allarmi; OT possiede tag, gateway e certificati.', 'Operations owns states and alarms; OT owns tags, the gateway, and certificates.'),
+          latencyBudgetMs: 1000,
+          securityBoundaryCrossing: t('Machine control zone verso supervisory zone tramite allowlist OT.', 'Machine control zone to supervisory zone through an OT allowlist.'),
+          monitoring: t('Watchdog di sessione, bad status, queue overflow, clock offset e alarm rate.', 'Session watchdog, bad status, queue overflow, clock offset, and alarm rate.'),
+          degradedBehavior: t('PLC, interlock e HMI locale continuano; SCADA marca i valori stale.', 'PLC, interlocks, and local HMI continue; SCADA marks values stale.'),
+          fallback: t('L operatore usa HMI e procedura locale; nessun comando dipende da sistemi enterprise.', 'The operator uses the local HMI and procedure; no command depends on enterprise systems.'),
+          humanAction: t('OT diagnostica la sessione; Operations razionalizza e riconosce gli allarmi.', 'OT diagnoses the session; Operations rationalizes and acknowledges alarms.')
+        },
+        {
+          id: 'historian-to-dmz',
+          source: t('Historian di sito HIST-301', 'Site historian HIST-301'),
+          destination: t('Replica historian DMZ HIST-DMZ-401', 'DMZ historian replica HIST-DMZ-401'),
+          interface: t('Replica HTTPS su TLS 1.3 con mutua autenticazione e tag allowlist', 'HTTPS replication over mutual TLS 1.3 with a tag allowlist'),
+          dataOwner: t('Process owner approva i tag; OT opera la replica; OT Security possiede la regola.', 'The process owner approves tags; OT operates replication; OT Security owns the rule.'),
+          latencyBudgetMs: 5000,
+          securityBoundaryCrossing: t('Site operations zone verso industrial DMZ attraverso il firewall OT.', 'Site operations zone to industrial DMZ through the OT firewall.'),
+          monitoring: t('Lag p95, byte/s, buffer occupancy, certificate expiry, retry e gap.', 'p95 lag, bytes/s, buffer occupancy, certificate expiry, retries, and gaps.'),
+          degradedBehavior: t('Store-and-forward accumula fino a 24 ore; il controllo locale non cambia.', 'Store-and-forward accumulates up to 24 hours; local control does not change.'),
+          fallback: t('A soglia 80 per cento si allerta OT; a saturazione si preservano eventi critici e raw locale.', 'At 80 percent occupancy OT is alerted; at saturation critical events and local raw data are preserved.'),
+          humanAction: t('OT autorizza replay e riconcilia timestamp, status e gap dopo il recovery.', 'OT authorizes replay and reconciles timestamps, status, and gaps after recovery.')
+        },
+        {
+          id: 'dmz-to-enterprise-broker',
+          source: t('Publisher DMZ PUB-401', 'DMZ publisher PUB-401'),
+          destination: t('Broker eventi enterprise EVT-501', 'Enterprise event broker EVT-501'),
+          interface: t('MQTT 5 su mTLS con topic allowlist, QoS 1 e schema versionato', 'MQTT 5 over mTLS with a topic allowlist, QoS 1, and versioned schema'),
+          dataOwner: t('Domain owner approva payload; IT Platform opera il broker; Security governa identity.', 'The domain owner approves payloads; IT Platform operates the broker; Security governs identity.'),
+          latencyBudgetMs: 5000,
+          securityBoundaryCrossing: t('Industrial DMZ verso enterprise integration zone attraverso il firewall enterprise.', 'Industrial DMZ to enterprise integration zone through the enterprise firewall.'),
+          monitoring: t('Authentication failures, publish latency, consumer lag, duplicate rate e dead-letter queue.', 'Authentication failures, publish latency, consumer lag, duplicate rate, and dead-letter queue.'),
+          degradedBehavior: t('Persistent queue e circuit breaker isolano il broker; nessun flusso di ritorno raggiunge OT.', 'A persistent queue and circuit breaker isolate the broker; no return flow reaches OT.'),
+          fallback: t('Il publisher sospende i topic non critici e conserva sequenza per replay idempotente.', 'The publisher pauses noncritical topics and retains sequence for idempotent replay.'),
+          humanAction: t('SOC triagia identity e intrusion alert; platform engineer ripristina e riconcilia la coda.', 'The SOC triages identity and intrusion alerts; the platform engineer restores and reconciles the queue.')
+        }
+      ],
+      capacityCalculation: {
+        tagCount: 5000,
+        bytesPerSample: 120,
+        samplesPerSecond: 1,
+        bufferSeconds: 86400,
+        requiredBytes: 51840000000,
+        requiredGigabytes: 51.84,
+        marginFactor: 1.3,
+        provisionedGigabytes: 68,
+        formula: t(
+          '5.000 tag × 120 byte × 1 campione/s × 86.400 s = 51.840.000.000 byte; × 1,3 = 67,392 GB, arrotondati a 68 GB.',
+          '5,000 tags × 120 bytes × 1 sample/s × 86,400 s = 51,840,000,000 bytes; × 1.3 = 67.392 GB, rounded up to 68 GB.'
+        )
+      }
+    },
     rubric: [
-      t('2 punti: ogni conduit ha owner, identità, protocollo e boundary; 1: campi parziali; 0: frecce senza contratto.', '2 points: every conduit has owner, identity, protocol, and boundary; 1: partial fields; 0: arrows without a contract.'),
+      t('2 punti: tutte e tre le conduit hanno sorgente, destinazione, interface, owner, latency e boundary; 1: un campo manca; 0: frecce generiche.', '2 points: all three conduits include source, destination, interface, owner, latency, and boundary; 1: one field missing; 0: generic arrows.'),
       t('2 punti: calcolo 51,84 GB con margine dichiarato; 1: risultato senza formula; 0: buffer non dimensionato.', '2 points: 51.84 GB calculation with declared margin; 1: result without formula; 0: unsized buffer.'),
-      t('2 punti: controllo locale e fallback restano indipendenti; 1: degradazione vaga; 0: dipendenza safety dal cloud.', '2 points: local control and fallback remain independent; 1: vague degradation; 0: safety depends on cloud.')
+      t('2 punti: ogni riga definisce monitoring e degraded behavior verificabili; 1: uno dei due è vago; 0: nessuno.', '2 points: every row defines verifiable monitoring and degraded behavior; 1: one is vague; 0: neither is present.'),
+      t('2 punti: fallback e human action sono specifici e il controllo locale resta indipendente; 1: responsabilità parziale; 0: dipendenza safety dal cloud.', '2 points: fallback and human action are specific and local control remains independent; 1: partial responsibility; 0: safety depends on cloud.')
     ]
   }],
   checkpoint: checkpoint(
@@ -333,7 +464,7 @@ const unitSix = {
     ],
     1
   ),
-  sourceIds: ['isa-95', 'nist-sp-800-82-r3', 'opc-ua-part-1']
+  sourceIds: ['isa-95', 'isa-iec-62443', 'nist-sp-800-82-r3', 'opc-ua-part-1']
 }
 
 const unitSeven = {
@@ -348,6 +479,7 @@ const unitSeven = {
     'Select edge, cloud, or a hybrid pattern and govern event, API, and model lifecycles without creating an unsafe control path.'
   ),
   estimatedMinutes: 10,
+  timeAllocation: { theory: 5, cases: 3, practice: 2 },
   theory: [
     t(
       `Edge e cloud descrivono collocazione e modello operativo, non qualità intrinseca. Edge porta calcolo vicino alla sorgente: gateway, industrial PC, server di sito o appliance possono filtrare, contestualizzare, eseguire inferenza e continuare durante perdita WAN. Riduce latenza e volume in uscita, ma distribuisce hardware, patch, certificati, osservabilità e versioni su molti siti. Cloud offre risorse elastiche, servizi gestiti, data platform condivisa, addestramento intensivo e viste cross-plant, ma dipende da connettività, identity federation, cost governance e confini di sovranità o classificazione. La decisione usa criteri misurabili: deadline, jitter, durata offline, volume, sensibilità, necessità di aggregazione, frequenza di aggiornamento, skill locali, recovery e costo totale. Se un alert deve arrivare entro 500 ms e la WAN p99 è 800 ms, il cloud non soddisfa la deadline; inference edge è candidata, mentre training può restare centrale. Se una previsione supply-chain integra venti plant e ha orizzonte di una settimana, il cloud è appropriato. Un pattern ibrido separa control plane e data plane: configurazione e modelli approvati vengono distribuiti centralmente, dati necessari vengono elaborati localmente, metriche e subset governati risalgono. La disconnessione non deve cambiare silenziosamente comportamento. Si definiscono durata di autonomia, modello last-known-good, data freshness, coda, shed policy e riconciliazione. Se un edge resta offline oltre la validità del modello, passa ad advisory degradato o disabilita la raccomandazione; non improvvisa un comando.`,
@@ -387,96 +519,115 @@ const sensorToDecisionArtifact = {
     'Contratto riutilizzabile che documenta owner del dato, latenza, protocollo, security boundary, fallback e azione umana per ogni hop dalla misura alla decisione e al feedback.',
     'Reusable contract documenting data owner, latency, protocol, security boundary, fallback, and human action for every hop from measurement to decision and feedback.'
   ),
-  hops: [
+  totalLatencyBudgetMs: 57000,
+  edges: [
     {
-      id: 'sensor',
-      label: t('Sensore di vibrazione e trasmettitore', 'Vibration sensor and transmitter'),
-      dataOwner: t('Maintenance possiede significato metrologico; OT possiede acquisizione.', 'Maintenance owns metrological meaning; OT owns acquisition.'),
-      latency: t('Campioni raw a 10 kHz; feature ogni 1 s.', 'Raw samples at 10 kHz; features every 1 s.'),
-      protocol: t('Segnale sensore verso modulo di acquisizione dedicato.', 'Sensor signal to a dedicated acquisition module.'),
-      securityBoundary: t('Machine control zone; nessuna connettività enterprise.', 'Machine control zone; no enterprise connectivity.'),
-      fallback: t('Status Bad disabilita la feature; ispezione e misura portatile secondo procedura.', 'Bad status disables the feature; inspection and portable measurement follow procedure.'),
-      humanAction: t('Tecnico verifica montaggio, calibrazione e stato quando la diagnostica segnala errore.', 'Technician checks mounting, calibration, and condition when diagnostics report a fault.')
+      id: 'sensor-to-acquisition', order: 1,
+      source: t('Sensore di vibrazione VT-201', 'Vibration sensor VT-201'),
+      destination: t('Modulo di acquisizione EAM-201', 'Acquisition module EAM-201'),
+      interface: t('Interfaccia analogica IEPE a 24 bit', '24-bit IEPE analogue interface'),
+      latencyBudgetMs: 10,
+      cadence: t('Campionamento continuo a 10 kHz', 'Continuous sampling at 10 kHz'),
+      securityBoundaryCrossing: t('Nessun crossing: entrambi gli asset sono nella machine control zone.', 'No crossing: both assets are in the machine control zone.'),
+      dataOwner: t('Maintenance possiede significato metrologico e taratura; OT possiede acquisizione.', 'Maintenance owns metrological meaning and calibration; OT owns acquisition.'),
+      fallback: t('Status Bad sopprime la feature; si usa misura portatile secondo procedura.', 'Bad status suppresses the feature; a portable measurement is used under procedure.'),
+      humanAction: t('Il tecnico verifica montaggio, cavo e calibrazione dopo una diagnostica non valida.', 'The technician checks mounting, cable, and calibration after invalid diagnostics.')
     },
     {
-      id: 'plc-acquisition',
-      label: t('PLC e modulo di acquisizione', 'PLC and acquisition module'),
-      dataOwner: t('OT possiede tag, scan e mapping; Operations possiede lo stato macchina.', 'OT owns tags, scan, and mapping; Operations owns machine state.'),
-      latency: t('Stato e interlock entro il budget locale, indipendenti dall analytics.', 'State and interlocks meet the local budget independently of analytics.'),
-      protocol: t('I/O locale e protocollo industriale approvato verso supervisione.', 'Local I/O and approved industrial protocol toward supervision.'),
-      securityBoundary: t('Conduit interna dalla machine zone alla supervisory zone con allowlist.', 'Internal conduit from machine zone to supervisory zone with allowlist.'),
-      fallback: t('Controllo locale, interlock e HMI continuano se ogni servizio a valle fallisce.', 'Local control, interlocks, and HMI continue if every downstream service fails.'),
-      humanAction: t('Operatore conduce la macchina con HMI e procedure locali; non attende l’AI.', 'Operator runs the machine with local HMI and procedures; does not wait for AI.')
+      id: 'acquisition-to-edge-feature', order: 2,
+      source: t('Modulo di acquisizione EAM-201', 'Acquisition module EAM-201'),
+      destination: t('Servizio edge FeatureCalc-201', 'Edge service FeatureCalc-201'),
+      interface: t('Stream gRPC su loopback con protobuf versionato', 'Loopback gRPC stream with versioned protobuf'),
+      latencyBudgetMs: 990,
+      cadence: t('Una finestra feature ogni secondo', 'One feature window each second'),
+      securityBoundaryCrossing: t('Nessun crossing: processo isolato sullo stesso industrial edge host.', 'No crossing: isolated process on the same industrial edge host.'),
+      dataOwner: t('OT possiede runtime e mapping; Reliability Engineering possiede la definizione feature.', 'OT owns runtime and mapping; Reliability Engineering owns feature definitions.'),
+      fallback: t('Se la finestra è incompleta, nessuna feature viene emessa e il raw resta nel buffer locale.', 'If the window is incomplete, no feature is emitted and raw data remains locally buffered.'),
+      humanAction: t('Il reliability engineer approva ogni modifica della feature e ne verifica la riproducibilità.', 'The reliability engineer approves every feature change and verifies reproducibility.')
     },
     {
-      id: 'scada-opcua',
-      label: t('SCADA e server OPC UA', 'SCADA and OPC UA server'),
-      dataOwner: t('Operations possiede allarmi e stati; OT possiede endpoint e certificati.', 'Operations owns alarms and states; OT owns endpoints and certificates.'),
-      latency: t('Aggiornamento supervisione 1 s; eventi preservano source time e status.', 'Supervisory update in 1 s; events preserve source time and status.'),
-      protocol: t('OPC UA con endpoint, security policy, certificati e subscription approvati.', 'OPC UA with approved endpoint, security policy, certificates, and subscriptions.'),
-      securityBoundary: t('Supervisory zone; nessuna sessione avviata dal cloud.', 'Supervisory zone; no cloud-initiated session.'),
-      fallback: t('Allarmi e trend locali restano disponibili; eventi sono bufferizzati.', 'Local alarms and trends remain available; events are buffered.'),
-      humanAction: t('Operatore riconosce allarmi razionalizzati e registra il contesto richiesto.', 'Operator acknowledges rationalized alarms and records required context.')
+      id: 'edge-feature-to-opcua', order: 3,
+      source: t('Servizio edge FeatureCalc-201', 'Edge service FeatureCalc-201'),
+      destination: t('Server OPC UA di supervisione OPC-201', 'Supervisory OPC UA server OPC-201'),
+      interface: t('OPC UA Client/Server con SignAndEncrypt e certificati applicativi', 'OPC UA Client/Server with SignAndEncrypt and application certificates'),
+      latencyBudgetMs: 1000,
+      cadence: t('DataChange per feature e stato macchina ogni secondo', 'DataChange for feature and machine state each second'),
+      securityBoundaryCrossing: t('Machine control zone verso supervisory zone tramite allowlist OT.', 'Machine control zone to supervisory zone through an OT allowlist.'),
+      dataOwner: t('Operations possiede lo stato macchina; OT possiede namespace, endpoint e trust list.', 'Operations owns machine state; OT owns namespace, endpoint, and trust list.'),
+      fallback: t('Il server mantiene last value con status Uncertain; controllo e interlock locali non cambiano.', 'The server retains the last value with Uncertain status; local control and interlocks do not change.'),
+      humanAction: t('L’operatore usa soltanto allarmi locali razionalizzati e non attende l’analytics.', 'The operator relies only on rationalized local alarms and does not wait for analytics.')
     },
     {
-      id: 'historian',
-      label: t('Historian di sito e contestualizzazione', 'Site historian and contextualization'),
-      dataOwner: t('Process owner possiede semantica; OT opera historian; data steward monitora qualità.', 'Process owner owns semantics; OT operates the historian; data steward monitors quality.'),
-      latency: t('Trend entro 5 s; eventi contestualizzati entro 60 s.', 'Trends within 5 s; contextualized events within 60 s.'),
-      protocol: t('Collector approvato e replica OPC UA o interfaccia historian controllata.', 'Approved collector and controlled OPC UA or historian replication interface.'),
-      securityBoundary: t('Site operations zone; replica outward verso servizio DMZ dedicato.', 'Site operations zone; outward replication to a dedicated DMZ service.'),
-      fallback: t('Store-and-forward per 24 h; oltre soglia si mantiene raw locale e si allerta OT.', 'Store-and-forward for 24 h; beyond the threshold raw data stays local and OT is alerted.'),
-      humanAction: t('Data steward esamina gap, clock drift e status Bad prima dell uso analitico.', 'Data steward reviews gaps, clock drift, and Bad status before analytical use.')
+      id: 'opcua-to-historian', order: 4,
+      source: t('Server OPC UA OPC-201', 'OPC UA server OPC-201'),
+      destination: t('Historian di sito HIST-301', 'Site historian HIST-301'),
+      interface: t('OPC UA monitored items con queue e source timestamp preservati', 'OPC UA monitored items with queue and preserved source timestamps'),
+      latencyBudgetMs: 2000,
+      cadence: t('Publish interval di un secondo, coda di dieci campioni', 'One-second publishing interval with a ten-sample queue'),
+      securityBoundaryCrossing: t('Supervisory zone verso site operations zone attraverso firewall interno.', 'Supervisory zone to site operations zone through the internal firewall.'),
+      dataOwner: t('Process owner possiede semantica; OT opera historian; steward possiede regole qualità.', 'The process owner owns semantics; OT operates the historian; the steward owns quality rules.'),
+      fallback: t('Store-and-forward conserva timestamp e status; i gap restano espliciti.', 'Store-and-forward preserves timestamps and status; gaps remain explicit.'),
+      humanAction: t('Il data steward esamina gap e clock drift prima che il dataset sia approvato.', 'The data steward reviews gaps and clock drift before dataset approval.')
     },
     {
-      id: 'industrial-dmz',
-      label: t('Aggregator e broker nella DMZ industriale', 'Aggregator and broker in the industrial DMZ'),
-      dataOwner: t('OT Security possiede la conduit; IT platform possiede il broker; process owner approva i dati.', 'OT Security owns the conduit; IT platform owns the broker; process owner approves data.'),
-      latency: t('Eventi pubblicati entro 10 s p95; lag e coda monitorati.', 'Events published within 10 s p95; lag and queue are monitored.'),
-      protocol: t('OPC UA lato sito e TLS mutuale verso event broker enterprise.', 'OPC UA on the site side and mutual TLS toward the enterprise event broker.'),
-      securityBoundary: t('Doppio firewall con allowlist distinte, service identity e logging.', 'Dual firewalls with separate allowlists, service identity, and logging.'),
-      fallback: t('Buffer dimensionato, circuit breaker e nessuna propagazione di comandi verso OT.', 'Sized buffer, circuit breaker, and no command propagation toward OT.'),
-      humanAction: t('SOC e OT Security triagiano alert; OT autorizza recovery e cambi di regola.', 'SOC and OT Security triage alerts; OT authorizes recovery and rule changes.')
+      id: 'historian-to-dmz', order: 5,
+      source: t('Historian di sito HIST-301', 'Site historian HIST-301'),
+      destination: t('Replica historian DMZ HIST-DMZ-401', 'DMZ historian replica HIST-DMZ-401'),
+      interface: t('Replica HTTPS su TLS 1.3 con mutua autenticazione', 'HTTPS replication over mutually authenticated TLS 1.3'),
+      latencyBudgetMs: 5000,
+      cadence: t('Micro-batch ogni cinque secondi', 'Micro-batch every five seconds'),
+      securityBoundaryCrossing: t('Site operations zone verso industrial DMZ attraverso il firewall OT.', 'Site operations zone to industrial DMZ through the OT firewall.'),
+      dataOwner: t('OT possiede la replica; OT Security possiede la regola firewall; lo steward approva i tag.', 'OT owns replication; OT Security owns the firewall rule; the steward approves tags.'),
+      fallback: t('Buffer locale di 24 ore; superata la soglia, si allerta OT senza fermare la linea.', 'A 24-hour local buffer; after the threshold OT is alerted without stopping the line.'),
+      humanAction: t('OT controlla lag e capacità e autorizza il replay dopo il ripristino.', 'OT checks lag and capacity and authorizes replay after recovery.')
     },
     {
-      id: 'data-platform',
-      label: t('Data platform raw, curated e feature', 'Raw, curated, and feature data platform'),
-      dataOwner: t('Domain data owner approva uso; steward governa qualità; IT opera la piattaforma.', 'Domain data owner approves use; steward governs quality; IT operates the platform.'),
-      latency: t('Curated event entro 2 min; feature batch e streaming dichiarano freshness.', 'Curated event within 2 min; batch and streaming features declare freshness.'),
-      protocol: t('Event stream versionato, object storage e API con scope.', 'Versioned event stream, object storage, and scoped APIs.'),
-      securityBoundary: t('Enterprise data zone con least privilege, cifratura, audit e ambienti separati.', 'Enterprise data zone with least privilege, encryption, audit, and separated environments.'),
-      fallback: t('Ultima feature valida solo entro TTL; oltre TTL nessuna raccomandazione automatica.', 'Last valid feature only within its TTL; beyond TTL no automated recommendation.'),
-      humanAction: t('Steward approva correzioni e segnala limitazioni al product owner.', 'Steward approves corrections and communicates limitations to the product owner.')
+      id: 'dmz-to-event-broker', order: 6,
+      source: t('Replica DMZ HIST-DMZ-401', 'DMZ replica HIST-DMZ-401'),
+      destination: t('Broker eventi enterprise EVT-501', 'Enterprise event broker EVT-501'),
+      interface: t('MQTT 5 su mTLS con topic allowlist e schema versionato', 'MQTT 5 over mTLS with topic allowlist and versioned schema'),
+      latencyBudgetMs: 5000,
+      cadence: t('Publish event-driven, heartbeat ogni trenta secondi', 'Event-driven publishing with a thirty-second heartbeat'),
+      securityBoundaryCrossing: t('Industrial DMZ verso enterprise integration zone attraverso il firewall enterprise.', 'Industrial DMZ to enterprise integration zone through the enterprise firewall.'),
+      dataOwner: t('Domain owner approva payload; IT Platform opera il broker; Security governa identity.', 'The domain owner approves payloads; IT Platform operates the broker; Security governs identity.'),
+      fallback: t('Persistent queue e circuit breaker; nessun messaggio di ritorno crea un comando OT.', 'Persistent queue and circuit breaker; no return message creates an OT command.'),
+      humanAction: t('SOC e platform engineer triagiano autenticazione, lag e dead-letter queue.', 'SOC and the platform engineer triage authentication, lag, and the dead-letter queue.')
     },
     {
-      id: 'ai-serving',
-      label: t('Servizio AI di anomaly detection', 'AI anomaly-detection service'),
-      dataOwner: t('AI product owner possiede servizio; maintenance process owner possiede decisione.', 'AI product owner owns the service; maintenance process owner owns the decision.'),
-      latency: t('Inferenza entro 3 s; advisory complessivo entro 2 min, non safety-critical.', 'Inference within 3 s; overall advisory within 2 min, not safety-critical.'),
-      protocol: t('API autenticata con model version, input version, confidence ed evidence link.', 'Authenticated API with model version, input version, confidence, and evidence link.'),
-      securityBoundary: t('AI serving zone senza route o credenziali di scrittura verso control network.', 'AI serving zone with no route or write credentials to the control network.'),
-      fallback: t('Input stale, drift o bassa confidenza sopprimono l alert e attivano regola/manual review.', 'Stale input, drift, or low confidence suppresses the alert and triggers a rule or manual review.'),
-      humanAction: t('Reliability engineer accetta, respinge o pospone la proposta con motivo.', 'Reliability engineer accepts, rejects, or defers the proposal with a reason.')
+      id: 'event-broker-to-ai-serving', order: 7,
+      source: t('Broker eventi EVT-501', 'Event broker EVT-501'),
+      destination: t('Feature view e servizio AI AIMS-601', 'Feature view and AI service AIMS-601'),
+      interface: t('Apache Kafka consumer API con TLS, SASL e schema registry', 'Apache Kafka consumer API with TLS, SASL, and a schema registry'),
+      latencyBudgetMs: 30000,
+      cadence: t('Finestra streaming chiusa ogni trenta secondi', 'Streaming window closed every thirty seconds'),
+      securityBoundaryCrossing: t('Enterprise integration zone verso AI serving zone con service account least-privilege.', 'Enterprise integration zone to AI serving zone with a least-privilege service account.'),
+      dataOwner: t('Data owner possiede feature e scopo; model owner possiede inferenza e versione.', 'The data owner owns features and purpose; the model owner owns inference and version.'),
+      fallback: t('Feature oltre TTL o con status non valido sopprime l’inferenza e apre manual review.', 'A feature beyond its TTL or with invalid status suppresses inference and opens manual review.'),
+      humanAction: t('Model owner verifica drift, input rejection e modello last-known-good.', 'The model owner checks drift, input rejection, and the last-known-good model.')
     },
     {
-      id: 'decision-workflow',
-      label: t('Workflow decisionale e CMMS', 'Decision workflow and CMMS'),
-      dataOwner: t('Maintenance owner possiede priorità e work order; Quality possiede eventuale impatto prodotto.', 'Maintenance owns priority and work orders; Quality owns any product-impact decision.'),
-      latency: t('Review entro 15 min per severità alta; nessuna deadline di controllo macchina.', 'Review within 15 min for high severity; no machine-control deadline.'),
-      protocol: t('API CMMS autorizzata soltanto dall applicazione workflow dopo conferma.', 'CMMS API authorized only for the workflow application after confirmation.'),
-      securityBoundary: t('Business application zone con RBAC, segregation of duties e audit.', 'Business application zone with RBAC, segregation of duties, and audit.'),
-      fallback: t('Procedura manuale di ispezione e apertura work order; coda riconciliata al ripristino.', 'Manual inspection and work-order procedure; queue reconciled after recovery.'),
-      humanAction: t('Tecnico conferma priorità e azione; Quality valuta hold o rilascio se applicabile.', 'Technician confirms priority and action; Quality evaluates hold or release where applicable.')
+      id: 'ai-serving-to-decision-workflow', order: 8,
+      source: t('Servizio AI AIMS-601', 'AI service AIMS-601'),
+      destination: t('Workflow manutentivo MW-701', 'Maintenance workflow MW-701'),
+      interface: t('REST/JSON su HTTPS con OAuth 2.0 client credentials', 'REST/JSON over HTTPS with OAuth 2.0 client credentials'),
+      latencyBudgetMs: 3000,
+      cadence: t('Una proposta per finestra anomala, con rate limit', 'One proposal per anomalous window, with rate limiting'),
+      securityBoundaryCrossing: t('AI serving zone verso business application zone, senza route verso PLC.', 'AI serving zone to business application zone, with no route to PLCs.'),
+      dataOwner: t('AI product owner possiede advisory; Maintenance owner possiede la decisione.', 'The AI product owner owns the advisory; the Maintenance owner owns the decision.'),
+      fallback: t('Timeout, bassa confidenza o circuit breaker lasciano il workflow in procedura manuale.', 'Timeout, low confidence, or circuit breaker leaves the workflow on its manual procedure.'),
+      humanAction: t('Il planner manutentivo verifica duplicati e completezza prima della notifica.', 'The maintenance planner checks duplicates and completeness before notification.')
     },
     {
-      id: 'outcome-feedback',
-      label: t('Outcome, feedback e governance', 'Outcome, feedback, and governance'),
-      dataOwner: t('Process owner possiede KPI; model owner performance; governance approva scale gate.', 'Process owner owns KPIs; model owner owns performance; governance approves the scale gate.'),
-      latency: t('Outcome a chiusura lavoro; review settimanale e decisione mensile.', 'Outcome at work closure; weekly review and monthly decision.'),
-      protocol: t('Eventi CMMS/MES versionati e dashboard governata, senza percorso di comando.', 'Versioned CMMS/MES events and a governed dashboard, with no command path.'),
-      securityBoundary: t('Analytics zone con dati minimizzati e accesso per ruolo.', 'Analytics zone with minimized data and role-based access.'),
-      fallback: t('Se outcome o labels mancano, il modello resta in shadow/advisory e non scala.', 'If outcomes or labels are missing, the model remains shadow/advisory and does not scale.'),
-      humanAction: t('Team cross-functional verifica valore, falsi alert, miss, override e guardrail prima del gate.', 'Cross-functional team reviews value, false alerts, misses, overrides, and guardrails before the gate.')
+      id: 'decision-workflow-to-reliability-engineer', order: 9,
+      source: t('Workflow manutentivo MW-701', 'Maintenance workflow MW-701'),
+      destination: t('Reliability engineer autenticato', 'Authenticated reliability engineer'),
+      interface: t('Web application HTTPS con OIDC, RBAC e audit trail', 'HTTPS web application with OIDC, RBAC, and an audit trail'),
+      latencyBudgetMs: 10000,
+      cadence: t('Notifica event-driven con escalation dopo quindici minuti', 'Event-driven notification with escalation after fifteen minutes'),
+      securityBoundaryCrossing: t('Business application zone verso sessione utente gestita e autenticata.', 'Business application zone to a managed, authenticated user session.'),
+      dataOwner: t('Maintenance owner possiede priorità e work order; Quality possiede ogni impatto prodotto.', 'Maintenance owns priority and work orders; Quality owns every product-impact decision.'),
+      fallback: t('Ispezione e apertura manuale del work order; la coda viene riconciliata al recovery.', 'Manual inspection and work-order entry; the queue is reconciled after recovery.'),
+      humanAction: t('L’ingegnere accetta, respinge o pospone con motivo; Quality decide hold o rilascio.', 'The engineer accepts, rejects, or defers with a reason; Quality decides hold or release.')
     }
   ]
 }
@@ -492,15 +643,16 @@ const unitEight = {
     'Difendere un’architettura completa dalla misura alla decisione umana, quantificarne prestazioni e degradazione e impedire controllo AI diretto.',
     'Defend a complete measurement-to-human-decision architecture, quantify performance and degradation, and prevent direct AI control.'
   ),
-  estimatedMinutes: 11,
+  estimatedMinutes: 10,
+  timeAllocation: { theory: 4, cases: 3, practice: 3 },
   theory: [
     t(
       `Il caso integra il modulo in uno scenario PMI-style realistico ma interamente ipotetico, derivato soltanto da informazioni pubbliche su una grande manifattura globale e regolamentata. Non descrive linee, prodotti, sistemi o procedure PMI reali. Una linea di confezionamento ad alta velocità registra dodici arresti non pianificati del gruppo motore in quattro settimane, per 480 minuti persi. La diagnosi mostra che in otto casi la vibrazione era aumentata nelle sei ore precedenti, ma il trend non veniva esaminato prima del fermo. Il costo non autorizza controllo autonomo. L'obiettivo è una decisione manutentiva più tempestiva: rilevare un pattern, presentare evidenze a un reliability engineer e creare un work order soltanto dopo conferma. Il controllo macchina, gli interlock e ogni safety function restano indipendenti nel PLC o sistema progettato. Quality conserva qualsiasi decisione su hold, indagine o rilascio del prodotto. La baseline usa 12 eventi, 480 minuti e tempo mediano di 95 minuti tra prima evidenza riconoscibile e review. Il target dell'MVP è portare la review sotto 15 minuti, raggiungere almeno 80 per cento di precisione sulle proposte confermate e ridurre del 15 per cento i minuti della causa in un periodo comparabile. I guardrail sono massimo due falsi alert per turno, nessun aumento di backlog oltre 5 per cento, nessuna scrittura verso PLC, nessun prodotto rilasciato dall'AI e disponibilità degli interlock invariata. Il value ceiling iniziale è prudente: una riduzione del 15 per cento su 480 minuti vale 72 minuti, non l'intero downtime di linea. Il team dichiara che manutenzioni parallele, mix e ore operative possono confondere attribuzione.`,
       `This case integrates the module through a realistic but entirely hypothetical PMI-style scenario derived only from public information about a large global regulated manufacturer. It does not describe actual PMI lines, products, systems, or procedures. A high-speed packaging line records twelve unplanned drive-group stops over four weeks, totaling 480 lost minutes. Review shows that vibration increased during the previous six hours in eight cases, but nobody examined the trend before the stop. The cost does not justify autonomous control. The objective is a more timely maintenance decision: detect a pattern, show evidence to a reliability engineer, and create a work order only after confirmation. Machine control, interlocks, and every safety function remain independent in the PLC or another engineered system. Quality retains any product hold, investigation, or release decision. The baseline contains 12 events, 480 minutes, and a median 95 minutes from first recognizable evidence to review. The MVP targets review within 15 minutes, at least 80 percent precision for confirmed proposals, and a 15 percent reduction in cause minutes over a comparable period. Guardrails are no more than two false alerts per shift, no backlog increase above 5 percent, no PLC write path, no AI product release, and unchanged interlock availability. The initial value ceiling is cautious: a 15 percent reduction of 480 minutes equals 72 minutes, not all line downtime. Parallel maintenance, product mix, and operating hours may confound attribution.`
     ),
     t(
-      `Il percorso è documentato nell'artefatto a nove hop. Il sensore acquisisce la vibrazione nella banda utile e diagnostica qualità; il modulo locale calcola feature ogni secondo senza modificare il controllo; SCADA e OPC UA pubblicano stato, source timestamp e status; historian combina trend e mode; un aggregator nella DMZ trasferisce soltanto eventi approvati; la data platform applica identità, unità e feature versionate; AI serving calcola anomaly score in una zona senza route di scrittura OT; il workflow aggiunge evidenze e duplicati; l'ingegnere decide e CMMS registra; outcome e feedback chiudono il ciclo. A ogni hop sono espliciti data owner, latency, protocol, security boundary, fallback e human action. Questa completezza impedisce che una freccia nasconda una decisione. Per una stima conservativa del budget automatico si sommano le allocazioni rilevanti: feature 1 s, publish 1 s, historian/context 5 s, DMZ 10 s, platform 60 s, inference 3 s e workflow notification 10 s, per 90 s prima della review umana. Ogni componente viene poi misurato con percentile e margine propri, perché la somma dei singoli p95 non equivale matematicamente al p95 end-to-end. Il target di review entro 15 minuti lascia 13,5 minuti al ruolo umano. Non si usa questa catena per arrestare il motore: anche 90 s sarebbero incompatibili con un evento pericoloso e ogni componente può fallire. Per capacità, 24 ore di buffer sono calcolate e monitorate; per freshness, una feature oltre due minuti viene respinta. Per security, l'identità del servizio AI non ha credenziali o route verso PLC. Per governance, model version e input version accompagnano ogni proposta. L'engineered control più importante è strutturale: il modello produce un advisory object, non un comando. L'applicazione accetta solo azioni definite, richiede RBAC e conferma, applica rate limit e conserva audit.`,
-      `The path is documented through a nine-hop artifact. The sensor captures vibration over the useful band and diagnoses quality; the local module calculates one-second features without changing control; SCADA and OPC UA publish state, source timestamp, and status; the historian combines trend and mode; a DMZ aggregator transfers approved events only; the data platform applies identity, units, and versioned features; AI serving calculates an anomaly score in a zone with no OT write route; the workflow adds evidence and duplicate checks; the engineer decides and CMMS records; outcome and feedback close the cycle. Every hop explicitly names data owner, latency, protocol, security boundary, fallback, and human action. This completeness prevents an arrow from hiding a decision. A conservative automated-path budget adds the relevant allocations: 1 second for features, 1 for publishing, 5 for historian and context, 10 for the DMZ, 60 for the platform, 3 for inference, and 10 for workflow notification, totaling 90 seconds before human review. Each component then has its own measured percentile and margin because adding component p95 values does not mathematically yield end-to-end p95. A review target within 15 minutes leaves 13.5 minutes for the human role. This chain is never used to trip the motor. Even 90 seconds would be incompatible with a hazardous event, and every component may fail. For capacity, 24 hours of buffering is calculated and monitored; for freshness, a feature older than two minutes is rejected. For security, the AI service identity has neither credentials nor a route to the PLC. For governance, model and input versions accompany every proposal. The most important engineered control is structural: the model produces an advisory object rather than a command. The application accepts only defined actions, requires RBAC and confirmation, applies rate limits, and retains an audit trail.`
+      `Il percorso è documentato come nove edge reali, ciascuno con sorgente e destinazione. Il sensore alimenta l'acquisizione, il servizio edge calcola feature senza modificare il controllo, OPC UA pubblica source timestamp e status, historian conserva il trend, la DMZ trasferisce soltanto eventi approvati, il broker alimenta AI serving e il workflow presenta evidenze al reliability engineer. A ogni edge sono espliciti data owner, interface, cadence, latency budget, security crossing, fallback e human action. Il budget conservativo è uno solo e si ricava dai campi numerici: 10 ms + 990 ms + 1 s + 2 s + 5 s + 5 s + 30 s + 3 s + 10 s = 57 secondi prima della review umana. Il target entro 15 minuti lascia 843 secondi, cioè 14,05 minuti, alla review e all'escalation. La misura operativa confronta poi il percentile end-to-end con il budget, senza sommare percentile incompatibili. Non si usa questa catena per arrestare il motore: anche 57 secondi sarebbero incompatibili con un evento pericoloso e ogni componente può fallire. Il TTL della feature è coerente con il budget e non introduce un secondo obiettivo contraddittorio. Per capacità, 24 ore di buffer sono calcolate e monitorate. Per security, l'identità AI non ha route o credenziali verso PLC. Per governance, model version e input version accompagnano ogni proposta. L'engineered control più importante è strutturale: il modello produce un advisory object, non un comando. L'applicazione accetta solo azioni definite, richiede RBAC e conferma, applica rate limit e conserva audit.`,
+      `The path is documented as nine real edges, each with a source and destination. The sensor feeds acquisition, the edge service calculates features without changing control, OPC UA publishes source timestamps and status, the historian retains the trend, the DMZ transfers approved events only, the broker feeds AI serving, and the workflow presents evidence to the reliability engineer. Every edge explicitly states data owner, interface, cadence, latency budget, security crossing, fallback, and human action. There is one conservative budget derived from numeric fields: 10 ms + 990 ms + 1 s + 2 s + 5 s + 5 s + 30 s + 3 s + 10 s = 57 seconds before human review. A fifteen-minute target leaves 843 seconds, or 14.05 minutes, for review and escalation. Operations then measures the end-to-end percentile against this budget rather than adding incompatible percentiles. This chain is never used to trip the motor: even 57 seconds would be incompatible with a hazardous event, and every component may fail. Feature TTL is aligned with the budget and does not introduce a second contradictory target. Capacity provides 24 hours of monitored buffering. The AI identity has no route or credential to PLCs. Model and input versions accompany every proposal. The most important engineered control is structural: the model produces an advisory object, not a command. The application accepts defined actions only, requires RBAC and confirmation, applies rate limits, and retains an audit trail.`
     ),
     t(
       `Il pre-mortem identifica failure mode prima del pilot. Uno: sensore allentato genera vibrazione alta; detection usa diagnostica e confronto con mode, fallback è ispezione e l'alert viene marcato non valido. Due: clock drift allinea il pattern all'ordine sbagliato; monitor di sincronizzazione blocca la feature e il data steward corregge senza riscrivere raw. Tre: certificato OPC UA scade; allarme di scadenza anticipato e runbook consentono rinnovo, mentre buffer locale preserva dati. Quattro: WAN cade otto ore; controllo continua, DMZ bufferizza e nessun alert remoto viene promesso, l'operatore segue manutenzione standard. Cinque: modello distribuito ha checksum errato; runtime rifiuta l'artefatto e usa last-known-good. Sei: input drift produce troppe proposte; circuit breaker scatta oltre due falsi per turno e riporta il servizio in shadow mode. Sette: technician confirmation diventa rubber stamp; audit su tempo, override e motivi attiva coaching o sospensione. Otto: API CMMS risponde timeout dopo aver creato l'ordine; idempotency key impedisce il duplicato. Nove: una raccomandazione coincide con materiale potenzialmente coinvolto; Quality viene ingaggiata, ma il workflow manutentivo non modifica status prodotto. Dieci: la piattaforma enterprise è compromessa; firewall e assenza di route impediscono movimento verso control zone, credenziali vengono revocate e controllo locale resta disponibile. Il tabletop assegna detection owner, response, recovery time e prova. Non basta scrivere fallback manuale: si verifica che persone, dati e istruzioni esistano durante un turno reale. Dopo sei settimane ipotizziamo 30 proposte, 24 confermate e 6 false: precisione 24/30, cioè 80 per cento. Due dei dodici eventi baseline sono evitati e i minuti comparabili scendono da 480 a 402: riduzione 78/480, cioè 16,25 per cento. Se backlog cresce da 200 a 208 ordini, l'aumento è 4 per cento e resta sotto guardrail. I target sono raggiunti, ma la scala richiede verifica di attribuzione, recall sui missed events, stabilità su altri mix e supporto locale.`,
@@ -557,8 +709,8 @@ const unitEight = {
       'Complete and defend the sensor-to-human-decision artifact. For every hop verify owner, latency, protocol, security boundary, fallback, and human action. Calculate pipeline latency, precision, downtime reduction, and backlog growth. Conclude with a scale gate.'
     ),
     modelSolution: t(
-      'L’artefatto usa nove hop e nessuno offre write path verso PLC. La pipeline automatica vale 1+1+5+10+60+3+10 = 90 secondi e lascia 13,5 minuti per una review entro 15. Precision è 24/30 = 80 per cento. Riduzione è (480-402)/480 = 16,25 per cento. Backlog è (208-200)/200 = 4 per cento. Si continua in advisory mode per sei settimane su una seconda configurazione, misurando recall, attribuzione, conferme e guardrail; nessuna scala globale né autonomia safety.',
-      'The artifact uses nine hops and none provides a PLC write path. The automated pipeline is 1+1+5+10+60+3+10 = 90 seconds, leaving 13.5 minutes for review within 15. Precision is 24/30 = 80 percent. Reduction is (480-402)/480 = 16.25 percent. Backlog change is (208-200)/200 = 4 percent. Continue in advisory mode for six weeks on a second configuration while measuring recall, attribution, confirmations, and guardrails; there is no global rollout or safety autonomy.'
+      'L’artefatto usa nove edge e nessuno offre write path verso PLC. La pipeline automatica vale 10+990+1.000+2.000+5.000+5.000+30.000+3.000+10.000 = 57.000 ms, cioè 57 secondi, e lascia 14,05 minuti per una review entro 15. Precision è 24/30 = 80 per cento. Riduzione è (480-402)/480 = 16,25 per cento. Backlog è (208-200)/200 = 4 per cento. Si continua in advisory mode per sei settimane su una seconda configurazione, misurando recall, attribuzione, conferme e guardrail; nessuna scala globale né autonomia safety.',
+      'The artifact uses nine edges and none provides a PLC write path. The automated path is 10+990+1,000+2,000+5,000+5,000+30,000+3,000+10,000 = 57,000 ms, or 57 seconds, leaving 14.05 minutes for review within 15. Precision is 24/30 = 80 percent. Reduction is (480-402)/480 = 16.25 percent. Backlog change is (208-200)/200 = 4 percent. Continue in advisory mode for six weeks on a second configuration while measuring recall, attribution, confirmations, and guardrails; there is no global rollout or safety autonomy.'
     ),
     rubric: [
       t('3 punti: tutti i campi sono espliciti a ogni hop; 2: un campo manca in un hop; 1: più gap; 0: solo diagramma generico.', '3 points: every field is explicit at every hop; 2: one field missing in one hop; 1: multiple gaps; 0: generic diagram only.'),
@@ -596,24 +748,64 @@ export const architectureLesson = {
   professionalArtifacts: [sensorToDecisionArtifact],
   interviewAnswers: [
     {
-      prompt: 'How do OT and IT differ?',
-      short: 'OT operates physical processes, so timing, availability, safety, equipment lifecycle, and controlled change are central. IT manages enterprise information and services, often with greater elasticity and faster release cycles. I do not treat them as opposing worlds. I create joint ownership, but I place functions according to physical consequence, latency, recovery, and risk, keeping deterministic protection independent from enterprise analytics.',
-      long: 'OT and IT share sound engineering principles, but their operating contexts differ. OT monitors and controls physical processes. A wrong command or poorly tested outage can affect people, equipment, environment, product, and production continuity. That creates strict timing, availability, compatibility, change-window, recovery, and safety requirements. Equipment may remain in service far longer than a typical enterprise application. IT manages information, transactions, collaboration, and scalable services across the enterprise, often using faster release cycles and elastic infrastructure. The difference is not that OT ignores confidentiality or IT ignores availability. It is that consequence and lifecycle change the priority and implementation of controls. I start with the decision and required service level. A lubrication interlock belongs in validated local control and must survive loss of WAN, historian, and cloud. A cross-plant reliability benchmark can use an enterprise data platform because minute-level latency is acceptable and aggregation creates value. The integration boundary then specifies data owner, protocol, identity, latency, security zone, fallback, and human action. NIST SP 800-82 is useful because it treats OT security in the context of performance, reliability, and safety. My operating model pairs OT process and asset knowledge with IT platform, identity, data, and service capabilities. Changes are risk assessed, tested, approved, monitored, and reversible. The goal is not to force one culture onto the other. It is to make dependencies explicit while ensuring a failure in enterprise analytics cannot remove essential local control.'
+      prompt: t('In che cosa differiscono OT e IT?', 'How do OT and IT differ?'),
+      short: t(
+        `L'OT opera processi fisici, quindi tempi, disponibilità, safety, ciclo di vita degli asset e cambi controllati sono centrali. L'IT gestisce informazioni e servizi enterprise, spesso con maggiore elasticità e release più rapide. Non li tratto come mondi contrapposti: creo ownership congiunta, ma colloco ogni funzione secondo conseguenza fisica, latenza, recovery e rischio, mantenendo la protezione deterministica indipendente dagli analytics enterprise.`,
+        `OT operates physical processes, so timing, availability, safety, equipment lifecycle, and controlled change are central. IT manages enterprise information and services, often with greater elasticity and faster release cycles. I do not treat them as opposing worlds. I create joint ownership, but I place functions according to physical consequence, latency, recovery, and risk, keeping deterministic protection independent from enterprise analytics.`
+      ),
+      long: t(
+        `OT e IT condividono buoni principi di engineering, ma operano in contesti diversi. L'OT monitora e controlla processi fisici: un comando errato o un fermo mal testato può influire su persone, equipment, ambiente, prodotto e continuità. Ne derivano requisiti rigorosi di timing, availability, compatibilità, change window, recovery e safety. Gli asset possono restare in servizio molto più a lungo di una tipica applicazione enterprise. L'IT gestisce informazioni, transazioni, collaborazione e servizi scalabili, spesso con cicli di release più rapidi e infrastruttura elastica. La differenza non significa che OT ignori confidentiality o IT ignori availability; sono conseguenze e lifecycle a cambiare priorità e implementazione dei controlli. Parto dalla decisione e dal livello di servizio. Un interlock di lubrificazione appartiene al controllo locale validato e deve sopravvivere alla perdita di WAN, historian e cloud. Un benchmark cross-plant può usare una data platform enterprise perché la latenza di minuti è accettabile e l'aggregazione crea valore. Il confine specifica owner, protocollo, identità, latenza, zona, fallback e azione umana. NIST SP 800-82 aiuta a leggere cybersecurity, performance, reliability e safety insieme. Il mio operating model unisce competenza OT su processo e asset con capacità IT su piattaforme, identity, dati e servizi. Ogni cambio viene valutato, testato, approvato, monitorato e reso reversibile. L'obiettivo è rendere esplicite le dipendenze e impedire che un failure enterprise elimini il controllo locale essenziale.`,
+        `OT and IT share sound engineering principles, but their operating contexts differ. OT monitors and controls physical processes. A wrong command or poorly tested outage can affect people, equipment, environment, product, and production continuity. That creates strict timing, availability, compatibility, change-window, recovery, and safety requirements. Equipment may remain in service far longer than a typical enterprise application. IT manages information, transactions, collaboration, and scalable services across the enterprise, often using faster release cycles and elastic infrastructure. The difference is not that OT ignores confidentiality or IT ignores availability. It is that consequence and lifecycle change the priority and implementation of controls. I start with the decision and required service level. A lubrication interlock belongs in validated local control and must survive loss of WAN, historian, and cloud. A cross-plant reliability benchmark can use an enterprise data platform because minute-level latency is acceptable and aggregation creates value. The integration boundary then specifies data owner, protocol, identity, latency, security zone, fallback, and human action. NIST SP 800-82 is useful because it treats OT security in the context of performance, reliability, and safety. My operating model pairs OT process and asset knowledge with IT platform, identity, data, and service capabilities. Changes are risk assessed, tested, approved, monitored, and reversible. The goal is not to force one culture onto the other. It is to make dependencies explicit while ensuring a failure in enterprise analytics cannot remove essential local control.`
+      ),
+      followUps: [
+        t('Come governeresti un cambiamento che attraversa entrambi i domini?', 'How would you govern a change that crosses both domains?'),
+        t('Quale funzione non sposteresti mai nel cloud?', 'Which function would you never move to cloud?')
+      ]
     },
     {
-      prompt: 'How do MES and SCADA differ?',
-      short: 'SCADA supervises current process state through data acquisition, displays, alarms, events, and authorized commands. MES manages manufacturing execution context: which order is running, which resources and materials are used, what workflow applies, and what result and genealogy are recorded. Products can overlap, so I define the boundary by authoritative decisions and data, not by labels or a rigid layer diagram.',
-      long: 'I explain MES and SCADA through responsibilities. SCADA is centered on acquisition and supervisory operation. It shows what the process is doing, handles operational events and alarms, and may provide authorized supervisory commands. It remains close to current plant state. MES, or a substantial part of manufacturing operations management, is centered on execution. It dispatches authorized work, verifies readiness, links orders with people, equipment and materials, guides workflow, captures declarations and exceptions, and builds production performance and genealogy. ISA-95 gives a useful common language for business planning, manufacturing operations, and control, but it is a functional model rather than a mandatory server topology. A real vendor suite may contain capabilities from both areas. I therefore assign a system of record for each object and transition. For example, SCADA may be authoritative for an alarm event and machine state, while MES is authoritative for detailed execution state, material consumption, and genealogy. ERP remains authoritative for the released enterprise order under the chosen design. Interfaces carry stable identities, source timestamps, quality, version, and idempotency keys. If MES is unavailable, local control and SCADA continue safely, while an approved degraded execution procedure determines which already released work may continue and how records are reconciled. MES never replaces PLC interlocks, and SCADA should not silently create a second order history. This decision-based explanation survives product overlap and makes ownership, failure handling, and regulated traceability clear.'
+      prompt: t('In che cosa differiscono MES e SCADA?', 'How do MES and SCADA differ?'),
+      short: t(
+        `SCADA supervisiona lo stato corrente del processo tramite acquisizione, display, allarmi, eventi e comandi autorizzati. MES governa il contesto di esecuzione: quale ordine è attivo, quali risorse e materiali vengono usati, quale workflow si applica e quali risultato e genealogia vengono registrati. I prodotti possono sovrapporsi, quindi definisco il confine tramite decisioni e dati autorevoli, non tramite etichette o livelli rigidi.`,
+        `SCADA supervises current process state through data acquisition, displays, alarms, events, and authorized commands. MES manages manufacturing execution context: which order is running, which resources and materials are used, what workflow applies, and what result and genealogy are recorded. Products can overlap, so I define the boundary by authoritative decisions and data, not by labels or a rigid layer diagram.`
+      ),
+      long: t(
+        `Spiego MES e SCADA attraverso le responsabilità. SCADA è centrato su acquisizione e supervisione: mostra cosa fa il processo, gestisce eventi e allarmi operativi e può offrire comandi supervisori autorizzati. Rimane vicino allo stato corrente dell'impianto. MES, o una parte sostanziale del manufacturing operations management, è centrato sull'esecuzione. Dispatcha lavoro autorizzato, verifica readiness, collega ordini a persone, equipment e materiali, guida workflow, raccoglie dichiarazioni ed eccezioni e costruisce performance e genealogia. ISA-95 fornisce un linguaggio comune per planning, operations e control, ma è un modello funzionale, non una topologia server obbligatoria. Una suite reale può contenere capacità di entrambi. Assegno quindi un system of record per oggetto e transizione. SCADA può essere autorevole per allarme e stato macchina, MES per stato dettagliato dell'ordine, consumo e genealogia, ERP per l'ordine enterprise rilasciato. Le interfacce portano identità stabili, source timestamp, quality, versione e idempotency key. Se MES non è disponibile, controllo locale e SCADA continuano in sicurezza, mentre una procedura degradata autorizzata stabilisce quali ordini già rilasciati possano continuare e come riconciliare. MES non sostituisce gli interlock PLC e SCADA non crea silenziosamente una seconda storia dell'ordine. Questa distinzione basata sulle decisioni resta valida anche quando i prodotti si sovrappongono e rende chiari ownership, failure handling e tracciabilità regolamentata.`,
+        `I explain MES and SCADA through responsibilities. SCADA is centered on acquisition and supervisory operation. It shows what the process is doing, handles operational events and alarms, and may provide authorized supervisory commands. It remains close to current plant state. MES, or a substantial part of manufacturing operations management, is centered on execution. It dispatches authorized work, verifies readiness, links orders with people, equipment and materials, guides workflow, captures declarations and exceptions, and builds production performance and genealogy. ISA-95 gives a useful common language for business planning, manufacturing operations, and control, but it is a functional model rather than a mandatory server topology. A real vendor suite may contain capabilities from both areas. I therefore assign a system of record for each object and transition. For example, SCADA may be authoritative for an alarm event and machine state, while MES is authoritative for detailed execution state, material consumption, and genealogy. ERP remains authoritative for the released enterprise order under the chosen design. Interfaces carry stable identities, source timestamps, quality, version, and idempotency keys. If MES is unavailable, local control and SCADA continue safely, while an approved degraded execution procedure determines which already released work may continue and how records are reconciled. MES never replaces PLC interlocks, and SCADA should not silently create a second order history. This decision-based explanation survives product overlap and makes ownership, failure handling, and regulated traceability clear.`
+      ),
+      followUps: [
+        t('Quale sistema possiede la genealogia?', 'Which system owns genealogy?'),
+        t('Che cosa continua se MES non è disponibile?', 'What continues if MES is unavailable?')
+      ]
     },
     {
-      prompt: 'When would you choose edge rather than cloud?',
-      short: 'I choose edge when the decision has a local deadline, must continue through WAN loss, uses high-volume data that should be reduced near the source, or has strict exposure constraints. I choose cloud for elastic training, cross-site aggregation, and enterprise coordination. Most industrial solutions are hybrid: governed models are trained centrally, signed releases run locally within limits, and only approved telemetry returns.',
-      long: 'I make edge-versus-cloud a requirements decision. Edge is favored when latency and jitter must be bounded locally, the site needs autonomous operation during disconnection, raw data volume is too high to move economically, or sensitive operational data should be minimized before transfer. It also lets a service use local machine context. The trade-off is a distributed fleet that needs patching, certificate rotation, version control, observability, spare capacity, and a support model at every site. Cloud is favored when the problem benefits from elastic compute, managed data services, cross-plant comparison, centralized training, or enterprise information. Its trade-offs include WAN dependency, cost governance, identity, data classification, and jurisdiction. I quantify the choice. If an advisory must be generated within 500 milliseconds and WAN p99 alone is 800 milliseconds, cloud serving cannot meet the deadline. I may run signed inference at the edge while training and model approval remain central. If a weekly supply forecast needs twenty plants, central aggregation is more valuable and the deadline permits cloud. The hybrid design defines a last-known-good model, model validity period, input freshness, buffer capacity, store-and-forward, and behavior after prolonged disconnection. Low confidence, stale input, or drift returns the service to a deterministic rule, manual review, or shadow mode. Crucially, edge placement does not turn AI into a safety controller. Protection and interlocks stay in engineered deterministic systems. I also standardize the reference pattern while validating local sensor mapping, roles, thresholds, security, and rollback before each deployment.'
+      prompt: t('Quando sceglieresti edge invece di cloud?', 'When would you choose edge rather than cloud?'),
+      short: t(
+        `Scelgo edge quando la decisione ha una deadline locale, deve continuare durante la perdita WAN, usa dati ad alto volume da ridurre vicino alla sorgente o ha vincoli rigorosi di esposizione. Scelgo cloud per training elastico, aggregazione cross-site e coordinamento enterprise. Molte soluzioni industriali sono ibride: modelli governati vengono addestrati centralmente, release firmate operano localmente entro limiti e risale soltanto telemetria approvata.`,
+        `I choose edge when the decision has a local deadline, must continue through WAN loss, uses high-volume data that should be reduced near the source, or has strict exposure constraints. I choose cloud for elastic training, cross-site aggregation, and enterprise coordination. Most industrial solutions are hybrid: governed models are trained centrally, signed releases run locally within limits, and only approved telemetry returns.`
+      ),
+      long: t(
+        `Rendo edge rispetto a cloud una decisione sui requisiti. Edge è favorito quando latenza e jitter devono essere limitati localmente, il sito deve operare durante la disconnessione, il volume raw è troppo alto da trasferire o i dati operativi devono essere minimizzati prima dell'uscita. Consente anche di usare contesto macchina locale. Il trade-off è una flotta distribuita da patchare, osservare e supportare, con certificati, versioni e spare capacity in ogni sito. Cloud è favorito per compute elastico, data service gestiti, confronto cross-plant, training centrale e informazioni enterprise. I trade-off sono WAN, cost governance, identity, classificazione e giurisdizione. Quantifico la scelta. Se l'advisory deve arrivare entro 500 ms e la WAN p99 richiede già 800 ms, il cloud non soddisfa la deadline. Posso eseguire inferenza firmata all'edge e mantenere training e approvazione centrali. Se una previsione settimanale richiede venti plant, l'aggregazione centrale vale di più e la deadline consente cloud. Il design ibrido definisce last-known-good, periodo di validità, freshness, buffer, store-and-forward e comportamento dopo disconnessione prolungata. Bassa confidenza, input stale o drift riportano il servizio a regola deterministica, review umana o shadow mode. La collocazione edge non rende l'AI un safety controller: protezioni e interlock restano deterministici. Standardizzo il reference pattern, ma valido mapping sensori, ruoli, soglie, sicurezza e rollback in ogni deployment.`,
+        `I make edge-versus-cloud a requirements decision. Edge is favored when latency and jitter must be bounded locally, the site needs autonomous operation during disconnection, raw data volume is too high to move economically, or sensitive operational data should be minimized before transfer. It also lets a service use local machine context. The trade-off is a distributed fleet that needs patching, certificate rotation, version control, observability, spare capacity, and a support model at every site. Cloud is favored when the problem benefits from elastic compute, managed data services, cross-plant comparison, centralized training, or enterprise information. Its trade-offs include WAN dependency, cost governance, identity, data classification, and jurisdiction. I quantify the choice. If an advisory must be generated within 500 milliseconds and WAN p99 alone is 800 milliseconds, cloud serving cannot meet the deadline. I may run signed inference at the edge while training and model approval remain central. If a weekly supply forecast needs twenty plants, central aggregation is more valuable and the deadline permits cloud. The hybrid design defines a last-known-good model, model validity period, input freshness, buffer capacity, store-and-forward, and behavior after prolonged disconnection. Low confidence, stale input, or drift returns the service to a deterministic rule, manual review, or shadow mode. Crucially, edge placement does not turn AI into a safety controller. Protection and interlocks stay in engineered deterministic systems. I also standardize the reference pattern while validating local sensor mapping, roles, thresholds, security, and rollback before each deployment.`
+      ),
+      followUps: [
+        t('Come opererebbe il servizio dopo otto ore senza WAN?', 'How would the service operate after eight hours without WAN?'),
+        t('Quale telemetria invieresti centralmente?', 'Which telemetry would you send centrally?')
+      ]
     },
     {
-      prompt: 'Why must an AI model not directly close a safety-critical control loop?',
-      short: 'A safety-critical loop needs bounded timing, validated behavior across defined conditions, independent protection, controlled change, and predictable failure handling. A statistical model, especially across a network, introduces uncertainty, drift, jitter, outages, and version risk. I keep safety functions in engineered deterministic systems. AI may provide read-only advice within hard limits, with plausibility checks, authorization, human accountability, audit, fallback, and rollback.',
-      long: 'I would not let a general AI model directly close a safety-critical loop because its assurance case does not match the function. A protective loop needs a defined hazard analysis, response-time budget, deterministic behavior, validated operating envelope, independent layers of protection, controlled modification, proof testing, and a known fail-safe state. A model introduces statistical error, distribution shift, dependency on input quality, runtime and version changes, and potentially variable network latency. A human confirmation label alone is insufficient if the person cannot understand or challenge the recommendation within the available time. I first ask whether AI is needed at all. Often a conventional sensor, interlock, or deterministic rule is simpler and more defensible. Where AI adds value, I separate observation, recommendation, authorization, and control. The model reads approved data, validates schema, status, freshness, and operating mode, and produces an advisory with evidence, confidence, model version, and scope. Independent application logic applies hard bounds, rate limits, role-based authorization, audit, and a circuit breaker. An authorized engineer may accept a maintenance action, while conventional control applies any permitted setting within its validated range. Safety PLCs or safety instrumented functions remain independent and can always override or trip. The model has no network route or credential to write to PLCs, bypass interlocks, or release product. Stale data, low confidence, drift, service loss, or excessive false alerts triggers a tested fallback such as a traditional rule, manual procedure, or shadow mode. That architecture gains analytical insight without making safety depend on uncertain behavior.'
+      prompt: t('Perché un modello AI non deve chiudere direttamente un loop safety-critical?', 'Why must an AI model not directly close a safety-critical control loop?'),
+      short: t(
+        `Un loop safety-critical richiede timing limitato, comportamento validato nelle condizioni definite, protezione indipendente, cambi controllati e failure handling prevedibile. Un modello statistico, soprattutto attraverso una rete, introduce incertezza, drift, jitter, outage e rischio di versione. Mantengo le safety function in sistemi deterministici progettati. L'AI può offrire advisory read-only entro limiti rigidi, con plausibility check, autorizzazione, accountability umana, audit, fallback e rollback.`,
+        `A safety-critical loop needs bounded timing, validated behavior across defined conditions, independent protection, controlled change, and predictable failure handling. A statistical model, especially across a network, introduces uncertainty, drift, jitter, outages, and version risk. I keep safety functions in engineered deterministic systems. AI may provide read-only advice within hard limits, with plausibility checks, authorization, human accountability, audit, fallback, and rollback.`
+      ),
+      long: t(
+        `Non consentirei a un modello general-purpose di chiudere direttamente un loop safety-critical perché il suo assurance case non corrisponde alla funzione. Un loop protettivo richiede hazard analysis, response-time budget, comportamento deterministico, operating envelope validato, livelli indipendenti di protezione, modifica controllata, proof test e stato fail-safe noto. Un modello introduce errore statistico, distribution shift, dipendenza dalla qualità input, cambi di runtime e versione e latenza di rete variabile. La sola etichetta human-in-the-loop non basta se la persona non può capire o contestare la raccomandazione nel tempo disponibile. Chiedo prima se l'AI serva davvero: spesso sensore, interlock o regola deterministica sono più semplici e difendibili. Dove l'AI aggiunge valore, separo osservazione, raccomandazione, autorizzazione e controllo. Il modello legge dati approvati, verifica schema, status, freshness e mode e produce un advisory con evidenza, confidenza, versione e scope. Logica applicativa indipendente applica hard bound, rate limit, RBAC, audit e circuit breaker. Un ingegnere autorizzato può accettare un'azione manutentiva, mentre il controllo convenzionale applica soltanto impostazioni ammesse nel range validato. Safety PLC o safety instrumented function restano indipendenti e possono sempre intervenire. Il modello non ha route o credenziali per scrivere sui PLC, bypassare interlock o rilasciare prodotto. Dati stale, bassa confidenza, drift, perdita servizio o falsi alert eccessivi attivano fallback testato: regola tradizionale, procedura manuale o shadow mode. Così si ottiene insight senza far dipendere la safety da comportamento incerto.`,
+        `I would not let a general AI model directly close a safety-critical loop because its assurance case does not match the function. A protective loop needs a defined hazard analysis, response-time budget, deterministic behavior, validated operating envelope, independent layers of protection, controlled modification, proof testing, and a known fail-safe state. A model introduces statistical error, distribution shift, dependency on input quality, runtime and version changes, and potentially variable network latency. A human confirmation label alone is insufficient if the person cannot understand or challenge the recommendation within the available time. I first ask whether AI is needed at all. Often a conventional sensor, interlock, or deterministic rule is simpler and more defensible. Where AI adds value, I separate observation, recommendation, authorization, and control. The model reads approved data, validates schema, status, freshness, and operating mode, and produces an advisory with evidence, confidence, model version, and scope. Independent application logic applies hard bounds, rate limits, role-based authorization, audit, and a circuit breaker. An authorized engineer may accept a maintenance action, while conventional control applies any permitted setting within its validated range. Safety PLCs or safety instrumented functions remain independent and can always override or trip. The model has no network route or credential to write to PLCs, bypass interlocks, or release product. Stale data, low confidence, drift, service loss, or excessive false alerts triggers a tested fallback such as a traditional rule, manual procedure, or shadow mode. That architecture gains analytical insight without making safety depend on uncertain behavior.`
+      ),
+      followUps: [
+        t('Quali engineered control applicheresti a un advisory AI?', 'Which engineered controls would you apply to an AI advisory?'),
+        t('Quando sarebbe insufficiente la conferma umana?', 'When would human confirmation be insufficient?')
+      ]
     }
   ],
   finalQuiz: [
@@ -623,7 +815,7 @@ export const architectureLesson = {
       [
         ['Valore, timestamp, status, unità, asset, owner e lineage.', 'Value, timestamp, status, unit, asset, owner, and lineage.', 'La sequenza conserva misura, contesto e responsabilità.', 'This retains measurement, context, and responsibility.'],
         ['Solo valore e dashboard.', 'Value and dashboard only.', 'Mancano qualità, tempo, identità e provenienza.', 'Quality, time, identity, and provenance are missing.'],
-        ['Output del modello senza input version.', 'Model output without input version.', 'L esito non è riproducibile o auditabile.', 'The result is not reproducible or auditable.']
+        ['Output del modello senza input version.', 'Model output without input version.', 'L’esito non è riproducibile o auditabile.', 'The result is not reproducible or auditable.']
       ],
       0
     ),

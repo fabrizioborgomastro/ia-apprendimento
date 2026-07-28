@@ -92,6 +92,16 @@ function isSolvedActivity(value) {
   return isObject(value) && isLocalized(value.prompt) && isLocalized(solution) && asArray(value.rubric).length > 0 && value.rubric.every(isLocalized)
 }
 
+function isProfessionalAnswer(value) {
+  return isObject(value) &&
+    isLocalized(value.prompt) &&
+    isLocalized(value.short) &&
+    isLocalized(value.long) &&
+    Array.isArray(value.followUps) &&
+    value.followUps.length > 0 &&
+    value.followUps.every(isLocalized)
+}
+
 function isProfessionalArtifact(value) {
   return hasLocalizedFields(value, ['title', 'description'])
 }
@@ -155,6 +165,33 @@ export function validateCurriculum(lessons, sources) {
       errors.push(`${path} unit minutes must equal durationMinutes`)
     }
 
+    const allocatedMinutes = { theory: 0, cases: 0, practice: 0 }
+    for (const [unitIndex, unit] of units.entries()) {
+      const unitPath = `${path} unit ${unit.id || unitIndex + 1}`
+      if (!Number.isFinite(unit.estimatedMinutes) || unit.estimatedMinutes < 5 || unit.estimatedMinutes > 10) {
+        errors.push(`${unitPath} estimatedMinutes must be between 5 and 10`)
+      }
+      const allocation = unit.timeAllocation
+      if (!isObject(allocation) || TIME_BUDGET_KEYS.some((key) => !Number.isFinite(allocation[key]) || allocation[key] < 0)) {
+        errors.push(`${unitPath} must allocate non-negative theory, cases and practice minutes`)
+        continue
+      }
+      const unknownKeys = Object.keys(allocation).filter((key) => !TIME_BUDGET_KEYS.includes(key))
+      if (unknownKeys.length) errors.push(`${unitPath} has unknown time allocation fields: ${unknownKeys.join(', ')}`)
+      const allocationTotal = TIME_BUDGET_KEYS.reduce((sum, key) => sum + allocation[key], 0)
+      if (allocationTotal !== unit.estimatedMinutes) {
+        errors.push(`${unitPath} time allocation must equal estimatedMinutes`)
+      }
+      for (const key of TIME_BUDGET_KEYS) allocatedMinutes[key] += allocation[key]
+    }
+    if (isObject(timeBudget)) {
+      for (const key of TIME_BUDGET_KEYS) {
+        if (allocatedMinutes[key] !== timeBudget[key]) {
+          errors.push(`${path} unit ${key} allocation must equal its time budget`)
+        }
+      }
+    }
+
     collectLocalizedErrors(lesson, path, errors)
     const italianLessonWords = theoryWords(lesson, 'it')
     const englishLessonWords = theoryWords(lesson, 'en')
@@ -179,8 +216,8 @@ export function validateCurriculum(lessons, sources) {
     if (!lessonArtifacts(lesson).some(isProfessionalArtifact)) errors.push(`${path} needs one valid professional artifact`)
 
     const answers = asArray(lesson.interviewAnswers).length ? lesson.interviewAnswers : [lesson.interview]
-    if (!answers.some((answer) => typeof answer?.short === 'string' && answer.short.trim() && typeof answer?.long === 'string' && answer.long.trim())) {
-      errors.push(`${path} needs short and extended English interview answers`)
+    if (!answers.length || !answers.every(isProfessionalAnswer)) {
+      errors.push(`${path} needs fully localized professional interview answers`)
     }
 
     for (const [unitIndex, unit] of units.entries()) {

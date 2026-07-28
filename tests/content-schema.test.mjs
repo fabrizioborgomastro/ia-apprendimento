@@ -40,11 +40,27 @@ const workedCase = (number) => ({
 
 function curriculumFixture(wordsPerLesson = lessonDefinitions.map((definition) => definition[4])) {
   return lessonDefinitions.map(([id, slug, durationMinutes, timeBudget], lessonIndex) => {
-    const units = Array.from({ length: 6 }, (_, unitIndex) => ({
+    const unitCount = Math.max(6, Math.ceil(durationMinutes / 10))
+    const baseMinutes = Math.floor(durationMinutes / unitCount)
+    const extraMinutes = durationMinutes % unitCount
+    const unitMinutes = Array.from({ length: unitCount }, (_, unitIndex) => (
+      baseMinutes + (unitIndex < extraMinutes ? 1 : 0)
+    ))
+    const minuteModes = Object.entries(timeBudget)
+      .flatMap(([mode, minutes]) => Array(minutes).fill(mode))
+    let minuteCursor = 0
+    const units = Array.from({ length: unitCount }, (_, unitIndex) => {
+      const estimatedMinutes = unitMinutes[unitIndex]
+      const allocatedModes = minuteModes.slice(minuteCursor, minuteCursor + estimatedMinutes)
+      minuteCursor += estimatedMinutes
+      const timeAllocation = { theory: 0, cases: 0, practice: 0 }
+      for (const mode of allocatedModes) timeAllocation[mode] += 1
+      return ({
       id: `unit-${unitIndex + 1}`,
       eyebrow: text('Contesto', 'Context'),
       title: text('Titolo', 'Title'),
-      estimatedMinutes: unitIndex === 0 ? durationMinutes - 5 : 1,
+      estimatedMinutes,
+      timeAllocation,
       theory: unitIndex === 0 ? [text(
         words(wordsPerLesson[lessonIndex], 'italiano'),
         words(Math.ceil(wordsPerLesson[lessonIndex] * 0.85), 'english')
@@ -65,7 +81,7 @@ function curriculumFixture(wordsPerLesson = lessonDefinitions.map((definition) =
         { prompt: text('Attività uno', 'Activity one'), solution: text('Soluzione uno', 'Solution one'), rubric: [text('Criterio uno', 'Criterion one')] },
         { prompt: text('Attività due', 'Activity two'), modelSolution: text('Soluzione due', 'Solution two'), rubric: [text('Criterio due', 'Criterion two')] }
       ] : []
-    }))
+    })})
     return {
       id,
       slug,
@@ -73,7 +89,12 @@ function curriculumFixture(wordsPerLesson = lessonDefinitions.map((definition) =
       timeBudget: { ...timeBudget },
       units,
       professionalArtifacts: [{ title: text('Artefatto professionale', 'Professional artifact'), description: text('Descrizione italiana', 'English description') }],
-      interviewAnswers: [{ short: 'Short English answer', long: 'Extended English answer with supporting detail.' }]
+      interviewAnswers: [{
+        prompt: text('Domanda professionale?', 'Professional question?'),
+        short: text('Risposta breve italiana', 'Short English answer'),
+        long: text('Risposta italiana estesa con dettaglio.', 'Extended English answer with supporting detail.'),
+        followUps: [text('Domanda successiva?', 'Follow-up question?')]
+      }]
     }
   })
 }
@@ -90,12 +111,18 @@ const invalidLessonFixture = {
     eyebrow: { it: 'Contesto', en: 'Context' },
     title: { it: 'Titolo', en: 'Title' },
     estimatedMinutes: 50,
+    timeAllocation: { theory: 25, cases: 15, practice: 10 },
     theory: [{ it: 'Spiegazione italiana', en: 'English explanation' }],
     keyPoints: [{ it: 'Punto chiave', en: 'Key point' }],
     sourceIds: ['missing-source'],
     checkpoint: { prompt: { it: 'Domanda?', en: 'Question?' }, options: [{ it: 'Risposta', en: 'Answer' }], correctOption: 0 }
   }],
-  interviewAnswers: [{ short: 'Short English answer', long: 'Extended English answer with supporting detail.' }]
+  interviewAnswers: [{
+    prompt: { it: 'Domanda?', en: 'Question?' },
+    short: { it: 'Risposta breve', en: 'Short answer' },
+    long: { it: 'Risposta estesa', en: 'Extended answer' },
+    followUps: [{ it: 'Approfondimento?', en: 'Follow-up?' }]
+  }]
 }
 
 test('localized content requires both languages', () => {
@@ -149,6 +176,24 @@ test('validateLessons treats a time-budget lesson missing units as malformed new
 
 test('validator accepts exact duration, practical-time, Italian-word, and English-ratio thresholds', () => {
   assert.deepEqual(validateCurriculum(curriculumFixture(), sourcesFixture), [])
+})
+
+test('validator enforces bounded unit duration and reconciled per-mode allocations', () => {
+  const lessons = clone(curriculumFixture())
+  lessons[0].units[0].estimatedMinutes = 11
+  lessons[0].units[0].timeAllocation.theory += 1
+  const errors = validateCurriculum(lessons, sourcesFixture)
+  assert.ok(errors.some((error) => error.includes('estimatedMinutes must be between 5 and 10')))
+  assert.ok(errors.some((error) => error.includes('time allocation must equal estimatedMinutes')))
+  assert.ok(errors.some((error) => error.includes('unit theory allocation must equal its time budget')))
+})
+
+test('validator requires localized prompts, answers and follow-up questions', () => {
+  const lessons = clone(curriculumFixture())
+  delete lessons[0].interviewAnswers[0].prompt.en
+  lessons[1].interviewAnswers[0].followUps = []
+  const errors = validateCurriculum(lessons, sourcesFixture)
+  assert.equal(errors.filter((error) => error.includes('fully localized professional interview answers')).length, 2)
 })
 
 test('validator reports duration, practical-time, Italian-word, and English-ratio threshold failures', () => {
@@ -253,7 +298,10 @@ test('source catalog retains the required authoritative records and resolves sta
     'toyota-way-genchi-genbutsu',
     'lean-enterprise-gemba',
     'uk-government-stakeholder-mapping',
-    'ahrq-raci-chart'
+    'ahrq-raci-chart',
+    'isa-18-alarm-management',
+    'isa-iec-62443',
+    'ni-4-20ma-current-loop'
   ]
 
   assert.deepEqual(Object.keys(sources), requiredIds)
