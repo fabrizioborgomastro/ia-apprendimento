@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { countWords, validateCurriculum } from '../public/content/schema.js'
 import { digitalTransformationLesson } from '../public/content/module-1-transformation.js'
+import { architectureLesson } from '../public/content/module-2-architecture.js'
 import { sources } from '../public/content/sources.js'
 
 export function theoryWords(lesson, locale) {
@@ -196,5 +197,83 @@ test('Module 1 contains all required interview prompts with short and extended a
   for (const answer of digitalTransformationLesson.interviewAnswers) {
     assert.ok(countWords(answer.short) >= 50)
     assert.ok(countWords(answer.long) >= 180)
+  }
+})
+
+test('Module 2 has the approved time, depth and practical portfolio', () => {
+  assert.ok(architectureLesson, 'Module 2 content must exist')
+  assert.equal(architectureLesson.id, 'ot-it-ai-cloud')
+  assert.equal(architectureLesson.durationMinutes, 75)
+  assert.deepEqual(architectureLesson.timeBudget, { theory: 38, cases: 22, practice: 15 })
+  assert.equal(architectureLesson.units.length, 8)
+  assert.ok(theoryWords(architectureLesson, 'it') >= 6840)
+  assert.ok(theoryWords(architectureLesson, 'en') >= 5814)
+  assert.equal(countWorkedCases(architectureLesson), 2)
+  assert.equal(architectureLesson.units.flatMap((unit) => unit.activities || []).length, 2)
+
+  const referencedIds = new Set(architectureLesson.units.flatMap((unit) => unit.sourceIds))
+  assert.ok(referencedIds.has('isa-95'))
+  assert.ok(referencedIds.has('opc-ua-part-1'))
+  assert.ok(referencedIds.has('nist-sp-800-82-r3'))
+})
+
+test('Module 2 keeps the eight approved unit boundaries and exact minute allocation', () => {
+  assert.ok(architectureLesson, 'Module 2 content must exist')
+  assert.deepEqual(
+    architectureLesson.units.map(({ title, estimatedMinutes }) => ({
+      title: title.en,
+      estimatedMinutes
+    })),
+    [
+      { title: 'Physical process, sensors, actuators, signals, and sampling', estimatedMinutes: 9 },
+      { title: 'PLC, DCS, HMI, SCADA, alarms, and control-loop constraints', estimatedMinutes: 9 },
+      { title: 'Historian, timestamps, event context, and time-series quality', estimatedMinutes: 9 },
+      { title: 'MES/MOM responsibilities and production genealogy', estimatedMinutes: 9 },
+      { title: 'ERP, planning, logistics, and the MES/ERP boundary', estimatedMinutes: 9 },
+      { title: 'ISA-95, Purdue, zones, conduits, and the industrial DMZ', estimatedMinutes: 9 },
+      { title: 'Edge, cloud, data platforms, APIs, event streaming, and AI serving', estimatedMinutes: 10 },
+      { title: 'Worked case: sensor-to-human-decision architecture and failure modes', estimatedMinutes: 11 }
+    ]
+  )
+  assert.equal(
+    architectureLesson.units.reduce((total, unit) => total + unit.estimatedMinutes, 0),
+    75
+  )
+})
+
+test('Module 2 artifact makes ownership, timing, trust and action explicit at every hop', () => {
+  assert.ok(architectureLesson, 'Module 2 content must exist')
+  const artifact = architectureLesson.sensorToDecisionArtifact
+  assert.ok(artifact)
+  assert.ok(artifact.hops.length >= 8)
+
+  for (const hop of artifact.hops) {
+    for (const field of [
+      'label',
+      'dataOwner',
+      'latency',
+      'protocol',
+      'securityBoundary',
+      'fallback',
+      'humanAction'
+    ]) {
+      assert.ok(hop[field]?.it && hop[field]?.en, `${hop.id} must localize ${field}`)
+    }
+  }
+})
+
+test('Module 2 trains the four architecture interview distinctions with natural timed answers', () => {
+  assert.ok(architectureLesson, 'Module 2 content must exist')
+  assert.deepEqual(architectureLesson.interviewAnswers.map(({ prompt }) => prompt), [
+    'How do OT and IT differ?',
+    'How do MES and SCADA differ?',
+    'When would you choose edge rather than cloud?',
+    'Why must an AI model not directly close a safety-critical control loop?'
+  ])
+  for (const answer of architectureLesson.interviewAnswers) {
+    assert.ok(countWords(answer.short) >= 50)
+    assert.ok(countWords(answer.short) <= 90)
+    assert.ok(countWords(answer.long) >= 180)
+    assert.ok(countWords(answer.long) <= 340)
   }
 })
