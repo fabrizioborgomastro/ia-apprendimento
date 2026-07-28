@@ -1,0 +1,13 @@
+{
+  "name": "ai-transformation-sprint",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/server.mjs",
+    "build": "node tools/validate.mjs",
+    "lint": "node --check public/app.js && node --check public/learning.js && node --check public/content.js && node --check public/ui.js && node --check public/sync.js && node --check public/sw.js && node --check public/types.js",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "node tests/e2e.mjs"
+  }
+}

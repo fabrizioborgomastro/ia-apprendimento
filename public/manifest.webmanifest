@@ -1,0 +1,14 @@
+{
+  "name": "AI Transformation Interview Sprint",
+  "short_name": "AI Sprint",
+  "description": "Preparazione interattiva bilingue per AI Digital Transformation Lead",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f7f8",
+  "theme_color": "#12324a",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
