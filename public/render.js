@@ -5,6 +5,8 @@ const COPY = {
   it: {
     unitOf: (index, total) => `Unità ${index} di ${total}`,
     index: 'Unità della lezione',
+    controls: 'Spostamento tra le unità',
+    progress: 'Avanzamento nella lezione',
     objective: 'Obiettivo',
     keyPoints: 'Punti chiave',
     terminology: 'Terminologia',
@@ -50,6 +52,8 @@ const COPY = {
   en: {
     unitOf: (index, total) => `Unit ${index} of ${total}`,
     index: 'Lesson units',
+    controls: 'Move between units',
+    progress: 'Lesson progress',
     objective: 'Objective',
     keyPoints: 'Key points',
     terminology: 'Terminology',
@@ -235,7 +239,7 @@ export function renderUnitView({ lesson, state, locale, revealed = {}, checkpoin
       <p class="unit-kicker"><span>${text(lesson.title, locale)}</span><span>${escapeHtml(copy.unitOf(state.index + 1, state.total))}</span><span>${escapeHtml(copy.activityOf(unit.estimatedMinutes))}</span></p>
       <h1>${text(unit.title, locale)}</h1>
       ${unit.objective ? `<p class="unit-objective"><b>${copy.objective}:</b> ${text(unit.objective, locale)}</p>` : ''}
-      <div class="unit-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${state.total}" aria-valuenow="${state.index + 1}"><span style="width:${Math.round(((state.index + 1) / state.total) * 100)}%"></span></div>
+      <div class="unit-progress" role="progressbar" aria-label="${copy.progress}" aria-valuemin="1" aria-valuemax="${state.total}" aria-valuenow="${state.index + 1}" aria-valuetext="${escapeHtml(copy.unitOf(state.index + 1, state.total))}"><span style="width:${Math.round(((state.index + 1) / state.total) * 100)}%"></span></div>
     </header>
 
     ${renderUnitIndex(lesson, state, locale)}
@@ -259,7 +263,7 @@ export function renderUnitView({ lesson, state, locale, revealed = {}, checkpoin
 
     ${renderSources(unit.sourceIds, locale)}
 
-    <nav class="unit-controls" data-unit-controls aria-label="${copy.index}">
+    <nav class="unit-controls" data-unit-controls aria-label="${copy.controls}">
       ${state.previous ? `<a class="button secondary" data-link data-unit-previous href="${escapeHtml(unitPath(lesson.slug, state.previous.id))}">← ${copy.previous}</a>` : '<span></span>'}
       <p class="unit-status" data-unit-status>${unitComplete ? `✓ ${copy.unitDone}` : copy.completeFirst}</p>
       ${state.next

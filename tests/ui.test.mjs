@@ -332,3 +332,19 @@ test('the unit stylesheet keeps mobile targets, readable text and scrollable tab
   assert.match(css, /@media \(min-width: 900px\)/u, 'desktop must show the side index')
   assert.match(css, /max-width: 72ch/u, 'reading measure must stay near 72 characters')
 })
+
+test('every landmark and progress indicator carries a distinct accessible name', () => {
+  const lesson = curriculum[4]
+  for (const locale of ['it', 'en']) {
+    const state = getUnitState(lesson, lesson.units[2].id, { cursor: 2 })
+    const html = renderUnitView({ lesson, state, locale, revealed: {}, checkpointChoice: null, activityMarked: false })
+
+    const navLabels = [...html.matchAll(/<nav[^>]*aria-label="([^"]+)"/gu)].map(([, label]) => label)
+    assert.equal(navLabels.length, 2, 'the unit index and the unit controls are both landmarks')
+    assert.equal(new Set(navLabels).size, 2, `landmark names must differ, received ${navLabels.join(' / ')}`)
+
+    const progressBar = html.match(/role="progressbar"[^>]*>/u)
+    assert.ok(progressBar, 'the unit progress indicator must exist')
+    assert.match(progressBar[0], /aria-label="[^"]+"/u, 'the progress indicator needs an accessible name')
+  }
+})
