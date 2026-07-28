@@ -174,7 +174,7 @@ Expected: failure because `migrateLessonProgress` is missing.
 
 - [ ] **Step 3: Implement proportional migration and version-aware merge**
 
-Map with `Math.round((legacyCursor / legacyBlockCount) * (newUnitCount - 1))`, clamp to valid bounds, and preserve completion and score. When progress versions differ, migrate before timestamp-based cursor selection.
+Treat cursors as zero-based indexes. Map endpoint-to-endpoint with `Math.round((legacyCursor / (legacyBlockCount - 1)) * (newUnitCount - 1))`, clamp to valid bounds, and preserve completion and score. A completed legacy sentinel cursor equal to `legacyBlockCount` clamps to the final new unit. When progress versions differ, migrate before timestamp-based cursor selection.
 
 Use the exact legacy map from the shipped curriculum:
 

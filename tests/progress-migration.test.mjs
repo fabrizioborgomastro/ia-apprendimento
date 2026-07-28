@@ -31,6 +31,30 @@ test('completed legacy progress stays completed with its best score', () => {
   assert.equal(migrated.bestScore, 90)
 })
 
+test('negative legacy cursor clamps to the first new unit', () => {
+  const migrated = migrateLessonProgress({ ...legacy, cursor: -3 }, { units: Array(9).fill({}) }, 5)
+
+  assert.equal(migrated.cursor, 0)
+})
+
+test('over-range legacy cursor clamps to the final new unit', () => {
+  const migrated = migrateLessonProgress({ ...legacy, cursor: 99 }, { units: Array(9).fill({}) }, 5)
+
+  assert.equal(migrated.cursor, 8)
+})
+
+test('completed sentinel cursor clamps without regressing completion or score', () => {
+  const migrated = migrateLessonProgress(
+    { ...legacy, cursor: 5, status: 'completed', bestScore: 90 },
+    { units: Array(9).fill({}) },
+    5
+  )
+
+  assert.equal(migrated.cursor, 8)
+  assert.equal(migrated.status, 'completed')
+  assert.equal(migrated.bestScore, 90)
+})
+
 test('version-aware merge migrates a legacy cursor before selecting the newest progress', () => {
   const localLegacy = { ...legacy, cursor: 2, updatedAt: '2026-07-28T11:00:00.000Z' }
   const remoteCurrent = {
