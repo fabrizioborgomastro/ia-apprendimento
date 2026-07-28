@@ -792,6 +792,366 @@ function validateModule4SafetyContracts(lesson, path, errors) {
   }
 }
 
+function validateTimedCaseItems(lesson, contractPath, expectedCount, expectedMinutes, errors) {
+  const timedCaseItems = asArray(lesson.units).flatMap((unit) => [
+    ...asArray(unit?.microExamples),
+    ...asArray(unit?.caseSegments)
+  ])
+  for (const [index, item] of timedCaseItems.entries()) {
+    const itemPath = `${contractPath} timed case item ${index + 1}`
+    for (const field of ['learnerAction', 'expectedOutput', 'modelReasoning', 'responseFormat']) {
+      if (!isLocalized(item?.[field])) errors.push(`${itemPath} needs localized ${field}`)
+    }
+    const columns = asArray(item?.decisionAid?.columns)
+    const rows = asArray(item?.decisionAid?.rows)
+    if (columns.length < 2 || !columns.every(isLocalized) || rows.length < 2 || rows.some((row) => (
+      !hasNonEmptyString(row?.id) || asArray(row?.cells).length !== columns.length ||
+      !asArray(row?.cells).every(isLocalized)
+    ))) {
+      errors.push(`${itemPath} needs a localized decision aid with at least two rows and columns`)
+    }
+    const scope = item?.scope
+    const scopeCounts = ['decisionCount', 'comparisonCount', 'interpretationCount']
+    const validScope = isObject(scope) && scope.outputCount === 1 && scopeCounts.every(
+      (field) => Number.isInteger(scope[field]) && scope[field] >= 0
+    )
+    if (!validScope || scopeCounts.reduce((sum, field) => sum + (scope?.[field] || 0), 0) !== item?.durationMinutes) {
+      errors.push(`${itemPath} workload must equal durationMinutes and retain one output`)
+    }
+  }
+  if (timedCaseItems.length !== expectedCount || timedCaseItems.reduce(
+    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
+    0
+  ) !== expectedMinutes) {
+    errors.push(
+      `${contractPath} must retain ${expectedCount} substantive timed case items totaling ${expectedMinutes} minutes`
+    )
+  }
+}
+
+function validateMvpExperimentCanvas(canvas, contractPath, errors) {
+  if (!isObject(canvas)) {
+    errors.push(`${contractPath} MVP experiment canvas is required`)
+    return
+  }
+  const requiredFields = ['title', 'description', 'problem', 'decisionSupported', 'riskiestAssumption', 'hypothesis', 'dissent']
+  for (const field of requiredFields) {
+    if (!isLocalized(canvas[field])) errors.push(`${contractPath} canvas needs localized ${field}`)
+  }
+  if (!isObject(canvas.baseline) || !isPositiveNumber(canvas.baseline.value) ||
+      !isLocalized(canvas.baseline.metric) || !isISODate(canvas.baseline.measuredAt) ||
+      !hasNonEmptyString(canvas.baseline.evidenceRef)) {
+    errors.push(`${contractPath} canvas baseline needs a measured value, metric, date and evidence`)
+  }
+  const criteria = asArray(canvas.successCriteria)
+  if (criteria.length < 3) {
+    errors.push(`${contractPath} canvas needs at least three success criteria`)
+  }
+  if (!criteria.some((criterion) => criterion?.hardGate === true)) {
+    errors.push(`${contractPath} canvas needs at least one hard gate criterion`)
+  }
+  const criterionIds = new Set()
+  for (const [index, criterion] of criteria.entries()) {
+    const criterionPath = `${contractPath} canvas criterion ${criterion?.id || index + 1}`
+    if (!hasNonEmptyString(criterion?.id) || !STABLE_SLUG_ID.test(criterion.id)) {
+      errors.push(`${criterionPath} needs a stable ID`)
+    } else if (criterionIds.has(criterion.id)) {
+      errors.push(`${criterionPath} has a duplicate criterion ID`)
+    } else {
+      criterionIds.add(criterion.id)
+    }
+    if (!isLocalized(criterion?.metric) || !isLocalized(criterion?.measurement)) {
+      errors.push(`${criterionPath} needs a localized metric and measurement method`)
+    }
+    if (!Number.isFinite(criterion?.baselineValue) || !Number.isFinite(criterion?.targetValue)) {
+      errors.push(`${criterionPath} needs numeric baseline and target values`)
+      continue
+    }
+    if (criterion.baselineValue === criterion.targetValue) {
+      errors.push(`${criterionPath} target must differ from baseline`)
+      continue
+    }
+    const expectedDirection = criterion.targetValue > criterion.baselineValue ? 'increase' : 'decrease'
+    if (criterion.direction !== expectedDirection) {
+      errors.push(`${criterionPath} direction must match the target movement`)
+    }
+  }
+  if (asArray(canvas.stopCriteria).length < 2 || !asArray(canvas.stopCriteria).every(isLocalized)) {
+    errors.push(`${contractPath} canvas needs at least two localized stop criteria`)
+  }
+  if (!asArray(canvas.guardrails).length || !asArray(canvas.guardrails).every(isLocalized)) {
+    errors.push(`${contractPath} canvas needs localized guardrails`)
+  }
+  if (!hasNonEmptyString(canvas.owner) || !hasNonEmptyString(canvas.approver)) {
+    errors.push(`${contractPath} canvas needs a named owner and approver`)
+  }
+  if (!isISODate(canvas.reviewDate)) errors.push(`${contractPath} canvas needs a valid review date`)
+}
+
+function validateRiskRegister(register, contractPath, errors) {
+  if (!isObject(register)) {
+    errors.push(`${contractPath} risk register is required`)
+    return
+  }
+  const rows = asArray(register.rows)
+  if (rows.length < 6) errors.push(`${contractPath} risk register needs at least six rows`)
+  if (!Number.isInteger(register.tolerance) || register.tolerance <= 0) {
+    errors.push(`${contractPath} risk register needs a positive integer tolerance`)
+  }
+  if (!isLocalized(register.toleranceRule) || !isLocalized(register.decisionRecord)) {
+    errors.push(`${contractPath} risk register needs a localized tolerance rule and decision record`)
+  }
+
+  const seenIds = new Set()
+  const inScale = (value) => Number.isInteger(value) && value >= 1 && value <= 5
+  for (const [index, row] of rows.entries()) {
+    const rowPath = `${contractPath} risk ${row?.id || index + 1}`
+    if (!hasNonEmptyString(row?.id) || !STABLE_SLUG_ID.test(row.id)) {
+      errors.push(`${rowPath} needs a stable risk ID`)
+    } else if (seenIds.has(row.id)) {
+      errors.push(`${rowPath} has a duplicate risk ID`)
+    } else {
+      seenIds.add(row.id)
+    }
+    if (!isLocalized(row?.category) || !isLocalized(row?.description)) {
+      errors.push(`${rowPath} needs a localized category and description`)
+    }
+    if (!asArray(row?.controls).length || !asArray(row?.controls).every(isLocalized)) {
+      errors.push(`${rowPath} needs at least one control described in both languages`)
+    }
+    if (!hasNonEmptyString(row?.owner) || !hasNonEmptyString(row?.evidenceRef)) {
+      errors.push(`${rowPath} needs an owner and an evidence reference`)
+    }
+    if (!isISODate(row?.dueDate)) errors.push(`${rowPath} needs a valid due date`)
+    if (![inScale(row?.likelihood), inScale(row?.impact), inScale(row?.residualLikelihood), inScale(row?.residualImpact)].every(Boolean)) {
+      errors.push(`${rowPath} needs likelihood and impact values between 1 and 5`)
+      continue
+    }
+    if (row.inherentScore !== row.likelihood * row.impact) {
+      errors.push(`${rowPath} inherent score must equal likelihood multiplied by impact`)
+    }
+    if (row.residualScore !== row.residualLikelihood * row.residualImpact) {
+      errors.push(`${rowPath} residual score must equal residual likelihood multiplied by residual impact`)
+    }
+    if (row.residualScore > row.inherentScore) {
+      errors.push(`${rowPath} controls must not increase the score`)
+    }
+  }
+
+  if (Number.isInteger(register.tolerance)) {
+    const expected = rows.filter((row) => row?.residualScore > register.tolerance)
+      .map((row) => row.id).sort().join(',')
+    const declared = asArray(register.blockingRiskIds).slice().sort().join(',')
+    if (expected !== declared) {
+      errors.push(`${contractPath} blocking risks must list every residual score above tolerance`)
+    }
+  }
+}
+
+function validateRaciMatrix(matrix, contractPath, errors) {
+  if (!isObject(matrix)) {
+    errors.push(`${contractPath} RACI matrix is required`)
+    return
+  }
+  const roles = asArray(matrix.roles)
+  const activities = asArray(matrix.activities)
+  if (roles.length < 4) errors.push(`${contractPath} RACI matrix needs at least four roles`)
+  if (activities.length < 5) errors.push(`${contractPath} RACI matrix needs at least five activities`)
+  const roleIds = new Set()
+  for (const [index, role] of roles.entries()) {
+    const rolePath = `${contractPath} RACI role ${role?.id || index + 1}`
+    if (!hasNonEmptyString(role?.id) || !STABLE_SLUG_ID.test(role.id)) {
+      errors.push(`${rolePath} needs a stable role ID`)
+    } else if (roleIds.has(role.id)) {
+      errors.push(`${rolePath} has a duplicate role ID`)
+    } else {
+      roleIds.add(role.id)
+    }
+    if (!isLocalized(role?.label)) errors.push(`${rolePath} needs a localized label`)
+  }
+
+  const activityIds = new Set()
+  for (const [index, activity] of activities.entries()) {
+    const activityPath = `${contractPath} RACI activity ${activity?.id || index + 1}`
+    if (!hasNonEmptyString(activity?.id) || !STABLE_SLUG_ID.test(activity.id)) {
+      errors.push(`${activityPath} needs a stable activity ID`)
+    } else if (activityIds.has(activity.id)) {
+      errors.push(`${activityPath} has a duplicate activity ID`)
+    } else {
+      activityIds.add(activity.id)
+    }
+    if (!isLocalized(activity?.name)) errors.push(`${activityPath} needs a localized name`)
+    const assignments = activity?.assignments
+    if (!isObject(assignments)) {
+      errors.push(`${activityPath} needs an assignment for every role`)
+      continue
+    }
+    const unknownRoles = Object.keys(assignments).filter((roleId) => !roleIds.has(roleId))
+    if (unknownRoles.length) errors.push(`${activityPath} assigns unknown roles: ${unknownRoles.join(', ')}`)
+    const codes = [...roleIds].map((roleId) => assignments[roleId])
+    if (codes.some((code) => !['R', 'A', 'C', 'I', '-'].includes(code))) {
+      errors.push(`${activityPath} may only use R, A, C, I or a dash`)
+    }
+    if (codes.filter((code) => code === 'A').length !== 1) {
+      errors.push(`${activityPath} needs exactly one accountable role`)
+    }
+    if (!codes.some((code) => code === 'R')) {
+      errors.push(`${activityPath} needs at least one responsible role`)
+    }
+  }
+}
+
+function validateScalingGateChecklist(checklist, contractPath, errors) {
+  if (!isObject(checklist)) {
+    errors.push(`${contractPath} scaling gate checklist is required`)
+    return
+  }
+  const gates = asArray(checklist.gates)
+  if (gates.length < 6) errors.push(`${contractPath} scaling gate checklist needs at least six gates`)
+  if (!gates.some((gate) => gate?.blocking === true)) {
+    errors.push(`${contractPath} scaling gate checklist needs at least one blocking gate`)
+  }
+  const gateIds = new Set()
+  for (const [index, gate] of gates.entries()) {
+    const gatePath = `${contractPath} scaling gate ${gate?.id || index + 1}`
+    if (!hasNonEmptyString(gate?.id) || !STABLE_SLUG_ID.test(gate.id)) {
+      errors.push(`${gatePath} needs a stable gate ID`)
+    } else if (gateIds.has(gate.id)) {
+      errors.push(`${gatePath} has a duplicate gate ID`)
+    } else {
+      gateIds.add(gate.id)
+    }
+    for (const field of ['name', 'question', 'evidenceRequired', 'threshold']) {
+      if (!isLocalized(gate?.[field])) errors.push(`${gatePath} needs a localized ${field}`)
+    }
+    if (typeof gate?.blocking !== 'boolean') errors.push(`${gatePath} must declare whether it is blocking`)
+    if (!['pass', 'fail', 'pending'].includes(gate?.status)) {
+      errors.push(`${gatePath} status must be pass, fail or pending`)
+    }
+    if (!hasNonEmptyString(gate?.evidenceRef)) errors.push(`${gatePath} needs an evidence reference`)
+  }
+
+  const blocked = gates.filter((gate) => gate?.blocking === true && gate?.status !== 'pass')
+  const declared = asArray(checklist.blockedGateIds).slice().sort().join(',')
+  if (blocked.map((gate) => gate.id).sort().join(',') !== declared) {
+    errors.push(`${contractPath} blocked gates must list every unmet blocking gate`)
+  }
+  if (!['scale', 'hold', 'stop'].includes(checklist.decision)) {
+    errors.push(`${contractPath} scaling decision must be scale, hold or stop`)
+  }
+  if (blocked.length && checklist.decision === 'scale') {
+    errors.push(`${contractPath} cannot recommend scale while a blocking gate is unmet`)
+  }
+  if (!isLocalized(checklist.decisionRationale)) {
+    errors.push(`${contractPath} scaling decision needs a localized rationale`)
+  }
+  if (!isISODate(checklist.reviewDate)) errors.push(`${contractPath} scaling checklist needs a valid review date`)
+  if (!hasNonEmptyString(checklist.owner)) errors.push(`${contractPath} scaling checklist needs an owner`)
+}
+
+function validateModule5GovernanceContracts(lesson, path, errors) {
+  const contractPath = `${path} Module 5 governance contract`
+
+  validateMvpExperimentCanvas(lesson.mvpExperimentCanvas, contractPath, errors)
+  validateRiskRegister(lesson.riskRegister, contractPath, errors)
+  validateRaciMatrix(lesson.raciMatrix, contractPath, errors)
+  validateScalingGateChecklist(lesson.scalingGateChecklist, contractPath, errors)
+  validateTimedCaseItems(lesson, contractPath, 6, 14, errors)
+
+  const units = asArray(lesson.units)
+  const caseMinutes = units.reduce((sum, unit) => sum + [
+    ...asArray(unit?.microExamples),
+    ...asArray(unit?.caseSegments),
+    ...asArray(unit?.workedCases)
+  ].reduce((unitSum, item) => unitSum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0), 0), 0)
+  const activities = units.flatMap((unit) => asArray(unit?.activities))
+  const practiceMinutes = activities.reduce(
+    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
+    0
+  )
+  const budget = lesson.timeBudget
+
+  if (units.length !== 8 || !isObject(budget) ||
+      budget.theory !== 36 || budget.cases !== 22 || budget.practice !== 17) {
+    errors.push(`${contractPath} timing must remain eight units and 36 theory, 22 cases, 17 practice minutes`)
+  }
+  if (caseMinutes !== 22) errors.push(`${contractPath} learner-visible case minutes must total 22`)
+  if (practiceMinutes !== 17 || activities.length !== 9 ||
+      activities.some((item) => !isValidQuickTaskScope(item?.quickTask))) {
+    errors.push(`${contractPath} must retain nine one-output activities totaling 17 practice minutes`)
+  }
+
+  const workedCases = units.flatMap((unit) => asArray(unit?.workedCases))
+  const requiredCaseIds = ['shadow-mode-quality-assistant', 'plant-to-multi-plant-rollout']
+  for (const caseId of requiredCaseIds) {
+    if (!workedCases.some((workedCase) => workedCase?.id === caseId)) {
+      errors.push(`${contractPath} must retain the ${caseId} worked case`)
+    }
+  }
+
+  const shadow = workedCases.find((workedCase) => workedCase?.id === 'shadow-mode-quality-assistant')
+  const confusion = shadow?.caseArtifact?.confusion
+  if (isObject(confusion)) {
+    const { truePositives, falsePositives, falseNegatives, trueNegatives } = confusion
+    const counts = [truePositives, falsePositives, falseNegatives, trueNegatives]
+    if (!counts.every((value) => Number.isInteger(value) && value >= 0)) {
+      errors.push(`${contractPath} shadow case confusion matrix needs non-negative integers`)
+    } else {
+      if (counts.reduce((sum, value) => sum + value, 0) !== shadow.caseArtifact.sampleSize) {
+        errors.push(`${contractPath} shadow case confusion matrix must sum to its sample size`)
+      }
+      const precision = truePositives / (truePositives + falsePositives)
+      const recall = truePositives / (truePositives + falseNegatives)
+      if (Math.abs(shadow.caseArtifact.precision - precision) > 0.005) {
+        errors.push(`${contractPath} shadow case precision must be derived from the confusion matrix`)
+      }
+      if (Math.abs(shadow.caseArtifact.recall - recall) > 0.005) {
+        errors.push(`${contractPath} shadow case recall must be derived from the confusion matrix`)
+      }
+    }
+    if (shadow.caseArtifact.reviewQueuePerShift > shadow.caseArtifact.reviewCapacityPerShift) {
+      errors.push(`${contractPath} shadow case review queue must stay within review capacity`)
+    }
+  } else if (shadow) {
+    errors.push(`${contractPath} shadow case needs a confusion matrix`)
+  }
+
+  const rollout = workedCases.find((workedCase) => workedCase?.id === 'plant-to-multi-plant-rollout')
+  const rolloutArtifact = rollout?.caseArtifact
+  if (isObject(rolloutArtifact)) {
+    const plants = asArray(rolloutArtifact.plants)
+    if (plants.length < 3) errors.push(`${contractPath} rollout case needs at least three plants`)
+    for (const [index, plant] of plants.entries()) {
+      const plantPath = `${contractPath} rollout plant ${plant?.id || index + 1}`
+      const criteria = asArray(plant?.criteria)
+      if (!criteria.length || criteria.some((criterion) => (
+        !Number.isInteger(criterion?.weight) || !Number.isInteger(criterion?.score)
+      ))) {
+        errors.push(`${plantPath} needs integer weighted criteria`)
+        continue
+      }
+      const computed = criteria.reduce((sum, criterion) => sum + criterion.weight * criterion.score, 0)
+      if (plant.readinessScore !== computed) {
+        errors.push(`${plantPath} readiness score must equal its weighted criteria total`)
+      }
+      const expectedEligible = plant.readinessScore >= rolloutArtifact.readinessThreshold &&
+        plant.hardGatesPassed === true
+      if (plant.eligible !== expectedEligible) {
+        errors.push(`${plantPath} eligibility must follow the threshold and the hard gates`)
+      }
+    }
+    const expectedSelection = plants.filter((plant) => plant.eligible).map((plant) => plant.id).join(',')
+    if (asArray(rolloutArtifact.selectedPlantIds).join(',') !== expectedSelection) {
+      errors.push(`${contractPath} rollout selection must contain exactly the eligible plants`)
+    }
+    if (!plants.some((plant) => plant?.hardGatesPassed === false && plant?.eligible === false)) {
+      errors.push(`${contractPath} rollout case must retain a high-scoring plant blocked by a hard gate`)
+    }
+  } else if (rollout) {
+    errors.push(`${contractPath} rollout case needs a readiness artifact`)
+  }
+}
+
 function validateCheckpoint(checkpoint, path, errors) {
   if (!checkpoint) {
     errors.push(`${path} is missing a checkpoint`)
@@ -923,6 +1283,9 @@ export function validateCurriculum(lessons, sources) {
     }
     if (lesson.id === 'llm-agents') {
       validateModule4SafetyContracts(lesson, path, errors)
+    }
+    if (lesson.id === 'mvp-governance') {
+      validateModule5GovernanceContracts(lesson, path, errors)
     }
 
     for (const [unitIndex, unit] of units.entries()) {

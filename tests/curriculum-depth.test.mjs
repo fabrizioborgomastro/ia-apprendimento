@@ -9,6 +9,8 @@ const { dataAiLesson = null } = await import('../public/content/module-3-data-ai
   .catch(() => ({}))
 const { llmAgentsLesson = null } = await import('../public/content/module-4-llm-agents.js')
   .catch(() => ({}))
+const { mvpGovernanceLesson = null } = await import('../public/content/module-5-mvp-governance.js')
+  .catch(() => ({}))
 
 export function theoryWords(lesson, locale) {
   return lesson.units
@@ -1322,4 +1324,351 @@ test('Module 4 routing and multi-agent claims cite local original research', () 
     assert.equal(sources[sourceId]?.type, 'primary')
     assert.match(sources[sourceId]?.url || '', /^https:\/\/arxiv\.org\/abs\//u)
   }
+})
+
+const MODULE_5_BOUNDARIES = [
+  { id: 'discovery-baseline-riskiest-assumption', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+  { id: 'mvp-prototype-pilot-scope', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+  { id: 'integration-shadow-mode-ownership', estimatedMinutes: 10, timeAllocation: { theory: 4, cases: 4, practice: 2 } },
+  { id: 'ot-security-segmentation-safety', estimatedMinutes: 10, timeAllocation: { theory: 5, cases: 3, practice: 2 } },
+  { id: 'genai-threats-and-excessive-agency', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+  { id: 'governance-nist-and-eu-obligations', estimatedMinutes: 9, timeAllocation: { theory: 4, cases: 3, practice: 2 } },
+  { id: 'monitoring-drift-incident-oversight', estimatedMinutes: 9, timeAllocation: { theory: 5, cases: 2, practice: 2 } },
+  { id: 'scaling-gates-platform-and-adoption', estimatedMinutes: 10, timeAllocation: { theory: 3, cases: 4, practice: 3 } }
+]
+
+test('Module 5 has the approved identity, depth, sources, and practical portfolio', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  assert.equal(mvpGovernanceLesson.id, 'mvp-governance')
+  assert.equal(mvpGovernanceLesson.slug, 'mvp-governance')
+  assert.equal(mvpGovernanceLesson.moduleNumber, 5)
+  assert.equal(mvpGovernanceLesson.durationMinutes, 75)
+  assert.deepEqual(mvpGovernanceLesson.timeBudget, { theory: 36, cases: 22, practice: 17 })
+  assert.equal(mvpGovernanceLesson.units.length, 8)
+  assert.ok(theoryWords(mvpGovernanceLesson, 'it') >= 6480)
+  assert.ok(theoryWords(mvpGovernanceLesson, 'en') >= 5508)
+  assert.equal(countWorkedCases(mvpGovernanceLesson), 2)
+
+  const sourceIds = new Set(mvpGovernanceLesson.units.flatMap(({ sourceIds }) => sourceIds))
+  for (const sourceId of [
+    'nist-sp-800-82-r3',
+    'nist-ai-rmf-1-0',
+    'nist-ai-600-1',
+    'eu-ai-act',
+    'isa-iec-62443',
+    'ahrq-raci-chart',
+    'nist-sp-800-61-r3'
+  ]) {
+    assert.ok(sourceIds.has(sourceId), `Module 5 must cite ${sourceId}`)
+    assert.equal(sources[sourceId]?.type, 'primary')
+    assert.match(sources[sourceId]?.url || '', /^https:\/\//u)
+  }
+})
+
+test('Module 5 keeps eight approved boundaries and reconciles every engaged minute', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  assert.deepEqual(
+    mvpGovernanceLesson.units.map(({ id, estimatedMinutes, timeAllocation }) => ({
+      id,
+      estimatedMinutes,
+      timeAllocation
+    })),
+    MODULE_5_BOUNDARIES
+  )
+
+  const sum = (key) => MODULE_5_BOUNDARIES.reduce((total, unit) => total + unit.timeAllocation[key], 0)
+  assert.equal(sum('theory'), 36)
+  assert.equal(sum('cases'), 22)
+  assert.equal(sum('practice'), 17)
+  assert.equal(
+    MODULE_5_BOUNDARIES.reduce((total, unit) => total + unit.estimatedMinutes, 0),
+    75
+  )
+
+  let caseMinutes = 0
+  let practiceMinutes = 0
+  for (const unit of mvpGovernanceLesson.units) {
+    const caseItems = [
+      ...(unit.microExamples || []),
+      ...(unit.caseSegments || []),
+      ...(unit.workedCases || [])
+    ]
+    const unitCaseMinutes = caseItems.reduce((total, item) => total + item.durationMinutes, 0)
+    assert.equal(unitCaseMinutes, unit.timeAllocation.cases, `${unit.id} case minutes must be explicit`)
+    const unitPracticeMinutes = (unit.activities || []).reduce((total, item) => total + item.durationMinutes, 0)
+    assert.equal(unitPracticeMinutes, unit.timeAllocation.practice, `${unit.id} practice minutes must be explicit`)
+    caseMinutes += unitCaseMinutes
+    practiceMinutes += unitPracticeMinutes
+  }
+  assert.equal(caseMinutes, 22)
+  assert.equal(practiceMinutes, 17)
+})
+
+test('Module 5 timed case items require substantive localized work proportional to duration', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  const timedItems = mvpGovernanceLesson.units.flatMap((unit) => [
+    ...(unit.microExamples || []),
+    ...(unit.caseSegments || [])
+  ])
+  assert.equal(timedItems.length, 6)
+  assert.equal(timedItems.reduce((total, item) => total + item.durationMinutes, 0), 14)
+
+  for (const item of timedItems) {
+    assert.ok(item.learnerAction?.it && item.learnerAction?.en, `${item.id} needs a learner action`)
+    assert.ok(item.expectedOutput?.it && item.expectedOutput?.en, `${item.id} needs an expected output`)
+    assert.ok(item.modelReasoning?.it && item.modelReasoning?.en, `${item.id} needs model reasoning`)
+    assert.ok(item.responseFormat?.it && item.responseFormat?.en, `${item.id} needs a response format`)
+    assert.ok(item.decisionAid?.columns?.length >= 2, `${item.id} needs decision-aid columns`)
+    assert.ok(item.decisionAid?.rows?.length >= 2, `${item.id} needs decision-aid rows`)
+    assert.ok(item.decisionAid.rows.every((row) => (
+      row.id && row.cells.length === item.decisionAid.columns.length &&
+      row.cells.every((cell) => cell.it && cell.en)
+    )), `${item.id} decision aid must be complete and localized`)
+    assert.equal(item.scope.outputCount, 1)
+    assert.equal(
+      item.scope.decisionCount + item.scope.comparisonCount + item.scope.interpretationCount,
+      item.durationMinutes,
+      `${item.id} workload must justify its declared duration`
+    )
+  }
+})
+
+test('Module 5 artifacts make experiment, risk, accountability and scaling recomputable', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  const { mvpExperimentCanvas, riskRegister, raciMatrix, scalingGateChecklist } = mvpGovernanceLesson
+
+  assert.ok(mvpExperimentCanvas.title.it && mvpExperimentCanvas.title.en)
+  for (const field of ['problem', 'decisionSupported', 'riskiestAssumption', 'hypothesis']) {
+    assert.ok(mvpExperimentCanvas[field]?.it && mvpExperimentCanvas[field]?.en, `canvas needs ${field}`)
+  }
+  assert.ok(mvpExperimentCanvas.successCriteria.length >= 3)
+  assert.ok(mvpExperimentCanvas.successCriteria.some((criterion) => criterion.hardGate === true))
+  for (const criterion of mvpExperimentCanvas.successCriteria) {
+    assert.ok(['increase', 'decrease'].includes(criterion.direction))
+    assert.ok(Number.isFinite(criterion.baselineValue) && Number.isFinite(criterion.targetValue))
+    assert.notEqual(criterion.baselineValue, criterion.targetValue)
+    assert.equal(
+      criterion.direction,
+      criterion.targetValue > criterion.baselineValue ? 'increase' : 'decrease',
+      `${criterion.id} direction must match its target`
+    )
+  }
+  assert.ok(mvpExperimentCanvas.stopCriteria.length >= 2)
+  assert.ok(mvpExperimentCanvas.owner && mvpExperimentCanvas.approver)
+  assert.ok(mvpExperimentCanvas.dissent?.it && mvpExperimentCanvas.dissent?.en)
+  assert.match(mvpExperimentCanvas.reviewDate, /^\d{4}-\d{2}-\d{2}$/u)
+
+  assert.ok(riskRegister.rows.length >= 6)
+  assert.equal(new Set(riskRegister.rows.map(({ id }) => id)).size, riskRegister.rows.length)
+  for (const row of riskRegister.rows) {
+    assert.equal(row.inherentScore, row.likelihood * row.impact, `${row.id} inherent score must be derived`)
+    assert.equal(row.residualScore, row.residualLikelihood * row.residualImpact, `${row.id} residual score must be derived`)
+    assert.ok(row.residualScore <= row.inherentScore, `${row.id} controls must not increase risk`)
+    assert.ok(row.controls.length >= 1)
+    assert.ok(row.owner && row.evidenceRef)
+    assert.match(row.dueDate, /^\d{4}-\d{2}-\d{2}$/u)
+  }
+  assert.ok(Number.isInteger(riskRegister.tolerance))
+  assert.equal(
+    riskRegister.blockingRiskIds.slice().sort().join(','),
+    riskRegister.rows.filter((row) => row.residualScore > riskRegister.tolerance)
+      .map(({ id }) => id).sort().join(','),
+    'blocking risks must be exactly the rows above tolerance'
+  )
+
+  assert.ok(raciMatrix.roles.length >= 4)
+  assert.ok(raciMatrix.activities.length >= 5)
+  for (const activity of raciMatrix.activities) {
+    const codes = raciMatrix.roles.map((role) => activity.assignments[role.id])
+    assert.equal(codes.filter((code) => code === 'A').length, 1, `${activity.id} needs exactly one accountable role`)
+    assert.ok(codes.filter((code) => code === 'R').length >= 1, `${activity.id} needs a responsible role`)
+    assert.ok(codes.every((code) => ['R', 'A', 'C', 'I', '-'].includes(code)))
+  }
+
+  assert.ok(scalingGateChecklist.gates.length >= 6)
+  assert.ok(scalingGateChecklist.gates.some((gate) => gate.blocking === true))
+  for (const gate of scalingGateChecklist.gates) {
+    assert.ok(['pass', 'fail', 'pending'].includes(gate.status))
+    assert.ok(gate.evidenceRequired?.it && gate.evidenceRequired?.en)
+    assert.ok(gate.threshold?.it && gate.threshold?.en)
+  }
+  const blockedGates = scalingGateChecklist.gates.filter((gate) => gate.blocking && gate.status !== 'pass')
+  assert.ok(['scale', 'hold', 'stop'].includes(scalingGateChecklist.decision))
+  if (blockedGates.length) assert.notEqual(scalingGateChecklist.decision, 'scale')
+  assert.equal(
+    scalingGateChecklist.blockedGateIds.slice().sort().join(','),
+    blockedGates.map(({ id }) => id).sort().join(',')
+  )
+})
+
+test('Module 5 identity-anchored validator rejects mutations to central governance contracts', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  const errorsFor = (mutate) => {
+    const lesson = structuredClone(mvpGovernanceLesson)
+    mutate(lesson)
+    return lessonLocalErrors([
+      digitalTransformationLesson,
+      architectureLesson,
+      dataAiLesson,
+      llmAgentsLesson,
+      lesson
+    ])
+  }
+
+  assert.ok(errorsFor((lesson) => { delete lesson.mvpExperimentCanvas })
+    .some((error) => /MVP experiment canvas is required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.riskRegister })
+    .some((error) => /risk register is required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.raciMatrix })
+    .some((error) => /RACI matrix is required/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.scalingGateChecklist })
+    .some((error) => /scaling gate checklist is required/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.riskRegister.rows[0].residualScore += 1 })
+    .some((error) => /residual score must equal/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.riskRegister.rows[0].inherentScore += 1 })
+    .some((error) => /inherent score must equal/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.riskRegister.rows = [] })
+    .some((error) => /risk register needs at least six/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.riskRegister.rows[1].id = lesson.riskRegister.rows[0].id })
+    .some((error) => /duplicate risk ID/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.riskRegister.blockingRiskIds = [] })
+    .some((error) => /blocking risks must list every residual score above tolerance/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.riskRegister.rows[0].controls })
+    .some((error) => /needs at least one control/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => {
+    const activity = lesson.raciMatrix.activities[0]
+    const roleId = lesson.raciMatrix.roles.find((role) => activity.assignments[role.id] === 'A').id
+    activity.assignments[roleId] = 'C'
+  }).some((error) => /exactly one accountable role/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.raciMatrix.activities = [] })
+    .some((error) => /RACI matrix needs at least five activities/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { lesson.scalingGateChecklist.decision = 'scale' })
+    .some((error) => /cannot recommend scale while a blocking gate/i.test(error)))
+  assert.ok(errorsFor((lesson) => {
+    lesson.scalingGateChecklist.gates.find((gate) => gate.blocking && gate.status === 'pass').status = 'fail'
+  }).some((error) => /blocked gates must list every unmet blocking gate/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.scalingGateChecklist.gates.splice(5) })
+    .some((error) => /scaling gate checklist needs at least six gates/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.mvpExperimentCanvas.successCriteria = [] })
+    .some((error) => /needs at least three success criteria/i.test(error)))
+  assert.ok(errorsFor((lesson) => {
+    for (const criterion of lesson.mvpExperimentCanvas.successCriteria) criterion.hardGate = false
+  }).some((error) => /needs at least one hard gate/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.mvpExperimentCanvas.successCriteria[0].targetValue = lesson.mvpExperimentCanvas.successCriteria[0].baselineValue })
+    .some((error) => /target must differ from baseline/i.test(error)))
+
+  assert.ok(errorsFor((lesson) => { delete lesson.units[0].microExamples[0].learnerAction })
+    .some((error) => /timed case item 1.*learnerAction/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[0].microExamples[0].scope.comparisonCount += 1 })
+    .some((error) => /timed case item 1.*workload.*durationMinutes/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.timeBudget.theory = 35 })
+    .some((error) => /timing must remain eight units and 36 theory, 22 cases, 17 practice minutes/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[7].activities.pop() })
+    .some((error) => /must retain nine one-output activities totaling 17 practice minutes/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[2].workedCases[0].durationMinutes = 3 })
+    .some((error) => /learner-visible case minutes must total 22/i.test(error)))
+  assert.ok(errorsFor((lesson) => { delete lesson.units[2].workedCases[0].caseArtifact.confusion })
+    .some((error) => /shadow case needs a confusion matrix/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[7].workedCases[0].caseArtifact.plants[1].readinessScore += 1 })
+    .some((error) => /readiness score must equal its weighted criteria total/i.test(error)))
+  assert.ok(errorsFor((lesson) => { lesson.units[7].workedCases[0].caseArtifact.plants[3].eligible = true })
+    .some((error) => /eligibility must follow the threshold and the hard gates/i.test(error)))
+})
+
+test('Module 5 governance validation is anchored to stable lesson identity', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  const lesson = structuredClone(mvpGovernanceLesson)
+  delete lesson.riskRegister
+
+  assert.ok(lessonLocalErrors([
+    digitalTransformationLesson,
+    architectureLesson,
+    dataAiLesson,
+    llmAgentsLesson,
+    lesson
+  ]).some((error) => /Module 5 governance contract.*risk register is required/i.test(error)))
+})
+
+test('Module 5 cases connect shadow-mode evidence and rollout economics to a defensible decision', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  const workedCases = mvpGovernanceLesson.units.flatMap((unit) => unit.workedCases || [])
+  assert.equal(workedCases.length, 2)
+
+  const shadow = workedCases.find(({ id }) => id === 'shadow-mode-quality-assistant')
+  assert.ok(shadow, 'shadow-mode quality assistant case must exist')
+  assert.equal(shadow.hypothetical, true)
+  assert.equal(shadow.publicContext, true)
+  const evidence = shadow.caseArtifact.confusion
+  const { truePositives, falsePositives, falseNegatives, trueNegatives } = evidence
+  assert.equal(
+    truePositives + falsePositives + falseNegatives + trueNegatives,
+    shadow.caseArtifact.sampleSize
+  )
+  const precision = truePositives / (truePositives + falsePositives)
+  const recall = truePositives / (truePositives + falseNegatives)
+  assert.ok(Math.abs(shadow.caseArtifact.precision - precision) < 0.005)
+  assert.ok(Math.abs(shadow.caseArtifact.recall - recall) < 0.005)
+  assert.ok(shadow.caseArtifact.reviewQueuePerShift <= shadow.caseArtifact.reviewCapacityPerShift)
+  assert.ok(shadow.decision.it && shadow.decision.en)
+  assert.ok(shadow.tradeOff.it && shadow.tradeOff.en)
+
+  const rollout = workedCases.find(({ id }) => id === 'plant-to-multi-plant-rollout')
+  assert.ok(rollout, 'multi-plant rollout case must exist')
+  const plants = rollout.caseArtifact.plants
+  assert.ok(plants.length >= 3)
+  for (const plant of plants) {
+    assert.equal(
+      plant.readinessScore,
+      plant.criteria.reduce((total, criterion) => total + criterion.weight * criterion.score, 0)
+    )
+    assert.equal(
+      plant.eligible,
+      plant.readinessScore >= rollout.caseArtifact.readinessThreshold && plant.hardGatesPassed === true
+    )
+  }
+  assert.deepEqual(
+    rollout.caseArtifact.selectedPlantIds,
+    plants.filter((plant) => plant.eligible).map(({ id }) => id)
+  )
+  assert.ok(plants.some((plant) => plant.hardGatesPassed === false && plant.eligible === false))
+})
+
+test('Module 5 trains controlled MVP, OT and AI security, oversight and refusal to scale', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  const answers = mvpGovernanceLesson.interviewAnswers
+  assert.equal(answers.length, 4)
+  for (const answer of answers) {
+    assert.ok(answer.prompt.it && answer.prompt.en)
+    assert.ok(countWords(answer.short.en) >= 60 && countWords(answer.short.en) <= 130)
+    assert.ok(countWords(answer.long.en) >= 200)
+    assert.ok(answer.followUps.length >= 2)
+    assert.ok(answer.followUps.every((followUp) => followUp.it && followUp.en))
+  }
+  const englishPrompts = answers.map(({ prompt }) => prompt.en.toLowerCase())
+  assert.ok(englishPrompts.some((prompt) => prompt.includes('mvp')))
+  assert.ok(englishPrompts.some((prompt) => prompt.includes('secure')))
+  assert.ok(englishPrompts.some((prompt) => prompt.includes('oversight')))
+  assert.ok(englishPrompts.some((prompt) => prompt.includes('not to scale')))
+})
+
+test('Module 5 passes lesson-local validation with modules one to four', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  assert.deepEqual(lessonLocalErrors([
+    digitalTransformationLesson,
+    architectureLesson,
+    dataAiLesson,
+    llmAgentsLesson,
+    mvpGovernanceLesson
+  ]), [])
+})
+
+test('Module 5 Italian copy elides articles before vowels', () => {
+  assert.ok(mvpGovernanceLesson, 'Module 5 content must exist')
+  assert.doesNotMatch(
+    JSON.stringify(mvpGovernanceLesson, (key, value) => key === 'en' ? undefined : value),
+    missingItalianElision
+  )
 })

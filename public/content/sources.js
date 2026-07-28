@@ -37,6 +37,14 @@ export const sources = {
     url: 'https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf',
     accessedAt
   },
+  'nist-sp-800-61-r3': {
+    title: 'NIST SP 800-61 Rev. 3: Incident Response Recommendations and Considerations for Cybersecurity Risk Management',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://csrc.nist.gov/pubs/sp/800/61/r3/final',
+    publicationDate: '2025-04-03',
+    accessedAt
+  },
   'eu-ai-act': {
     title: 'Regulation (EU) 2024/1689 (Artificial Intelligence Act)',
     organization: 'European Union',

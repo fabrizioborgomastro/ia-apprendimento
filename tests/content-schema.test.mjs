@@ -8,7 +8,13 @@ import {
 } from '../public/content/schema.js'
 import { validateLessons } from '../public/learning.js'
 import { llmAgentsLesson } from '../public/content/module-4-llm-agents.js'
+import { mvpGovernanceLesson } from '../public/content/module-5-mvp-governance.js'
 import { sourceById, sources } from '../public/content/sources.js'
+
+const identityAnchoredLessons = {
+  'llm-agents': llmAgentsLesson,
+  'mvp-governance': mvpGovernanceLesson
+}
 
 const lessonDefinitions = [
   ['digital-transformation', 'digital-transformation', 50, { theory: 25, cases: 15, practice: 10 }, 5667],
@@ -41,8 +47,8 @@ const workedCase = (number) => ({
 
 function curriculumFixture(wordsPerLesson = lessonDefinitions.map((definition) => definition[4])) {
   return lessonDefinitions.map(([id, slug, durationMinutes, timeBudget], lessonIndex) => {
-    if (id === 'llm-agents') {
-      const lesson = structuredClone(llmAgentsLesson)
+    if (identityAnchoredLessons[id]) {
+      const lesson = structuredClone(identityAnchoredLessons[id])
       for (const unit of lesson.units) {
         unit.theory = []
         unit.sourceIds = ['primary']
@@ -303,6 +309,7 @@ test('source catalog retains the required authoritative records and resolves sta
     'opc-ua-part-1',
     'nist-ai-rmf-1-0',
     'nist-ai-600-1',
+    'nist-sp-800-61-r3',
     'eu-ai-act',
     'ec-industry-5-0',
     'attention-is-all-you-need',
