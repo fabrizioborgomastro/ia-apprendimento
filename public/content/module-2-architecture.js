@@ -219,6 +219,12 @@ const unitFour = {
       'The reconstruction links 6,000 consumed units to 5,750 potentially affected finished units and 250 scrap or loss units, for a 95.83 percent yield. Against an initial 10,000-unit hold, the finished scope narrows by 42.5 percent; Quality retains the decision.'
     ),
     caseArtifact: {
+      nodes: [
+        { id: 'SFG-401', kind: 'intermediate-lot' },
+        { id: 'SFG-401-A', kind: 'split-lot' },
+        { id: 'SFG-401-B', kind: 'split-lot' },
+        { id: 'RW-401-B', kind: 'rework-lot' }
+      ],
       inputLots: [{
         id: 'COMP-A17',
         units: 10000,
@@ -523,6 +529,7 @@ const sensorToDecisionArtifact = {
   edges: [
     {
       id: 'sensor-to-acquisition', order: 1,
+      sourceId: 'sensor-vt-201', destinationId: 'acquisition-eam-201',
       source: t('Sensore di vibrazione VT-201', 'Vibration sensor VT-201'),
       destination: t('Modulo di acquisizione EAM-201', 'Acquisition module EAM-201'),
       interface: t('Interfaccia analogica IEPE a 24 bit', '24-bit IEPE analogue interface'),
@@ -535,6 +542,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'acquisition-to-edge-feature', order: 2,
+      sourceId: 'acquisition-eam-201', destinationId: 'edge-featurecalc-201',
       source: t('Modulo di acquisizione EAM-201', 'Acquisition module EAM-201'),
       destination: t('Servizio edge FeatureCalc-201', 'Edge service FeatureCalc-201'),
       interface: t('Stream gRPC su loopback con protobuf versionato', 'Loopback gRPC stream with versioned protobuf'),
@@ -547,6 +555,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'edge-feature-to-opcua', order: 3,
+      sourceId: 'edge-featurecalc-201', destinationId: 'supervisory-opc-201',
       source: t('Servizio edge FeatureCalc-201', 'Edge service FeatureCalc-201'),
       destination: t('Server OPC UA di supervisione OPC-201', 'Supervisory OPC UA server OPC-201'),
       interface: t('OPC UA Client/Server con SignAndEncrypt e certificati applicativi', 'OPC UA Client/Server with SignAndEncrypt and application certificates'),
@@ -559,6 +568,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'opcua-to-historian', order: 4,
+      sourceId: 'supervisory-opc-201', destinationId: 'site-historian-hist-301',
       source: t('Server OPC UA OPC-201', 'OPC UA server OPC-201'),
       destination: t('Historian di sito HIST-301', 'Site historian HIST-301'),
       interface: t('OPC UA monitored items con queue e source timestamp preservati', 'OPC UA monitored items with queue and preserved source timestamps'),
@@ -571,6 +581,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'historian-to-dmz', order: 5,
+      sourceId: 'site-historian-hist-301', destinationId: 'dmz-historian-hist-401',
       source: t('Historian di sito HIST-301', 'Site historian HIST-301'),
       destination: t('Replica historian DMZ HIST-DMZ-401', 'DMZ historian replica HIST-DMZ-401'),
       interface: t('Replica HTTPS su TLS 1.3 con mutua autenticazione', 'HTTPS replication over mutually authenticated TLS 1.3'),
@@ -583,6 +594,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'dmz-to-event-broker', order: 6,
+      sourceId: 'dmz-historian-hist-401', destinationId: 'enterprise-event-broker-evt-501',
       source: t('Replica DMZ HIST-DMZ-401', 'DMZ replica HIST-DMZ-401'),
       destination: t('Broker eventi enterprise EVT-501', 'Enterprise event broker EVT-501'),
       interface: t('MQTT 5 su mTLS con topic allowlist e schema versionato', 'MQTT 5 over mTLS with topic allowlist and versioned schema'),
@@ -595,6 +607,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'event-broker-to-ai-serving', order: 7,
+      sourceId: 'enterprise-event-broker-evt-501', destinationId: 'ai-service-aims-601',
       source: t('Broker eventi EVT-501', 'Event broker EVT-501'),
       destination: t('Feature view e servizio AI AIMS-601', 'Feature view and AI service AIMS-601'),
       interface: t('Apache Kafka consumer API con TLS, SASL e schema registry', 'Apache Kafka consumer API with TLS, SASL, and a schema registry'),
@@ -607,6 +620,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'ai-serving-to-decision-workflow', order: 8,
+      sourceId: 'ai-service-aims-601', destinationId: 'maintenance-workflow-mw-701',
       source: t('Servizio AI AIMS-601', 'AI service AIMS-601'),
       destination: t('Workflow manutentivo MW-701', 'Maintenance workflow MW-701'),
       interface: t('REST/JSON su HTTPS con OAuth 2.0 client credentials', 'REST/JSON over HTTPS with OAuth 2.0 client credentials'),
@@ -619,6 +633,7 @@ const sensorToDecisionArtifact = {
     },
     {
       id: 'decision-workflow-to-reliability-engineer', order: 9,
+      sourceId: 'maintenance-workflow-mw-701', destinationId: 'reliability-engineer',
       source: t('Workflow manutentivo MW-701', 'Maintenance workflow MW-701'),
       destination: t('Reliability engineer autenticato', 'Authenticated reliability engineer'),
       interface: t('Web application HTTPS con OIDC, RBAC e audit trail', 'HTTPS web application with OIDC, RBAC, and an audit trail'),

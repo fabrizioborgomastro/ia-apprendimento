@@ -109,6 +109,8 @@ function isProfessionalArtifact(value) {
 const hasNonEmptyString = (value) => typeof value === 'string' && Boolean(value.trim())
 const isPositiveInteger = (value) => Number.isSafeInteger(value) && value > 0
 const isPositiveNumber = (value) => Number.isFinite(value) && value > 0
+const STABLE_SLUG_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
+const STABLE_GRAPH_ID = /^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/u
 
 function validateSensorToDecisionArtifact(artifact, path, errors) {
   if (!isObject(artifact)) {
@@ -139,12 +141,19 @@ function validateSensorToDecisionArtifact(artifact, path, errors) {
       errors.push(`${edgePath} must be an object`)
       continue
     }
-    if (!hasNonEmptyString(edge.id) || edgeIds.has(edge.id)) {
-      errors.push(`${edgePath} needs a unique non-empty ID`)
+    if (!STABLE_SLUG_ID.test(edge.id || '') || edgeIds.has(edge.id)) {
+      errors.push(`${edgePath} needs a stable unique ID`)
     } else {
       edgeIds.add(edge.id)
     }
     if (edge.order !== index + 1) errors.push(`${edgePath} order must be contiguous from 1`)
+    for (const field of ['sourceId', 'destinationId']) {
+      if (!STABLE_SLUG_ID.test(edge[field] || '')) errors.push(`${edgePath} ${field} must be a stable ID`)
+    }
+    if (edge.sourceId === edge.destinationId) errors.push(`${edgePath} sourceId and destinationId must differ`)
+    if (index > 0 && edge.sourceId !== edges[index - 1]?.destinationId) {
+      errors.push(`${edgePath} sourceId must equal the previous edge destinationId`)
+    }
     for (const field of localizedFields) {
       if (!isLocalized(edge[field])) errors.push(`${edgePath} needs localized ${field}`)
     }
@@ -243,43 +252,99 @@ function validateGenealogyArtifact(artifact, workedCase, path, errors) {
     return
   }
 
-  const validateLots = (lots, role) => {
+  const declaredNodeIds = new Set()
+  const inputIds = []
+  const outputIds = []
+  const declareNode = (id, nodePath) => {
+    if (!STABLE_GRAPH_ID.test(id || '') || declaredNodeIds.has(id)) {
+      errors.push(`${nodePath} needs a stable unique ID`)
+      return false
+    }
+    declaredNodeIds.add(id)
+    return true
+  }
+  const validateLots = (lots, role, roleIds) => {
     if (!lots.length) errors.push(`${path} needs at least one ${role} lot node`)
-    const ids = new Set()
     for (const [index, lot] of lots.entries()) {
       const lotPath = `${path} ${role} lot ${index + 1}`
-      if (!isObject(lot) || !hasNonEmptyString(lot.id) || ids.has(lot.id)) {
-        errors.push(`${lotPath} needs a unique non-empty ID`)
-      } else {
-        ids.add(lot.id)
-      }
+      if (isObject(lot) && declareNode(lot.id, lotPath)) roleIds.push(lot.id)
+      else if (!isObject(lot)) errors.push(`${lotPath} must be an object`)
       if (!isPositiveNumber(lot?.units)) errors.push(`${lotPath} units must be positive`)
       if (!isLocalized(lot?.evidence)) errors.push(`${lotPath} needs localized evidence`)
     }
   }
-  validateLots(asArray(artifact.inputLots), 'input')
-  validateLots(asArray(artifact.outputLots), 'output')
+  validateLots(asArray(artifact.inputLots), 'input', inputIds)
+  validateLots(asArray(artifact.outputLots), 'output', outputIds)
+  for (const [index, node] of asArray(artifact.nodes).entries()) {
+    const nodePath = `${path} transformation node ${index + 1}`
+    if (!isObject(node)) {
+      errors.push(`${nodePath} must be an object`)
+      continue
+    }
+    declareNode(node.id, nodePath)
+    if (!STABLE_SLUG_ID.test(node.kind || '')) errors.push(`${nodePath} kind must be a stable ID`)
+  }
 
   const edges = asArray(artifact.edges)
   if (!edges.length) errors.push(`${path} needs at least one edge`)
   const edgeIds = new Set()
+  const adjacency = new Map()
   for (const [index, edge] of edges.entries()) {
     const edgePath = `${path} edge ${index + 1}`
     if (!isObject(edge)) {
       errors.push(`${edgePath} must be an object`)
       continue
     }
-    if (!hasNonEmptyString(edge.id) || edgeIds.has(edge.id)) {
-      errors.push(`${edgePath} needs a unique non-empty ID`)
+    if (!STABLE_SLUG_ID.test(edge.id || '') || edgeIds.has(edge.id)) {
+      errors.push(`${edgePath} needs a stable unique ID`)
     } else {
       edgeIds.add(edge.id)
     }
-    if (!hasNonEmptyString(edge.from) || !hasNonEmptyString(edge.to) || edge.from === edge.to) {
+    if (!STABLE_GRAPH_ID.test(edge.from || '') || !STABLE_GRAPH_ID.test(edge.to || '') || edge.from === edge.to) {
       errors.push(`${edgePath} needs distinct non-empty from and to nodes`)
+    }
+    if (STABLE_GRAPH_ID.test(edge.from || '') && !declaredNodeIds.has(edge.from)) {
+      errors.push(`${edgePath} references undeclared from node ${edge.from}`)
+    }
+    if (STABLE_GRAPH_ID.test(edge.to || '') && !declaredNodeIds.has(edge.to)) {
+      errors.push(`${edgePath} references undeclared to node ${edge.to}`)
+    }
+    if (declaredNodeIds.has(edge.from) && declaredNodeIds.has(edge.to) && edge.from !== edge.to) {
+      const destinations = adjacency.get(edge.from) || []
+      destinations.push(edge.to)
+      adjacency.set(edge.from, destinations)
     }
     if (!isPositiveNumber(edge.units)) errors.push(`${edgePath} units must be positive`)
     if (!isLocalized(edge.operation)) errors.push(`${edgePath} needs a localized operation`)
     if (!isLocalized(edge.evidence)) errors.push(`${edgePath} needs localized evidence`)
+  }
+
+  const reachableFrom = (start) => {
+    const reachable = new Set([start])
+    const pending = [start]
+    while (pending.length) {
+      const current = pending.shift()
+      for (const destination of adjacency.get(current) || []) {
+        if (!reachable.has(destination)) {
+          reachable.add(destination)
+          pending.push(destination)
+        }
+      }
+    }
+    return reachable
+  }
+  const reachableFromInputs = new Set()
+  for (const inputId of inputIds) {
+    const reachable = reachableFrom(inputId)
+    for (const nodeId of reachable) reachableFromInputs.add(nodeId)
+    if (!outputIds.some((outputId) => reachable.has(outputId))) {
+      errors.push(`${path} input lot ${inputId} must connect to an output lot`)
+    }
+  }
+  for (const outputId of outputIds) {
+    if (!reachableFromInputs.has(outputId)) {
+      errors.push(`${path} output lot ${outputId} must be reachable from an input lot`)
+    }
   }
 
   for (const [field, label] of [

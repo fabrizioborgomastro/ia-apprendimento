@@ -332,6 +332,42 @@ test('validator rejects a declared sensor-to-decision artifact with no edges', (
   )
 })
 
+test('validator rejects a disconnected sensor-to-decision path', () => {
+  const lesson = structuredClone(architectureLesson)
+  lesson.sensorToDecisionArtifact.edges[1].sourceId = 'unrelated-acquisition'
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('sourceId must equal the previous edge destinationId'))
+  )
+})
+
+test('validator rejects an unstable sensor edge ID', () => {
+  const lesson = structuredClone(architectureLesson)
+  lesson.sensorToDecisionArtifact.edges[0].id = 'Sensor Edge 1'
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('needs a stable unique ID'))
+  )
+})
+
+test('validator rejects duplicate sensor edge IDs', () => {
+  const lesson = structuredClone(architectureLesson)
+  lesson.sensorToDecisionArtifact.edges[1].id = lesson.sensorToDecisionArtifact.edges[0].id
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('needs a stable unique ID'))
+  )
+})
+
+test('validator rejects a sensor edge missing a required interface', () => {
+  const lesson = structuredClone(architectureLesson)
+  delete lesson.sensorToDecisionArtifact.edges[0].interface
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('needs localized interface'))
+  )
+})
+
 test('validator rejects a declared conduit solution with no conduit rows', () => {
   const lesson = structuredClone(architectureLesson)
   lesson.units[5].activities[0].solutionArtifact.conduits = []
@@ -341,12 +377,49 @@ test('validator rejects a declared conduit solution with no conduit rows', () =>
   )
 })
 
+test('validator rejects a conduit row missing degraded behavior', () => {
+  const lesson = structuredClone(architectureLesson)
+  delete lesson.units[5].activities[0].solutionArtifact.conduits[0].degradedBehavior
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('needs localized degradedBehavior'))
+  )
+})
+
 test('validator rejects a declared genealogy artifact with no graph edges', () => {
   const lesson = structuredClone(architectureLesson)
   lesson.units[3].workedCases[0].caseArtifact.edges = []
   assert.ok(
     lessonLocalErrors([digitalTransformationLesson, lesson])
       .some((error) => error.includes('genealogy artifact needs at least one edge'))
+  )
+})
+
+test('validator rejects a genealogy edge that references an undeclared node', () => {
+  const lesson = structuredClone(architectureLesson)
+  lesson.units[3].workedCases[0].caseArtifact.edges[0].from = 'UNKNOWN'
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('references undeclared from node UNKNOWN'))
+  )
+})
+
+test('validator rejects genealogy inputs and outputs disconnected from each other', () => {
+  const lesson = structuredClone(architectureLesson)
+  const artifact = lesson.units[3].workedCases[0].caseArtifact
+  artifact.nodes = [...(artifact.nodes || []), { id: 'ORPHAN-LOT', kind: 'intermediate-lot' }]
+  artifact.edges[0].from = 'ORPHAN-LOT'
+  const errors = lessonLocalErrors([digitalTransformationLesson, lesson])
+  assert.ok(errors.some((error) => error.includes('input lot COMP-A17 must connect to an output lot')))
+  assert.ok(errors.some((error) => error.includes('output lot FG-701 must be reachable from an input lot')))
+})
+
+test('validator rejects a genealogy edge missing required evidence', () => {
+  const lesson = structuredClone(architectureLesson)
+  delete lesson.units[3].workedCases[0].caseArtifact.edges[0].evidence
+  assert.ok(
+    lessonLocalErrors([digitalTransformationLesson, lesson])
+      .some((error) => error.includes('needs localized evidence'))
   )
 })
 
