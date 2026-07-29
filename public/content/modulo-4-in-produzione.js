@@ -55,12 +55,8 @@ export const inProduzioneLesson = {
           ]
         },
         t(
-          'Un MVP che non si può usare in produzione non è un MVP, è un prototipo con un nome più ambizioso. Ed è l\'errore più frequente, sempre nella stessa direzione.',
-          'An MVP you cannot use in production is not an MVP, it is a prototype with a more ambitious name. And it is the most frequent mistake, always in the same direction.'
-        ),
-        t(
-          'La sequenza logica è semplice: prototipo se il dubbio è tecnico, MVP se il dubbio è sul valore, pilota se il dubbio è sulla tenuta. Confondere i tre è l\'errore più frequente, e quasi sempre nella stessa direzione: chiamare MVP un prototipo ben fatto.',
-          'The logic is simple: prototype if the doubt is technical, MVP if the doubt is about value, pilot if the doubt is about durability. Mixing the three is the most frequent mistake, and almost always in the same direction: calling a well made prototype an MVP.'
+          'La sequenza logica è semplice: prototipo se il dubbio è tecnico, MVP se il dubbio è sul valore, pilota se il dubbio è sulla tenuta. Confondere i tre è l\'errore più frequente, e va quasi sempre nella stessa direzione: chiamare MVP un prototipo ben fatto. Un MVP che non si può usare in produzione non è un MVP.',
+          'The logic is simple: prototype if the doubt is technical, MVP if the doubt is about value, pilot if the doubt is about durability. Mixing the three is the most frequent mistake, and it almost always goes the same way: calling a well made prototype an MVP. An MVP you cannot use in production is not an MVP.'
         ),
         t(
           'E qui la regola che vale più di tutte: parti dall\'ipotesi più rischiosa, cioè quella che, se falsa, fa crollare tutto il resto. Nella manutenzione predittiva non è "il modello sarà accurato", è "i dati di vibrazione degli ultimi tre anni sono utilizzabili". Se quella è falsa, l\'accuratezza non si misura nemmeno.',
