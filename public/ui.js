@@ -111,7 +111,13 @@ export function getDashboardState(lessons, progress) {
   }
 }
 
-export function quizFeedback(question, selectedOption) {
+const FEEDBACK_LABELS = {
+  it: { correct: 'Corretto', review: 'Da rivedere' },
+  en: { correct: 'Correct', review: 'Review this' }
+}
+
+export function quizFeedback(question, selectedOption, locale = 'it') {
   const correct = selectedOption === question.correctOption
-  return { correct, label: correct ? 'Corretto' : 'Da rivedere', explanation: question.explanation }
+  const labels = FEEDBACK_LABELS[locale] || FEEDBACK_LABELS.it
+  return { correct, label: correct ? labels.correct : labels.review, explanation: question.explanation }
 }

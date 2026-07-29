@@ -15,7 +15,7 @@ import {
   unitPath,
   writeLocale
 } from '../public/ui.js'
-import { applyShellLocale, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from '../public/render.js'
+import { applyShellLocale, localizedFinalQuiz, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from '../public/render.js'
 import { readFile } from 'node:fs/promises'
 import { curriculum, lessons } from '../public/content.js'
 
@@ -503,4 +503,63 @@ test('the static navigation is localized without losing its icons', () => {
 
   applyShellLocale(fakeDocument, 'it')
   assert.deepEqual(links.map((link) => link.appended[3]), ['Oggi', 'Sprint', 'Ripasso', 'Interview'])
+})
+
+test('the final checkpoint is localized and keeps the review IDs stable', () => {
+  const lesson = curriculum[1]
+  const projected = lessons.find((item) => item.id === lesson.id)
+  const italian = localizedFinalQuiz(lesson, 'it')
+  const english = localizedFinalQuiz(lesson, 'en')
+
+  assert.equal(italian.length, lesson.finalQuiz.length)
+  assert.deepEqual(
+    english.map(({ id }) => id),
+    projected.quiz.map(({ id }) => id),
+    'switching language must not change a question ID, or the review queue breaks'
+  )
+
+  for (const [index, question] of english.entries()) {
+    const source = lesson.finalQuiz[index]
+    assert.equal(question.prompt, source.prompt.en)
+    assert.deepEqual(question.options, source.options.map((option) => option.en))
+    assert.equal(question.explanation, source.options[source.correctOption].explanation.en)
+    assert.equal(question.correctOption, source.correctOption)
+    assert.notEqual(question.prompt, italian[index].prompt, 'the prompt must actually change language')
+  }
+})
+
+test('checkpoint feedback labels follow the selected language', () => {
+  const question = localizedFinalQuiz(curriculum[1], 'en')[0]
+  assert.equal(quizFeedback(question, question.correctOption, 'it').label, 'Corretto')
+  assert.equal(quizFeedback(question, question.correctOption, 'en').label, 'Correct')
+  assert.equal(quizFeedback(question, question.correctOption + 1, 'en').label, 'Review this')
+  assert.equal(quizFeedback(question, question.correctOption).label, 'Corretto')
+})
+
+test('the final checkpoint block stays centred like every other shell section', async () => {
+  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
+  const rule = css.match(/\.lesson-glossary, \.quiz-section, \.answer-lab \{[^}]*\}/u)
+  assert.ok(rule, 'the shared section rule must exist')
+  assert.doesNotMatch(
+    rule[0],
+    /margin: \d+px 0 0/u,
+    'a zero inline margin overrides .shell margin-inline:auto and pins the block to the left edge'
+  )
+  assert.match(rule[0], /margin: \d+px auto 0/u, 'the block must keep its top margin and stay centred')
+})
+
+test('the answer lab sets its own text colour instead of inheriting the dark section', async () => {
+  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
+
+  const darkSection = css.match(/\.quiz-section \{[^}]*\}/u)[0]
+  assert.match(darkSection, /color: white/u, 'the checkpoint block is intentionally dark')
+
+  const answerLab = css.match(/^\.answer-lab \{[^}]*\}/mu)
+  assert.ok(answerLab, '.answer-lab must be styled')
+  assert.match(
+    answerLab[0],
+    /color: var\(--ink\)/u,
+    'nested inside .quiz-section the answer lab inherits white text, which renders the model answers white on white'
+  )
+  assert.match(css, /\.answer-lab \.eyebrow \{ color:/u, 'the answer lab eyebrow needs its own colour on a light background')
 })

@@ -1,11 +1,11 @@
-import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=7'
-import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=7'
+import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=8'
+import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=8'
 import {
   getDashboardState, getUnitState, isUnitComplete, normalizeAppHref, parseRoute,
   quizFeedback, readLocale, selectLocale, splitAppPath, unitPath, writeLocale
-} from './ui.js?v=7'
-import { applyShellLocale, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from './render.js?v=7'
-import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=7'
+} from './ui.js?v=8'
+import { applyShellLocale, localizedFinalQuiz, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from './render.js?v=8'
+import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=8'
 
 const main = document.querySelector('#main')
 const toast = document.querySelector('#toast')
@@ -182,14 +182,14 @@ function readInteraction(lessonId, unitId) {
 
 function renderFinalCheckpoint(lesson, state) {
   if (!state.isLast) return ''
-  const projected = lessons.find((item) => item.id === lesson.id)
+  const quiz = localizedFinalQuiz(lesson, locale)
   const heading = locale === 'en' ? 'Final checkpoint' : 'Checkpoint finale'
   const helper = locale === 'en'
     ? 'Answer without returning to the text. Every miss enters your review queue.'
     : 'Rispondi senza tornare al testo. Ogni errore entra nella coda di ripasso.'
   return `<section class="quiz-section shell" id="final-checkpoint"><p class="eyebrow">${heading}</p><h2>${selectLocale(lesson.title, locale)}</h2><p>${helper}</p>
-    <div class="quiz-list">${projected.quiz.map((question, questionIndex) => `<fieldset class="quiz-card" data-question="${question.id}"><legend><span>Q${questionIndex + 1}</span>${question.prompt}</legend><div class="quiz-options">${question.options.map((option, optionIndex) => `<button type="button" data-quiz-option="${optionIndex}" data-lesson="${lesson.id}" data-question-id="${question.id}">${option}</button>`).join('')}</div><div class="feedback" data-feedback aria-live="polite"></div></fieldset>`).join('')}</div>
-    <div class="quiz-summary" data-quiz-summary><span>${locale === 'en' ? `Answer all ${projected.quiz.length} questions to see your score.` : `Completa le ${projected.quiz.length} domande per vedere il risultato.`}</span></div>
+    <div class="quiz-list">${quiz.map((question, questionIndex) => `<fieldset class="quiz-card" data-question="${question.id}"><legend><span>Q${questionIndex + 1}</span>${question.prompt}</legend><div class="quiz-options">${question.options.map((option, optionIndex) => `<button type="button" data-quiz-option="${optionIndex}" data-lesson="${lesson.id}" data-question-id="${question.id}">${option}</button>`).join('')}</div><div class="feedback" data-feedback aria-live="polite"></div></fieldset>`).join('')}</div>
+    <div class="quiz-summary" data-quiz-summary><span>${locale === 'en' ? `Answer all ${quiz.length} questions to see your score.` : `Completa le ${quiz.length} domande per vedere il risultato.`}</span></div>
     ${renderLessonInterviewAnswers(lesson, locale)}</section>`
 }
 
@@ -210,9 +210,11 @@ function bindLocaleControl() {
 function renderReview() {
   const copy = shellCopy(locale)
   const reviewIds = new Set(Object.values(progress).flatMap((item) => item.reviewQuestionIds || []))
-  const reviewQuestions = lessons.flatMap((lesson) => lesson.quiz.map((question) => ({ ...question, lesson }))).filter((item) => reviewIds.has(item.id))
+  const reviewQuestions = curriculum
+    .flatMap((lesson) => localizedFinalQuiz(lesson, locale).map((question) => ({ ...question, lessonTitle: selectLocale(lesson.title, locale) })))
+    .filter((item) => reviewIds.has(item.id))
   return `<section class="shell page-head"><p class="eyebrow">${copy.activeRecall}</p><h1>${copy.reviewTitle}</h1><p class="lead">${copy.reviewLead}</p></section>
-    <section class="shell review-layout"><div><div class="section-label"><span>${copy.questionsLabel}</span><b>${reviewQuestions.length}</b></div>${reviewQuestions.length ? reviewQuestions.map((item) => `<article class="review-question"><small>${item.lesson.englishTitle}</small><h2>${item.prompt}</h2><details><summary>${copy.showAnswer}</summary><p><b>${item.options[item.correctOption]}</b></p><p>${item.explanation}</p></details></article>`).join('') : `<div class="empty-state"><b>${copy.emptyQueue}</b><p>${copy.emptyQueueHint}</p><a href="/sprint" data-link class="text-link">${copy.goToSprint} →</a></div>`}</div>
+    <section class="shell review-layout"><div><div class="section-label"><span>${copy.questionsLabel}</span><b>${reviewQuestions.length}</b></div>${reviewQuestions.length ? reviewQuestions.map((item) => `<article class="review-question"><small>${item.lessonTitle}</small><h2>${item.prompt}</h2><details><summary>${copy.showAnswer}</summary><p><b>${item.options[item.correctOption]}</b></p><p>${item.explanation}</p></details></article>`).join('') : `<div class="empty-state"><b>${copy.emptyQueue}</b><p>${copy.emptyQueueHint}</p><a href="/sprint" data-link class="text-link">${copy.goToSprint} →</a></div>`}</div>
       <div class="glossary-panel"><label for="term-search">${copy.glossaryLabel}</label><input id="term-search" type="search" placeholder="${copy.glossaryPlaceholder}" autocomplete="off"><div data-term-list>${renderTerms(allGlossary)}</div></div></section>`
 }
 
@@ -279,7 +281,7 @@ function bindLessonEvents(slug, unitId) {
     button.setAttribute('aria-pressed', String(!panel.hidden))
   }))
 
-  document.querySelectorAll('[data-quiz-option]').forEach((button) => button.addEventListener('click', () => answerQuestion(projected, button)))
+  document.querySelectorAll('[data-quiz-option]').forEach((button) => button.addEventListener('click', () => answerQuestion(lesson, projected, button)))
 }
 
 function commitUnitCompletion(lesson, state, interaction) {
@@ -300,8 +302,9 @@ function commitUnitCompletion(lesson, state, interaction) {
   scheduleProgressSync()
 }
 
-function answerQuestion(lesson, button) {
-  const question = lesson.quiz.find((item) => item.id === button.dataset.questionId)
+function answerQuestion(lesson, projected, button) {
+  const quiz = localizedFinalQuiz(lesson, locale)
+  const question = quiz.find((item) => item.id === button.dataset.questionId)
   const selected = Number(button.dataset.quizOption)
   quizAnswers[lesson.id] ||= {}
   quizAnswers[lesson.id][question.id] = selected
@@ -311,24 +314,24 @@ function answerQuestion(lesson, button) {
     option.classList.toggle('selected-correct', index === question.correctOption)
     option.classList.toggle('selected-wrong', index === selected && selected !== question.correctOption)
   })
-  const feedback = quizFeedback(question, selected)
+  const feedback = quizFeedback(question, selected, locale)
   const feedbackBox = card.querySelector('[data-feedback]')
   feedbackBox.className = `feedback visible ${feedback.correct ? 'correct' : 'wrong'}`
   feedbackBox.innerHTML = `<b>${feedback.label}</b><p>${feedback.explanation}</p>`
-  updateQuizSummary(lesson)
+  updateQuizSummary(lesson, projected, quiz)
 }
 
-function updateQuizSummary(lesson) {
+function updateQuizSummary(lesson, projected, quiz) {
   const answers = quizAnswers[lesson.id] || {}
-  const answeredQuestions = lesson.quiz.filter((question) => answers[question.id] !== undefined)
-  if (answeredQuestions.length < lesson.quiz.length) return
-  const results = lesson.quiz.map((question) => answers[question.id] === question.correctOption)
+  const answeredQuestions = quiz.filter((question) => answers[question.id] !== undefined)
+  if (answeredQuestions.length < quiz.length) return
+  const results = quiz.map((question) => answers[question.id] === question.correctOption)
   const score = calculateScore(results)
-  const missed = lesson.quiz.filter((question) => answers[question.id] !== question.correctOption).map((question) => question.id)
-  const passed = score.percent >= lesson.masteryThreshold
+  const missed = quiz.filter((question) => answers[question.id] !== question.correctOption).map((question) => question.id)
+  const passed = score.percent >= projected.masteryThreshold
   progress = updateLessonProgress(progress, lesson.id, { status: passed ? 'completed' : 'in_progress', cursor: Math.max(progress[lesson.id]?.cursor || 0, lesson.units.length), bestScore: score.percent, reviewQuestionIds: missed, replaceReviewQuestionIds: true })
   saveProgress(progress)
-  document.querySelector('[data-quiz-summary]').innerHTML = `<div><b>${score.percent}%</b><span>${passed ? 'Competenza acquisita' : 'Ripassa e riprova'}</span></div><p>${score.correct}/${score.total} risposte corrette · soglia ${lesson.masteryThreshold}%</p>${passed ? `<a class="button primary" href="${nextLessonPath(lesson)}" data-link>Continua <span>→</span></a>` : '<a class="button secondary" href="/review" data-link>Apri il ripasso</a>'}`
+  document.querySelector('[data-quiz-summary]').innerHTML = `<div><b>${score.percent}%</b><span>${passed ? (locale === 'en' ? 'Competence achieved' : 'Competenza acquisita') : (locale === 'en' ? 'Review and try again' : 'Ripassa e riprova')}</span></div><p>${score.correct}/${score.total} ${locale === 'en' ? 'correct answers · threshold' : 'risposte corrette · soglia'} ${projected.masteryThreshold}%</p>${passed ? `<a class="button primary" href="${nextLessonPath(projected)}" data-link>${locale === 'en' ? 'Continue' : 'Continua'} <span>→</span></a>` : `<a class="button secondary" href="/review" data-link>${locale === 'en' ? 'Open the review' : 'Apri il ripasso'}</a>`}`
   syncProgressQuietly()
 }
 

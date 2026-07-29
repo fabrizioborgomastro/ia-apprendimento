@@ -40,7 +40,7 @@ test('versioned assets are served despite their cache-busting query', async (con
   context.after(() => new Promise((resolve) => server.close(resolve)))
   const { port } = server.address()
 
-  for (const asset of ['/app.js?v=7', '/content.js?v=7', '/render.js?v=7', '/content/index.js']) {
+  for (const asset of ['/app.js?v=8', '/content.js?v=8', '/render.js?v=8', '/content/index.js']) {
     const response = await fetch(`http://127.0.0.1:${port}${asset}`)
     assert.equal(response.status, 200, `${asset} must be served`)
     assert.match(response.headers.get('content-type'), /javascript/u)

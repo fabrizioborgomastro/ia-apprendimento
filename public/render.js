@@ -1,4 +1,4 @@
-import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=7'
+import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=8'
 import { sources } from './content/index.js'
 
 const COPY = {
@@ -330,6 +330,7 @@ const SHELL = {
     interviewEyebrow: 'Prova da 20 minuti',
     interviewTitle: 'Think clearly.<br><em>Speak simply.</em>',
     interviewLead: 'Avvia il timer, rispondi ad alta voce e rivela il modello soltanto dopo.',
+    answerCorrect: 'Corretto', answerReview: 'Da rivedere',
     startSimulation: 'Avvia simulazione', pauseSimulation: 'Pausa',
     resumeSimulation: 'Riprendi simulazione', restartSimulation: 'Ricomincia',
     timeOver: 'Tempo concluso. Valuta struttura, termini, metriche e rischi.',
@@ -363,6 +364,7 @@ const SHELL = {
     interviewEyebrow: '20-minute rehearsal',
     interviewTitle: 'Think clearly.<br><em>Speak simply.</em>',
     interviewLead: 'Start the timer, answer out loud, and reveal the model answer only afterwards.',
+    answerCorrect: 'Correct', answerReview: 'Review this',
     startSimulation: 'Start the simulation', pauseSimulation: 'Pause',
     resumeSimulation: 'Resume the simulation', restartSimulation: 'Start again',
     timeOver: 'Time is up. Score structure, terminology, metrics, and risks.',
@@ -389,4 +391,20 @@ export function applyShellLocale(document, locale) {
     if (icon) link.appendChild(icon)
     link.append(label)
   }
+}
+
+/**
+ * Projects a lesson final checkpoint into the shape the quiz flow expects, in the
+ * requested language. The generated IDs match `withLegacyProjection`, so a
+ * language change never invalidates the stored review queue.
+ */
+export function localizedFinalQuiz(lesson, locale) {
+  return (lesson.finalQuiz || []).map((checkpoint, index) => ({
+    id: `${lesson.id}-check-${index + 1}`,
+    type: 'single',
+    prompt: selectLocale(checkpoint.prompt, locale),
+    options: (checkpoint.options || []).map((option) => selectLocale(option, locale)),
+    correctOption: checkpoint.correctOption,
+    explanation: selectLocale(checkpoint.options?.[checkpoint.correctOption]?.explanation, locale)
+  }))
 }
