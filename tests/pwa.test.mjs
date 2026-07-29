@@ -163,3 +163,35 @@ test('every module the browser actually requests is precached', async () => {
   const missing = [...requests.keys()].filter((request) => !assets.includes(`./${request}`))
   assert.deepEqual(missing, [], `sw.js does not precache: ${missing.join(', ')}`)
 })
+
+test('every precached asset exists, so the service worker install cannot fail', async () => {
+  const sw = await read('sw.js')
+  const assets = sw.slice(sw.indexOf('const ASSETS'), sw.indexOf(']', sw.indexOf('const ASSETS')))
+  const entries = [...assets.matchAll(/'\.\/([^']*)'/gu)].map(([, entry]) => entry)
+  assert.ok(entries.length >= 20, 'the release must precache the whole application graph')
+
+  const missing = []
+  for (const entry of entries) {
+    const [file] = entry.split('?')
+    if (!file) continue
+    try {
+      await readFile(publicUrl(file))
+    } catch {
+      missing.push(entry)
+    }
+  }
+  assert.deepEqual(missing, [], `cache.addAll would reject on: ${missing.join(', ')}`)
+  assert.ok(entries.includes(''), 'the navigation root must be precached')
+})
+
+test('the manifest points at icons that exist and stays installable', async () => {
+  const manifest = JSON.parse(await read('manifest.webmanifest'))
+  assert.equal(manifest.display, 'standalone')
+  assert.ok(manifest.icons.length >= 2)
+  for (const icon of manifest.icons) {
+    const src = icon.src.replace(/^\.\//u, '')
+    await readFile(publicUrl(src))
+    assert.ok(icon.sizes, `${src} must declare its sizes`)
+  }
+  assert.ok(manifest.start_url, 'the manifest needs a start URL')
+})
