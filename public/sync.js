@@ -1,5 +1,5 @@
-import { mergeProgress } from './learning.js?v=6'
-import { lessons } from './content.js?v=6'
+import { mergeProgress } from './learning.js?v=7'
+import { lessons } from './content.js?v=7'
 
 const config = globalThis.AI_SPRINT_CONFIG || {}
 const sessionKey = 'ai-sprint-session-v1'

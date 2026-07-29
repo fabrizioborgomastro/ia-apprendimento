@@ -11,10 +11,11 @@ import {
   quizFeedback,
   readLocale,
   selectLocale,
+  splitAppPath,
   unitPath,
   writeLocale
 } from '../public/ui.js'
-import { renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView } from '../public/render.js'
+import { applyShellLocale, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from '../public/render.js'
 import { readFile } from 'node:fs/promises'
 import { curriculum, lessons } from '../public/content.js'
 
@@ -398,4 +399,108 @@ test('the unit grid constrains its columns so a wide child cannot overflow the p
     /grid-template-columns: 250px minmax\(0, 1fr\)/u,
     'the desktop side index must keep its own constrained column'
   )
+})
+
+test('an application path keeps its query when it is split for navigation', () => {
+  assert.deepEqual(splitAppPath('/lesson/llm-agents?unit=agent-loop-workflow-mcp'), {
+    pathname: '/lesson/llm-agents',
+    search: '?unit=agent-loop-workflow-mcp'
+  })
+  assert.deepEqual(splitAppPath('/sprint'), { pathname: '/sprint', search: '' })
+  assert.deepEqual(splitAppPath('/'), { pathname: '/', search: '' })
+  assert.deepEqual(splitAppPath(''), { pathname: '/', search: '' })
+  assert.deepEqual(splitAppPath('/lesson/x?a=1&b=2'), { pathname: '/lesson/x', search: '?a=1&b=2' })
+})
+
+test('every in-app link target survives a navigation round trip', () => {
+  const lesson = curriculum[0]
+  const state = getUnitState(lesson, lesson.units[0].id, { cursor: 0 })
+  const html = renderUnitView({ lesson, state, locale: 'it', revealed: {}, checkpointChoice: null, activityMarked: false })
+
+  const hrefs = [...html.matchAll(/data-link[^>]*href="([^"]+)"|href="([^"]+)"[^>]*data-link/gu)]
+    .map(([, a, b]) => a || b)
+    .filter((href) => href.startsWith('/lesson/'))
+  assert.ok(hrefs.length >= 2, 'the unit view must link to other units')
+  assert.ok(hrefs.some((href) => href.includes('?unit=')), 'unit links must carry the unit query')
+
+  for (const href of hrefs) {
+    const { pathname, search } = splitAppPath(href)
+    const route = parseRoute(pathname, search)
+    if (!href.includes('?unit=')) continue
+    assert.equal(route.name, 'lesson')
+    assert.ok(route.unitId, `navigating to ${href} must preserve the unit, received ${route.unitId}`)
+    assert.ok(
+      lesson.units.some((unit) => unit.id === route.unitId),
+      `${href} must resolve to a real unit`
+    )
+  }
+})
+
+test('the click handler forwards the query so a unit link is not flattened to the lesson', async () => {
+  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
+  assert.match(
+    source,
+    /navigate\(link\.pathname \+ link\.search\)/u,
+    'passing only link.pathname drops ?unit= and sends every unit link back to the first incomplete unit'
+  )
+  assert.match(source, /splitAppPath/u, 'navigate must rebuild the URL from path and query')
+})
+
+test('the shell copy is complete and actually differs between the two languages', () => {
+  const italian = shellCopy('it')
+  const english = shellCopy('en')
+
+  assert.deepEqual(Object.keys(italian).sort(), Object.keys(english).sort(), 'both languages must define the same keys')
+  assert.equal(shellCopy('de'), italian, 'an unsupported locale falls back to Italian')
+
+  // These labels are deliberately the same in both languages: they are English
+  // terms the Italian copy already uses as-is, or brand and unit labels.
+  const intentionallyShared = [
+    'navSprint', 'navInterview', 'readiness', 'activeRecall',
+    'sprintEyebrow', 'interviewTitle', 'thirtySec', 'twoMin'
+  ]
+  const shared = Object.keys(italian)
+    .filter((key) => typeof italian[key] === 'string' && italian[key] === english[key])
+    .filter((key) => !intentionallyShared.includes(key))
+  assert.deepEqual(shared, [], `these shell strings are identical in both languages: ${shared.join(', ')}`)
+  assert.equal(typeof italian.modulesDone, 'function')
+  assert.match(italian.modulesDone(2, 6), /2 di 6/u)
+  assert.match(english.modulesDone(2, 6), /2 of 6/u)
+})
+
+test('no page in the application renders a hard-coded Italian shell string', async () => {
+  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
+  const italianOnly = [
+    'Inizia lo sprint', 'Continua lo sprint', 'Apri la lezione', 'PROSSIMA MOSSA',
+    'domande da ripassare', 'Ripassa ora', 'Sei moduli. Un filo logico.',
+    'QUEUED', 'Ripassa ciò che conta.', 'DOMANDE DA RIVEDERE',
+    'Mostra risposta e spiegazione', 'La coda è vuota.', 'Vai allo sprint',
+    'Nessun termine trovato.', 'Avvia simulazione', 'Riprendi simulazione'
+  ]
+  const leaked = italianOnly.filter((phrase) => source.includes(`>${phrase}`) || source.includes(`'${phrase}'`))
+  assert.deepEqual(leaked, [], `these strings bypass the language switch: ${leaked.join(' | ')}`)
+})
+
+test('the static navigation is localized without losing its icons', () => {
+  const links = [
+    { dataset: { nav: 'dashboard' }, children: ['icon'] },
+    { dataset: { nav: 'sprint' }, children: ['icon'] },
+    { dataset: { nav: 'review' }, children: ['icon'] },
+    { dataset: { nav: 'interview' }, children: ['icon'] }
+  ].map((link) => ({
+    ...link,
+    textContent: 'old',
+    appended: [],
+    querySelector: () => ({ tag: 'span' }),
+    appendChild(node) { this.appended.push(node) },
+    append(text) { this.appended.push(text) }
+  }))
+  const fakeDocument = { querySelectorAll: () => links }
+
+  applyShellLocale(fakeDocument, 'en')
+  assert.deepEqual(links.map((link) => link.appended[1]), ['Today', 'Sprint', 'Review', 'Interview'])
+  assert.ok(links.every((link) => link.appended[0]?.tag === 'span'), 'the icon must be preserved')
+
+  applyShellLocale(fakeDocument, 'it')
+  assert.deepEqual(links.map((link) => link.appended[3]), ['Oggi', 'Sprint', 'Ripasso', 'Interview'])
 })

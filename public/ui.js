@@ -24,6 +24,17 @@ export function writeLocale(locale, storage = globalThis.localStorage) {
   return locale
 }
 
+/**
+ * Splits an in-application path into its pathname and query. Navigation must
+ * rebuild both, otherwise a `?unit=` deep link is flattened back to the lesson
+ * and the reader is returned to the first incomplete unit.
+ */
+export function splitAppPath(path) {
+  const [pathname, ...rest] = String(path || '').split('?')
+  const search = rest.join('?')
+  return { pathname: pathname || '/', search: search ? `?${search}` : '' }
+}
+
 export function unitPath(slug, unitId) {
   return unitId ? `/lesson/${slug}?unit=${encodeURIComponent(unitId)}` : `/lesson/${slug}`
 }

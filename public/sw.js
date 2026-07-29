@@ -1,8 +1,8 @@
-const CACHE = 'ai-sprint-v6'
+const CACHE = 'ai-sprint-v7'
 const ASSETS = [
-  './', './index.html', './styles.css?v=6', './manifest.webmanifest', './icon.svg', './icon-maskable.svg',
-  './config.js?v=6', './app.js?v=6', './learning.js?v=6', './ui.js?v=6', './render.js?v=6',
-  './sync.js?v=6', './types.js', './content.js?v=6',
+  './', './index.html', './styles.css?v=7', './manifest.webmanifest', './icon.svg', './icon-maskable.svg',
+  './config.js?v=7', './app.js?v=7', './learning.js?v=7', './ui.js?v=7', './render.js?v=7',
+  './sync.js?v=7', './types.js', './content.js?v=7',
   './content/index.js', './content/schema.js', './content/sources.js',
   './content/module-1-transformation.js', './content/module-2-architecture.js',
   './content/module-3-data-ai.js', './content/module-4-llm-agents.js',

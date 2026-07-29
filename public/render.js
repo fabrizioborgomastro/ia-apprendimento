@@ -1,4 +1,4 @@
-import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=6'
+import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=7'
 import { sources } from './content/index.js'
 
 const COPY = {
@@ -299,4 +299,94 @@ export function renderLocaleSwitch(locale) {
     <button type="button" data-locale="it" aria-pressed="${locale === 'it' ? 'true' : 'false'}">Italiano</button>
     <button type="button" data-locale="en" aria-pressed="${locale === 'en' ? 'true' : 'false'}">English</button>
   </div>`
+}
+
+const SHELL = {
+  it: {
+    navToday: 'Oggi', navSprint: 'Sprint', navReview: 'Ripasso', navInterview: 'Interview',
+    heroEyebrow: '2-3 giorni · colloquio tecnico',
+    heroTitle: 'Preparati a guidare<br><em>la trasformazione.</em>',
+    heroLead: 'Dalla linea produttiva all’AI, con il linguaggio tecnico inglese che ti serve per ragionare ad alta voce.',
+    heroCtaStart: 'Inizia lo sprint', heroCtaContinue: 'Continua lo sprint',
+    signalPathLabel: 'Flusso dalla fabbrica alla decisione',
+    nextMove: 'Prossima mossa', openLesson: 'Apri la lezione',
+    readiness: 'Sprint readiness', ready: 'pronto',
+    modulesDone: (done, total) => `${done} di ${total} moduli completati`,
+    activeRecall: 'Active recall', questionsToReview: 'domande da ripassare', reviewNow: 'Ripassa ora',
+    sprintEyebrow: 'Interview sprint',
+    sprintTitle: 'Sei moduli. Un filo logico.',
+    sprintLead: 'Puoi aprire qualunque modulo in qualsiasi momento. L’ordine è un consiglio, non un vincolo: seguilo una volta, poi torna solo sui punti deboli.',
+    completed: 'completato',
+    statusNext: 'Prossimo', statusOpen: 'Da fare', statusBest: 'Miglior punteggio',
+    reviewTitle: 'Ripassa ciò che conta.',
+    reviewLead: 'Gli errori non sono una penalità. Sono la lista esatta di ciò che devi rendere più solido.',
+    questionsLabel: 'Domande da rivedere',
+    showAnswer: 'Mostra risposta e spiegazione',
+    emptyQueue: 'La coda è vuota.',
+    emptyQueueHint: 'Completa i checkpoint finali oppure ripassa i termini inglesi qui accanto.',
+    goToSprint: 'Vai allo sprint',
+    glossaryLabel: 'Glossario · IT / EN', glossaryPlaceholder: 'Cerca PLC, drift, MVP...',
+    noTerms: 'Nessun termine trovato.',
+    interviewEyebrow: 'Prova da 20 minuti',
+    interviewTitle: 'Think clearly.<br><em>Speak simply.</em>',
+    interviewLead: 'Avvia il timer, rispondi ad alta voce e rivela il modello soltanto dopo.',
+    startSimulation: 'Avvia simulazione', pauseSimulation: 'Pausa',
+    resumeSimulation: 'Riprendi simulazione', restartSimulation: 'Ricomincia',
+    timeOver: 'Tempo concluso. Valuta struttura, termini, metriche e rischi.',
+    thirtySec: '30 sec', twoMin: '2 min'
+  },
+  en: {
+    navToday: 'Today', navSprint: 'Sprint', navReview: 'Review', navInterview: 'Interview',
+    heroEyebrow: '2-3 days · technical interview',
+    heroTitle: 'Get ready to lead<br><em>the transformation.</em>',
+    heroLead: 'From the production line to AI, with the technical English you need to reason out loud.',
+    heroCtaStart: 'Start the sprint', heroCtaContinue: 'Continue the sprint',
+    signalPathLabel: 'Flow from the shop floor to the decision',
+    nextMove: 'Next move', openLesson: 'Open the lesson',
+    readiness: 'Sprint readiness', ready: 'ready',
+    modulesDone: (done, total) => `${done} of ${total} modules completed`,
+    activeRecall: 'Active recall', questionsToReview: 'questions to review', reviewNow: 'Review now',
+    sprintEyebrow: 'Interview sprint',
+    sprintTitle: 'Six modules. One line of reasoning.',
+    sprintLead: 'You can open any module at any time. The order is advice, not a constraint: follow it once, then return only to the weak spots.',
+    completed: 'completed',
+    statusNext: 'Next', statusOpen: 'Not started', statusBest: 'Best score',
+    reviewTitle: 'Review what matters.',
+    reviewLead: 'Mistakes are not a penalty. They are the exact list of what you still need to make solid.',
+    questionsLabel: 'Questions to review',
+    showAnswer: 'Show the answer and the explanation',
+    emptyQueue: 'The queue is empty.',
+    emptyQueueHint: 'Complete the final checkpoints or review the English terms beside this panel.',
+    goToSprint: 'Go to the sprint',
+    glossaryLabel: 'Glossary · IT / EN', glossaryPlaceholder: 'Search PLC, drift, MVP...',
+    noTerms: 'No term found.',
+    interviewEyebrow: '20-minute rehearsal',
+    interviewTitle: 'Think clearly.<br><em>Speak simply.</em>',
+    interviewLead: 'Start the timer, answer out loud, and reveal the model answer only afterwards.',
+    startSimulation: 'Start the simulation', pauseSimulation: 'Pause',
+    resumeSimulation: 'Resume the simulation', restartSimulation: 'Start again',
+    timeOver: 'Time is up. Score structure, terminology, metrics, and risks.',
+    thirtySec: '30 sec', twoMin: '2 min'
+  }
+}
+
+export function shellCopy(locale) {
+  return SHELL[locale] || SHELL.it
+}
+
+/** Localizes the static navigation that lives in index.html rather than in a view. */
+export function applyShellLocale(document, locale) {
+  const copy = shellCopy(locale)
+  const labels = {
+    dashboard: copy.navToday, sprint: copy.navSprint,
+    review: copy.navReview, interview: copy.navInterview
+  }
+  for (const link of document.querySelectorAll('[data-nav]')) {
+    const icon = link.querySelector('span')
+    const label = labels[link.dataset.nav]
+    if (!label) continue
+    link.textContent = ''
+    if (icon) link.appendChild(icon)
+    link.append(label)
+  }
 }

@@ -6,7 +6,7 @@ import { parseRoute } from '../public/ui.js'
 const publicUrl = (file) => new URL(`../public/${file}`, import.meta.url)
 const read = (file) => readFile(publicUrl(file), 'utf8')
 
-const RELEASE_VERSION = 6
+const RELEASE_VERSION = 7
 
 test('the service worker declares the current release cache and cleans older ones', async () => {
   const sw = await read('sw.js')
@@ -57,7 +57,7 @@ test('every versioned entry URL agrees with the release version', async () => {
       `${file} mixes asset versions: ${versions.join(', ')}`
     )
   }
-  assert.match(html, /<script type="module" src="\.\/app\.js\?v=6"><\/script>/u)
+  assert.match(html, /<script type="module" src="\.\/app\.js\?v=7"><\/script>/u)
 })
 
 test('the application shell exposes the language switch and a focusable main region', async () => {

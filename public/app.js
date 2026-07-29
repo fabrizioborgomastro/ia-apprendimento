@@ -1,11 +1,11 @@
-import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=6'
-import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=6'
+import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=7'
+import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=7'
 import {
   getDashboardState, getUnitState, isUnitComplete, normalizeAppHref, parseRoute,
-  quizFeedback, readLocale, selectLocale, unitPath, writeLocale
-} from './ui.js?v=6'
-import { renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView } from './render.js?v=6'
-import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=6'
+  quizFeedback, readLocale, selectLocale, splitAppPath, unitPath, writeLocale
+} from './ui.js?v=7'
+import { applyShellLocale, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from './render.js?v=7'
+import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=7'
 
 const main = document.querySelector('#main')
 const toast = document.querySelector('#toast')
@@ -26,15 +26,16 @@ document.addEventListener('click', (event) => {
   const link = event.target.closest('[data-link]')
   if (link && link.origin === location.origin) {
     event.preventDefault()
-    navigate(link.pathname)
+    navigate(link.pathname + link.search)
   }
 })
 window.addEventListener('popstate', render)
 render()
 
 function navigate(path) {
-  const appPath = toAppPath(path)
-  history.pushState({}, '', `${BASE_PATH}${appPath.replace(/^\//, '')}`)
+  const { pathname, search } = splitAppPath(path)
+  const appPath = toAppPath(pathname)
+  history.pushState({}, '', `${BASE_PATH}${appPath.replace(/^\//, '')}${search}`)
   scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   render()
 }
@@ -44,6 +45,7 @@ function render() {
   document.documentElement.lang = locale
   document.querySelectorAll('[data-nav]').forEach((item) => item.classList.toggle('active', item.dataset.nav === route.name))
   renderLocaleControl()
+  applyShellLocale(document, locale)
   if (route.name === 'sprint') main.innerHTML = renderSprint()
   else if (route.name === 'lesson') main.innerHTML = renderLesson(route.slug, route.unitId)
   else if (route.name === 'review') main.innerHTML = renderReview()
@@ -81,15 +83,17 @@ function restoreRedirectedRoute() {
 function renderDashboard() {
   const state = getDashboardState(lessons, progress)
   const hasStarted = Object.keys(progress).length > 0
+  const copy = shellCopy(locale)
+  const lessonTitle = selectLocale(curriculum.find((item) => item.id === state.nextLesson.id)?.title, locale)
   return `
     <section class="hero shell">
       <div class="hero-copy">
-        <p class="eyebrow">2-3 giorni · colloquio tecnico</p>
-        <h1>Preparati a guidare<br><em>la trasformazione.</em></h1>
-        <p class="lead">Dalla linea produttiva all’AI, con il linguaggio tecnico inglese che ti serve per ragionare ad alta voce.</p>
-        <a class="button primary" href="/sprint" data-link>${hasStarted ? 'Continua lo sprint' : 'Inizia lo sprint'} <span>→</span></a>
+        <p class="eyebrow">${copy.heroEyebrow}</p>
+        <h1>${copy.heroTitle}</h1>
+        <p class="lead">${copy.heroLead}</p>
+        <a class="button primary" href="/sprint" data-link>${hasStarted ? copy.heroCtaContinue : copy.heroCtaStart} <span>→</span></a>
       </div>
-      <div class="signal-map" aria-label="Flusso dalla fabbrica alla decisione">
+      <div class="signal-map" aria-label="${copy.signalPathLabel}">
         <span class="signal-label">SIGNAL PATH</span>
         <div class="signal-node live"><b>01</b><span>Shop floor</span></div>
         <div class="signal-line"></div>
@@ -102,40 +106,44 @@ function renderDashboard() {
     </section>
     <section class="shell focus-grid">
       <article class="focus-card next-card">
-        <p class="eyebrow">PROSSIMA MOSSA</p>
+        <p class="eyebrow">${copy.nextMove}</p>
         <div class="module-number">${String(state.nextLesson.order).padStart(2, '0')}</div>
-        <h2>${state.nextLesson.title}</h2>
+        <h2>${lessonTitle}</h2>
         <p>${state.nextLesson.englishTitle}</p>
         <div class="meta-row"><span>${state.nextLesson.durationMinutes} min</span><span>IT + EN</span></div>
-        <a class="text-link" href="/lesson/${state.nextLesson.slug}" data-link>Apri la lezione →</a>
+        <a class="text-link" href="/lesson/${state.nextLesson.slug}" data-link>${copy.openLesson} →</a>
       </article>
       <article class="focus-card progress-card">
-        <p class="eyebrow">SPRINT READINESS</p>
-        <div class="progress-orbit" style="--progress:${state.percent * 3.6}deg"><span><b>${state.percent}%</b>pronto</span></div>
-        <p>${state.completedCount} di 6 moduli completati</p>
+        <p class="eyebrow">${copy.readiness}</p>
+        <div class="progress-orbit" style="--progress:${state.percent * 3.6}deg"><span><b>${state.percent}%</b>${copy.ready}</span></div>
+        <p>${copy.modulesDone(state.completedCount, lessons.length)}</p>
       </article>
       <article class="focus-card review-card">
-        <p class="eyebrow">ACTIVE RECALL</p>
+        <p class="eyebrow">${copy.activeRecall}</p>
         <strong>${state.reviewCount}</strong>
-        <p>domande da ripassare</p>
-        <a class="text-link" href="/review" data-link>Ripassa ora →</a>
+        <p>${copy.questionsToReview}</p>
+        <a class="text-link" href="/review" data-link>${copy.reviewNow} →</a>
       </article>
     </section>`
 }
 
 function renderSprint() {
   const state = getDashboardState(lessons, progress)
-  return `<section class="shell page-head"><p class="eyebrow">INTERVIEW SPRINT</p><h1>Sei moduli. Un filo logico.</h1><p class="lead">Segui l’ordine una volta, poi torna solo sui punti deboli. Obiettivo: spiegare, non memorizzare.</p>
-    <div class="overall-progress"><span style="width:${state.percent}%"></span></div><small>${state.percent}% completato</small></section>
+  const copy = shellCopy(locale)
+  return `<section class="shell page-head"><p class="eyebrow">${copy.sprintEyebrow}</p><h1>${copy.sprintTitle}</h1><p class="lead">${copy.sprintLead}</p>
+    <div class="overall-progress"><span style="width:${state.percent}%"></span></div><small>${state.percent}% ${copy.completed}</small></section>
     <section class="shell module-list">${lessons.map((lesson) => {
       const item = progress[lesson.id]
       const completed = item?.status === 'completed'
       const active = state.nextLesson.id === lesson.id
+      const source = curriculum.find((entry) => entry.id === lesson.id)
+      const title = selectLocale(source?.title, locale)
+      const subtitle = locale === 'en' ? selectLocale(source?.title, 'it') : lesson.englishTitle
+      const status = completed ? `${item.bestScore}% ${copy.statusBest}` : active ? copy.statusNext : copy.statusOpen
       return `<article class="module-row ${completed ? 'completed' : ''} ${active ? 'current' : ''}">
         <div class="module-index">${completed ? '✓' : String(lesson.order).padStart(2, '0')}</div>
-        <div class="module-copy"><div class="module-topline"><span>${lesson.durationMinutes} MIN</span><span>${completed ? `${item.bestScore}% BEST` : active ? 'NEXT' : 'QUEUED'}</span></div><h2>${lesson.title}</h2><p>${lesson.englishTitle}</p>
-          <div class="competency-tags">${lesson.competencies.slice(0, 2).map((tag) => `<span>${tag.replaceAll('-', ' ')}</span>`).join('')}</div></div>
-        <a class="button ${active ? 'primary' : 'secondary'}" href="/lesson/${lesson.slug}" data-link aria-label="Apri la lezione ${lesson.title}">Apri la lezione <span>→</span></a>
+        <div class="module-copy"><div class="module-topline"><span>${lesson.durationMinutes} MIN</span><span>${status}</span></div><h2>${title}</h2><p>${subtitle}</p></div>
+        <a class="button ${active ? 'primary' : 'secondary'}" href="/lesson/${lesson.slug}" data-link aria-label="${copy.openLesson}: ${title}">${copy.openLesson} <span>→</span></a>
       </article>`
     }).join('')}</section>`
 }
@@ -200,20 +208,22 @@ function bindLocaleControl() {
 }
 
 function renderReview() {
+  const copy = shellCopy(locale)
   const reviewIds = new Set(Object.values(progress).flatMap((item) => item.reviewQuestionIds || []))
   const reviewQuestions = lessons.flatMap((lesson) => lesson.quiz.map((question) => ({ ...question, lesson }))).filter((item) => reviewIds.has(item.id))
-  return `<section class="shell page-head"><p class="eyebrow">ACTIVE RECALL</p><h1>Ripassa ciò che conta.</h1><p class="lead">Gli errori non sono una penalità. Sono la lista esatta di ciò che devi rendere più solido.</p></section>
-    <section class="shell review-layout"><div><div class="section-label"><span>DOMANDE DA RIVEDERE</span><b>${reviewQuestions.length}</b></div>${reviewQuestions.length ? reviewQuestions.map((item) => `<article class="review-question"><small>${item.lesson.englishTitle}</small><h2>${item.prompt}</h2><details><summary>Mostra risposta e spiegazione</summary><p><b>${item.options[item.correctOption]}</b></p><p>${item.explanation}</p></details></article>`).join('') : '<div class="empty-state"><b>La coda è vuota.</b><p>Completa i quiz oppure ripeti i termini inglesi qui accanto.</p><a href="/sprint" data-link class="text-link">Vai allo sprint →</a></div>'}</div>
-      <div class="glossary-panel"><label for="term-search">GLOSSARY · IT / EN</label><input id="term-search" type="search" placeholder="Cerca PLC, drift, MVP..." autocomplete="off"><div data-term-list>${renderTerms(allGlossary)}</div></div></section>`
+  return `<section class="shell page-head"><p class="eyebrow">${copy.activeRecall}</p><h1>${copy.reviewTitle}</h1><p class="lead">${copy.reviewLead}</p></section>
+    <section class="shell review-layout"><div><div class="section-label"><span>${copy.questionsLabel}</span><b>${reviewQuestions.length}</b></div>${reviewQuestions.length ? reviewQuestions.map((item) => `<article class="review-question"><small>${item.lesson.englishTitle}</small><h2>${item.prompt}</h2><details><summary>${copy.showAnswer}</summary><p><b>${item.options[item.correctOption]}</b></p><p>${item.explanation}</p></details></article>`).join('') : `<div class="empty-state"><b>${copy.emptyQueue}</b><p>${copy.emptyQueueHint}</p><a href="/sprint" data-link class="text-link">${copy.goToSprint} →</a></div>`}</div>
+      <div class="glossary-panel"><label for="term-search">${copy.glossaryLabel}</label><input id="term-search" type="search" placeholder="${copy.glossaryPlaceholder}" autocomplete="off"><div data-term-list>${renderTerms(allGlossary)}</div></div></section>`
 }
 
 function renderTerms(terms) {
-  return terms.map((item) => `<article class="term-row"><code>${item.english}</code><b>${item.italian}</b><p>${item.definition}</p></article>`).join('') || '<p class="empty-inline">Nessun termine trovato.</p>'
+  return terms.map((item) => `<article class="term-row"><code>${item.english}</code><b>${item.italian}</b><p>${item.definition}</p></article>`).join('') || `<p class="empty-inline">${shellCopy(locale).noTerms}</p>`
 }
 
 function renderInterview() {
-  return `<section class="interview-hero"><div class="shell"><p class="eyebrow">20-MINUTE REHEARSAL</p><h1>Think clearly.<br><em>Speak simply.</em></h1><p>Avvia il timer, rispondi ad alta voce e rivela il modello soltanto dopo.</p><div class="timer"><span data-timer>20:00</span><button class="button primary" data-timer-toggle>Avvia simulazione</button></div></div></section>
-    <section class="shell interview-list">${interviewQuestions.map((item, index) => `<article class="interview-card"><div class="question-number">${String(index + 1).padStart(2, '0')}</div><div><small>${item.topic}</small><h2>${item.prompt}</h2><div class="interview-actions"><button type="button" data-model-toggle="${index}-short">30 sec</button><button type="button" data-model-toggle="${index}-long">2 min</button></div><div class="model-answer" data-model="${index}-short" hidden><p>${item.short}</p></div><div class="model-answer" data-model="${index}-long" hidden><p>${item.long}</p></div></div></article>`).join('')}</section>`
+  const copy = shellCopy(locale)
+  return `<section class="interview-hero"><div class="shell"><p class="eyebrow">${copy.interviewEyebrow}</p><h1>${copy.interviewTitle}</h1><p>${copy.interviewLead}</p><div class="timer"><span data-timer>20:00</span><button class="button primary" data-timer-toggle>${copy.startSimulation}</button></div></div></section>
+    <section class="shell interview-list">${interviewQuestions.map((item, index) => `<article class="interview-card"><div class="question-number">${String(index + 1).padStart(2, '0')}</div><div><small>${item.topic}</small><h2>${item.prompt}</h2><div class="interview-actions"><button type="button" data-model-toggle="${index}-short">${copy.thirtySec}</button><button type="button" data-model-toggle="${index}-long">${copy.twoMin}</button></div><div class="model-answer" data-model="${index}-short" hidden><p>${item.short}</p></div><div class="model-answer" data-model="${index}-long" hidden><p>${item.long}</p></div></div></article>`).join('')}</section>`
 }
 
 function renderLogin() {
@@ -347,16 +357,16 @@ function toggleTimer(event) {
   if (interviewTimer) {
     clearInterval(interviewTimer)
     interviewTimer = null
-    event.target.textContent = 'Riprendi simulazione'
+    event.target.textContent = shellCopy(locale).resumeSimulation
     return
   }
   let remaining = display.dataset.remaining ? Number(display.dataset.remaining) : 1200
-  event.target.textContent = 'Pausa'
+  event.target.textContent = shellCopy(locale).pauseSimulation
   interviewTimer = setInterval(() => {
     remaining -= 1
     display.dataset.remaining = remaining
     display.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`
-    if (remaining <= 0) { clearInterval(interviewTimer); interviewTimer = null; event.target.textContent = 'Ricomincia'; showToast('Tempo concluso. Valuta struttura, termini, metriche e rischi.') }
+    if (remaining <= 0) { clearInterval(interviewTimer); interviewTimer = null; event.target.textContent = shellCopy(locale).restartSimulation; showToast(shellCopy(locale).timeOver) }
   }, 1000)
 }
 
