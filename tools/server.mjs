@@ -8,7 +8,8 @@ const contentTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascr
 
 export function createAppServer() {
   return createServer((request, response) => {
-    const requested = decodeURIComponent(new URL(request.url, 'http://localhost').pathname)
+    const requestUrl = new URL(request.url, 'http://localhost')
+    const requested = decodeURIComponent(requestUrl.pathname)
     let filePath = normalize(join(root, requested === '/' ? 'index.html' : requested))
     if (!filePath.startsWith(root)) {
       response.writeHead(404).end('Application not built')
@@ -16,7 +17,10 @@ export function createAppServer() {
     }
     if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
       if (!extname(requested)) {
-        response.writeHead(302, { Location: `/?route=${encodeURIComponent(requested)}` }).end()
+        // Mirrors public/404.html: the query carries the requested unit and must survive.
+        response.writeHead(302, {
+          Location: `/?route=${encodeURIComponent(`${requested}${requestUrl.search}`)}`
+        }).end()
         return
       }
       response.writeHead(404).end('Asset not found')

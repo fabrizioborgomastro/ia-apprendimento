@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
+import { parseRoute } from '../public/ui.js'
 
 const publicUrl = (file) => new URL(`../public/${file}`, import.meta.url)
 const read = (file) => readFile(publicUrl(file), 'utf8')
@@ -45,6 +46,17 @@ test('every versioned entry URL agrees with the release version', async () => {
     assert.ok(versions.length > 0, `${name} must version its entries`)
     assert.deepEqual(versions, [RELEASE_VERSION], `${name} mixes asset versions: ${versions.join(', ')}`)
   }
+
+  // Any public module may version its imports, but none may disagree with the release.
+  const publicFiles = (await readdir(new URL('../public/', import.meta.url)))
+    .filter((file) => file.endsWith('.js'))
+  for (const file of publicFiles) {
+    const versions = versionsIn(await read(file))
+    assert.ok(
+      versions.length === 0 || versions.every((version) => version === RELEASE_VERSION),
+      `${file} mixes asset versions: ${versions.join(', ')}`
+    )
+  }
   assert.match(html, /<script type="module" src="\.\/app\.js\?v=5"><\/script>/u)
 })
 
@@ -54,4 +66,100 @@ test('the application shell exposes the language switch and a focusable main reg
   assert.match(html, /<main id="main" tabindex="-1">/u)
   assert.match(html, /class="skip-link"/u)
   assert.match(html, /<html lang="it">/u)
+})
+
+test('the GitHub Pages fallback preserves a unit deep link through the redirect', async () => {
+  const html = await read('404.html')
+  const script = html.slice(html.indexOf('<script>') + 8, html.indexOf('</script>'))
+  assert.ok(script.includes('location.replace'), 'the fallback must redirect')
+
+  const runFallback = (pathname, search = '', hash = '') => {
+    let replaced = null
+    const location = {
+      origin: 'https://fabrizioborgomastro.github.io',
+      hostname: 'fabrizioborgomastro.github.io',
+      pathname,
+      search,
+      hash,
+      replace: (target) => { replaced = target }
+    }
+    new Function('location', script)(location)
+    return replaced
+  }
+
+  const deepLink = '/ia-apprendimento/lesson/mvp-governance'
+  const query = '?unit=discovery-baseline-riskiest-assumption'
+  const target = runFallback(deepLink, query)
+  assert.ok(target, 'the fallback must produce a redirect target')
+
+  const restored = new URL(target).searchParams.get('route')
+  assert.equal(restored, '/lesson/mvp-governance?unit=discovery-baseline-riskiest-assumption',
+    'path and query must survive the GitHub Pages fallback')
+
+  const [routePath, routeSearch] = restored.split('?')
+  const route = parseRoute(routePath, `?${routeSearch}`)
+  assert.deepEqual(route, {
+    name: 'lesson',
+    slug: 'mvp-governance',
+    unitId: 'discovery-baseline-riskiest-assumption'
+  })
+
+  const plain = new URL(runFallback('/ia-apprendimento/sprint')).searchParams.get('route')
+  assert.equal(plain, '/sprint')
+  assert.deepEqual(parseRoute(plain), { name: 'sprint' })
+})
+
+test('the application restores the redirected route before rendering', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
+  const restoreIndex = app.indexOf('restoreRedirectedRoute()')
+  const renderIndex = app.indexOf('\nrender()')
+  assert.ok(restoreIndex > -1 && renderIndex > -1)
+  assert.ok(restoreIndex < renderIndex, 'the redirected route must be restored before the first render')
+  assert.match(app, /searchParams\.get\('route'\)/u)
+  assert.match(app, /history\.replaceState\(\{\}, '', `\$\{BASE_PATH\}\$\{redirected\.replace/u)
+})
+
+async function resolveModuleGraph() {
+  const html = await read('index.html')
+  const entries = [...html.matchAll(/src="\.\/([^"]+)"/gu)].map(([, src]) => src)
+  const requests = new Map()
+  const queue = entries.slice()
+
+  while (queue.length) {
+    const request = queue.shift()
+    const [file] = request.split('?')
+    if (requests.has(request)) continue
+    requests.set(request, file)
+    if (!file.endsWith('.js')) continue
+
+    const source = await read(file)
+    const directory = file.includes('/') ? `${file.slice(0, file.lastIndexOf('/'))}/` : ''
+    for (const [, specifier] of source.matchAll(/(?:from|import)\s*'(\.\/[^']+)'/gu)) {
+      const [target, query] = specifier.slice(2).split('?')
+      const resolved = new URL(`${directory}${target}`, 'file:///').pathname.slice(1)
+      queue.push(query ? `${resolved}?${query}` : resolved)
+    }
+  }
+  return requests
+}
+
+test('no module is ever requested under two different URLs', async () => {
+  const requests = await resolveModuleGraph()
+  const byFile = new Map()
+  for (const [request, file] of requests) {
+    byFile.set(file, [...(byFile.get(file) || []), request])
+  }
+  const duplicated = [...byFile.entries()].filter(([, urls]) => urls.length > 1)
+  assert.deepEqual(
+    duplicated,
+    [],
+    `these files would be downloaded and evaluated twice: ${duplicated.map(([file, urls]) => `${file} as ${urls.join(' and ')}`).join('; ')}`
+  )
+})
+
+test('every module the browser actually requests is precached', async () => {
+  const [sw, requests] = await Promise.all([read('sw.js'), resolveModuleGraph()])
+  const assets = sw.slice(sw.indexOf('const ASSETS'), sw.indexOf(']', sw.indexOf('const ASSETS')))
+  const missing = [...requests.keys()].filter((request) => !assets.includes(`./${request}`))
+  assert.deepEqual(missing, [], `sw.js does not precache: ${missing.join(', ')}`)
 })
