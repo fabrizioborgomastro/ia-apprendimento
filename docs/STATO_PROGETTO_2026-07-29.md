@@ -56,7 +56,7 @@ Il contenuto v1 è stato **rimosso** e sostituito. Stato attuale dell'app:
 - **175 domande**, 7 per unità, ognuna con spiegazione che insegna. Una domanda per unità è marcata `final` e alimenta il checkpoint del modulo.
 - **Teoria bilingue** in ogni unità: italiano e inglese, con un minimo del 75 percento di parole inglesi rispetto all'italiano, verificato dai test.
 - **Struttura fissa di ogni unità**: dove siamo nel percorso, il concetto, i termini, un esempio con numeri, il blocco "come lo dici in inglese" con la nota sul perché di quelle parole, il quiz da 7 domande, le fonti.
-- **Glossario derivato dal corso** (157 voci): `buildGlossary` legge i termini dalle unità, quindi un termine non può esistere in una unità e mancare dal glossario. Pagina dedicata `/glossario` con ricerca.
+- **Glossario derivato dal corso** (132 voci): `buildGlossary` legge i termini dalle unità, quindi un termine non può esistere in una unità e mancare dal glossario. Entra però solo ciò che vale la pena cercare, cioè sigle, parole inglesi da riunione e parole italiane con significato industriale; le parole comuni sono marcate `plain: true` e restano nella loro unità. Pagina dedicata `/glossario` con ricerca.
 - **Pagina colloquio** `/interview` con le 10 domande: attesa dell'esaminatore, risposta italiana, righe inglesi da dire a voce, tre punti chiave, errore da evitare.
 - **Ripasso** `/review` con le domande sbagliate e le coppie che vengono confuse.
 - `CONTENT_VERSION = 3`, cache del service worker `ai-sprint-v10`, tutti i `?v=` allineati a 10.
@@ -95,7 +95,7 @@ Il corso è costruito attorno a un unico filo, **le 7 tappe**, che ricorre in og
 - `pwa.test.mjs`: cache, versioni allineate, grafo dei moduli, fallback GitHub Pages
 - `server.test.mjs`, `sync.test.mjs`
 
-`npm run build` stampa: 5 moduli, 25 unità, 175 domande, 157 termini, 154 minuti.
+`npm run build` stampa: 5 moduli, 25 unità, 175 domande, 132 termini, 154 minuti.
 
 ---
 

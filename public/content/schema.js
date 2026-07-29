@@ -301,15 +301,19 @@ export function validateCurriculum(lessons, sources, glossary = []) {
 }
 
 /**
- * Every term introduced by a unit must also live in the glossary. The promise to
- * the reader was that no acronym is ever taken for granted, and the glossary is
- * where that promise is kept once the unit is closed.
+ * Every term worth looking up must live in the glossary. Terms flagged `plain`
+ * are ordinary words a unit explains in passing: they stay in their unit, and
+ * keeping them out is what makes the glossary usable.
  */
 export function validateGlossaryCoverage(lessons, glossary) {
   if (!Array.isArray(glossary) || !glossary.length) return []
   const errors = []
   const glossaryIds = new Set(glossary.map((entry) => entry?.id))
   for (const term of allTerms(lessons)) {
+    if (term?.plain) {
+      if (glossaryIds.has(term.id)) errors.push(`Glossary contains a plain word that belongs to its unit only: ${term.id}`)
+      continue
+    }
     if (term?.id && !glossaryIds.has(term.id)) {
       errors.push(`Glossary is missing a term introduced by the course: ${term.id}`)
     }

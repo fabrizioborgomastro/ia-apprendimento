@@ -56,12 +56,12 @@ export const scegliereStrumentoLesson = {
         t('L\'AI generativa serve quando il materiale di partenza è linguaggio.', 'Generative AI is for when the input material is language.')
       ],
       terminology: [
-        { id: 'regola', term: 'Rule', italian: 'Regola', definition: t('Condizione scritta da una persona: se succede questo, fai quello.', 'A condition written by a person: if this happens, do that.') },
+        { id: 'regola', plain: true, term: 'Rule', italian: 'Regola', definition: t('Condizione scritta da una persona: se succede questo, fai quello.', 'A condition written by a person: if this happens, do that.') },
         { id: 'analytics-descrittiva', term: 'Descriptive analytics', italian: 'Analisi descrittiva', definition: t('Guardare i dati per capire cosa è successo, senza prevedere.', 'Looking at data to understand what happened, without predicting.') },
         { id: 'machine-learning', term: 'Machine learning', italian: 'Apprendimento automatico', definition: t('Il computer trova relazioni nei dati storici e le usa per prevedere.', 'The computer finds relations in historical data and uses them to predict.') },
         { id: 'ottimizzazione', term: 'Optimisation', italian: 'Ottimizzazione', definition: t('Trovare la combinazione migliore dati dei vincoli.', 'Finding the best combination given the constraints.') },
         { id: 'ai-generativa', term: 'Generative AI', italian: 'AI generativa', definition: t('Sistemi che producono testo o immagini, utili quando il materiale è linguaggio.', 'Systems that produce text or images, useful when the material is language.') },
-        { id: 'modello', term: 'Model', italian: 'Modello', definition: t('La formula appresa dai dati che produce una previsione.', 'The formula learned from data that produces a prediction.') },
+        { id: 'modello', plain: true, term: 'Model', italian: 'Modello', definition: t('La formula appresa dai dati che produce una previsione.', 'The formula learned from data that produces a prediction.') },
         { id: 'spiegabilita', term: 'Explainability', italian: 'Spiegabilità', definition: t('Quanto è facile capire perché il sistema ha deciso così.', 'How easy it is to understand why the system decided that way.') }
       ],
       example: {
@@ -552,7 +552,7 @@ export const scegliereStrumentoLesson = {
         { id: 'llm', term: 'LLM', italian: 'Modello linguistico', definition: t('Sistema che prevede la parola successiva più probabile, addestrato su moltissimo testo.', 'A system that predicts the most likely next word, trained on very large amounts of text.') },
         { id: 'allucinazione', term: 'Hallucination', italian: 'Allucinazione', definition: t('Quando il modello scrive con sicurezza qualcosa che non è vero.', 'When the model confidently writes something that is not true.') },
         { id: 'rag', term: 'RAG', italian: 'Generazione con recupero', definition: t('Cercare prima i documenti giusti e far rispondere il modello solo su quelli, con citazione.', 'Finding the right documents first and letting the model answer only from them, with a citation.') },
-        { id: 'citazione', term: 'Citation', italian: 'Citazione', definition: t('Il riferimento al documento da cui viene la risposta, apribile per verificare.', 'The reference to the document the answer came from, openable to check.') },
+        { id: 'citazione', plain: true, term: 'Citation', italian: 'Citazione', definition: t('Il riferimento al documento da cui viene la risposta, apribile per verificare.', 'The reference to the document the answer came from, openable to check.') },
         { id: 'versione-effettiva', term: 'Effective version', italian: 'Versione effettiva', definition: t('La revisione del documento valida oggi, distinta da quelle superate.', 'The revision of the document that is valid today, as opposed to superseded ones.') },
         { id: 'acl', term: 'ACL', italian: 'Permessi di accesso', definition: t('Le regole che dicono chi può vedere quale documento.', 'The rules that say who can see which document.') },
         { id: 'agente', term: 'Agent', italian: 'Agente', definition: t('Sistema che sceglie ripetutamente l\'azione successiva invece di seguire passi fissi.', 'A system that repeatedly chooses the next action instead of following fixed steps.') }
@@ -714,11 +714,11 @@ export const scegliereStrumentoLesson = {
         t('I dati raccolti di persona rendono l\'obiezione impossibile da liquidare.', 'Data you collected yourself makes the objection impossible to dismiss.')
       ],
       terminology: [
-        { id: 'condizione-rientro', term: 'Re-entry condition', italian: 'Condizione di rientro', definition: t('Cosa deve succedere perché una proposta rifiutata torni in gioco.', 'What has to happen for a rejected proposal to come back into play.') },
+        { id: 'condizione-rientro', plain: true, term: 'Re-entry condition', italian: 'Condizione di rientro', definition: t('Cosa deve succedere perché una proposta rifiutata torni in gioco.', 'What has to happen for a rejected proposal to come back into play.') },
         { id: 'debito-tecnico', term: 'Technical debt', italian: 'Debito tecnico', definition: t('Le scorciatoie di oggi che costeranno lavoro domani.', 'Today\'s shortcuts that will cost work tomorrow.') },
         { id: 'costo-opportunita', term: 'Opportunity cost', italian: 'Costo opportunità', definition: t('Quello a cui rinunci scegliendo un progetto invece di un altro.', 'What you give up by choosing one project instead of another.') },
-        { id: 'prova-limitata', term: 'Limited trial', italian: 'Prova limitata', definition: t('Una prova su un solo formato o una sola linea, con dati già verificati.', 'A trial on a single format or line, with data that has already been checked.') },
-        { id: 'demo', term: 'Demo', italian: 'Dimostrazione', definition: t('Una prova costruita per convincere, non per reggere il lavoro reale.', 'A show built to convince, not to survive real work.') }
+        { id: 'prova-limitata', plain: true, term: 'Limited trial', italian: 'Prova limitata', definition: t('Una prova su un solo formato o una sola linea, con dati già verificati.', 'A trial on a single format or line, with data that has already been checked.') },
+        { id: 'demo', plain: true, term: 'Demo', italian: 'Dimostrazione', definition: t('Una prova costruita per convincere, non per reggere il lavoro reale.', 'A show built to convince, not to survive real work.') }
       ],
       example: {
         title: t('"Vogliamo un assistente AI per gli operatori in linea"', '"We want an AI assistant for the operators on the line"'),

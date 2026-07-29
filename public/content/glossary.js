@@ -2,9 +2,14 @@ const t = (it, en) => ({ it, en })
 
 /**
  * The glossary is built from the curriculum itself, so a term can never be
- * introduced in a unit and then be missing here. The promise to the reader was
- * that no acronym is ever taken for granted; deriving the list is how that
- * promise stays true when the content changes.
+ * introduced in a unit and then be missing here.
+ *
+ * Not every row of a unit terminology table belongs in a glossary, though. A
+ * term earns its place only if it is an acronym, an English word you would hear
+ * in a meeting, or an Italian word whose meaning on the shop floor is not the
+ * everyday one. Ordinary words that a unit explains in passing, like "allarme"
+ * or "contesto", carry `plain: true` and stay in their unit: putting them here
+ * would bury the terms that actually need looking up.
  */
 export function buildGlossary(curriculum, extras = extraGlossaryEntries) {
   const entries = []
@@ -13,7 +18,7 @@ export function buildGlossary(curriculum, extras = extraGlossaryEntries) {
   for (const lesson of curriculum) {
     for (const [unitIndex, unit] of (lesson.units || []).entries()) {
       for (const term of unit.terminology || []) {
-        if (seen.has(term.id)) continue
+        if (term.plain || seen.has(term.id)) continue
         seen.add(term.id)
         entries.push({
           id: term.id,

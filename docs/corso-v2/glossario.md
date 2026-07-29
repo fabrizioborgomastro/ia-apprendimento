@@ -1,6 +1,8 @@
 # Glossario completo
 
-Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonne: il termine come lo senti dire, l'equivalente italiano, che cos'è in una frase, e dove viene spiegato per esteso.
+I termini che vale la pena cercare, in ordine alfabetico. Quattro colonne: il termine come lo senti dire, l'equivalente italiano, che cos'è in una frase, e dove viene spiegato per esteso.
+
+**Cosa entra qui e cosa no.** Entra una voce solo se è una sigla, una parola inglese che senti in riunione, oppure una parola italiana il cui significato in fabbrica non è quello di tutti i giorni. Parole comuni come allarme, contesto, regola o modello restano spiegate dentro la loro unità: metterle qui farebbe perdere di vista i termini che davvero devi cercare.
 
 **Come si legge la colonna "Dove".** `M2.4` significa Modulo 2, unità 4. `M5` rimanda al Modulo 5, quello su governare, scalare e far adottare.
 
@@ -19,11 +21,9 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | Agente | Agente | Sistema che sceglie ripetutamente l'azione successiva invece di seguire passi fissi. | M3.4 |
 | AI generativa | AI generativa | Sistemi che producono testo o immagini, utili quando il materiale di partenza è linguaggio. | M3.1 |
 | Agile | Agile | Modo di lavorare a cicli brevi con verifica frequente, invece che con un piano unico lungo. | M4.1 |
-| Allarme | Allarme | Segnalazione che chiede un intervento umano, diversa da una semplice informazione. | M2.2 |
 | Allucinazione | Allucinazione | Quando un modello linguistico scrive con sicurezza qualcosa che non è vero. | M3.4 |
 | Alto rischio | Alto rischio | Categoria del Regolamento UE sull'AI che impone obblighi rafforzati. | M4.3 |
 | Analytics descrittiva | Analisi descrittiva | Guardare i dati per capire cosa è successo, senza prevedere niente. | M3.1 |
-| Assunzione | Assunzione | Qualcosa che diamo per vero senza averlo verificato. | M1.3 |
 | Attuatore | Attuatore | Dispositivo che agisce sul processo: motore, valvola, pistone. | M2.2 |
 | Automazione compiacente | Automazione compiacente | Quando le persone smettono di controllare perché si fidano troppo del sistema. | M4.3 |
 
@@ -45,19 +45,12 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | Capacità di revisione | Capacità di revisione | Quante segnalazioni una persona riesce davvero a controllare in un turno. | M3.3 |
 | Champion | Ambasciatore interno | Persona credibile sul campo che aiuta gli altri ad adottare il nuovo modo di lavorare. | M5.4 |
 | Change management | Gestione del cambiamento | Il lavoro sulle persone perché la soluzione venga usata davvero, non solo installata. | M4.5, M5.4 |
-| Citazione | Citazione | Il riferimento al documento da cui viene la risposta, apribile per verificare. | M3.4 |
 | Cloud | Nuvola | Far girare il calcolo su server esterni, raggiungibili via rete. | M2.5 |
-| Condizione di rientro | Condizione di rientro | Cosa deve succedere perché una proposta rifiutata torni in gioco. | M3.5 |
 | Condotto | Condotto | Collegamento permesso fra due zone di rete, con regole dichiarate. | M2.5 |
-| Contesto | Contesto operativo | Le informazioni che dicono cosa stava succedendo quando il dato è stato registrato. | M2.4 |
-| Controllo verificabile | Controllo verificabile | Una risposta a un'obiezione che qualcuno può misurare, al posto di una rassicurazione. | M1.5 |
 | Controllo visivo automatico | Controllo visivo automatico | Un modello che giudica immagini al posto dell'occhio umano. | M3.3 |
 | Convalida | Convalida | Dimostrare per iscritto che il sistema fa ciò che deve, e conservarne la prova. | M4.3 |
 | Convergenza OT/IT | Convergenza OT/IT | Il fatto che i due mondi oggi si parlino, con i vantaggi e i rischi che ne derivano. | M2.1 |
-| Costo di replica | Costo di replica | Quanto costa il secondo, il terzo, il decimo sito. | M4.5 |
 | Costo opportunità | Costo opportunità | Quello a cui rinunci scegliendo un progetto invece di un altro. | M3.5 |
-| Criterio di successo | Criterio di successo | La soglia scritta prima che definisce se l'esperimento è riuscito. | M4.2 |
-| Criterio pesato | Criterio pesato | Un aspetto della valutazione a cui si assegna un'importanza. | M1.4 |
 | Cross-functional | Interfunzionale | Che coinvolge più reparti diversi con obiettivi diversi. | M1.5 |
 
 ## D
@@ -72,7 +65,6 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | Deriva, *drift* | Deriva | Cambiamento nel tempo che peggiora il comportamento della soluzione. | M4.4, M5.5 |
 | Deriva dei dati | Deriva dei dati | Gli ingressi cambiano rispetto a quelli su cui il modello ha imparato. | M4.4 |
 | Deriva del concetto | Deriva del concetto | Cambia la relazione fra ingressi e risultato, anche a ingressi uguali. | M4.4 |
-| Deroga | Deroga | Eccezione approvata a una regola, che deve sempre avere una scadenza. | M1.5 |
 | Digital transformation | Trasformazione digitale | Cambiare in modo misurabile come si decide e si lavora, usando dati e tecnologia. | M1.1 |
 | Disponibilità (fattore OEE) | Disponibilità | Quanto tempo la macchina ha davvero prodotto rispetto a quando doveva. | M1.2 |
 | Disponibilità (sicurezza) | Disponibilità | Che il sistema sia acceso e funzionante quando serve. | M2.1 |
@@ -120,7 +112,6 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | Impatto | Impatto | Il cambiamento misurato sulla perdita di partenza. | M1.3 |
 | Incident response | Risposta agli incidenti | Il modo in cui l'organizzazione reagisce a errori, anomalie o rischi del sistema. | M5.5 |
 | Integrità | Integrità | Che i dati e il processo non vengano alterati. | M2.1 |
-| Ipotesi | Ipotesi | Un'affermazione che può essere smentita dai dati, scritta prima di raccoglierli. | M1.3 |
 | Ipotesi più rischiosa | Ipotesi più rischiosa | La cosa che, se falsa, fa crollare tutto il progetto. | M4.1 |
 | ISA-95 | ISA-95 | Lo standard che descrive come i sistemi gestionali e quelli di produzione si parlano. | M2.3 |
 | IT, *Information Technology* | Tecnologie dell'informazione | I sistemi che gestiscono informazioni: gestionale, posta, database, portali. | M2.1 |
@@ -137,7 +128,6 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | Termine | In italiano | Che cos'è, in una frase | Dove |
 |---|---|---|---|
 | Latenza | Latenza | Il tempo che passa tra la domanda e la risposta. | M2.5 |
-| Lezione appresa | Lezione appresa | Ciò che resta all'organizzazione anche da un progetto fermato. | M4.5 |
 | LLM, *Large Language Model* | Modello linguistico | Sistema che prevede la parola successiva più probabile, addestrato su moltissimo testo. | M3.4 |
 | Localization | Adattamento locale | La parte della soluzione che cambia per rispettare il contesto del sito. | M5.3 |
 
@@ -151,7 +141,6 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | MES, *Manufacturing Execution System* | Sistema di esecuzione della produzione | Traduce l'ordine in esecuzione e registra cosa è successo davvero in reparto. Ragiona in minuti. | M2.3 |
 | Microfermo | Microfermo | Fermata molto breve, spesso sotto i due minuti, quasi mai registrata. | M2.4 |
 | Modalità ombra, *shadow mode* | Modalità ombra | Il sistema gira in parallelo e registra, ma non viene mostrato e non decide niente. | M1.1, M4.2 |
-| Modello | Modello | La formula appresa dai dati che produce una previsione. | M3.1 |
 | Modo di guasto | Modo di guasto | Il modo specifico in cui un componente si rompe. | M3.2 |
 | Monitoring | Monitoraggio | Controllo continuo di prestazioni, uso, rischio e qualità del sistema. | M5.5 |
 | MTBF, *Mean Time Between Failures* | Tempo medio tra guasti | Quanto tempo passa in media tra un guasto e il successivo. Più è alto, meglio è. | M1.2 |
@@ -196,9 +185,7 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | Termine | In italiano | Che cos'è, in una frase | Dove |
 |---|---|---|---|
 | RAG, *Retrieval Augmented Generation* | Generazione con recupero | Cercare prima i documenti giusti e far rispondere il modello solo su quelli, con la citazione. | M3.4 |
-| Regola | Regola | Condizione scritta da una persona: se succede questo, fai quello. | M3.1 |
 | Replicability | Replicabilità | Possibilità di usare la stessa logica su altre linee o altri siti. | M1.4, M5.1 |
-| Reversibilità | Reversibilità | Quanto è facile tornare indietro se la soluzione sbaglia. | M1.4 |
 | Riaddestramento | Riaddestramento | Rifare l'apprendimento del modello con dati aggiornati. | M4.4 |
 | Ricetta | Ricetta | L'insieme dei parametri con cui si produce un certo articolo. | M2.3 |
 | Richiamo, *recall* | Richiamo | Di tutti i problemi veri, quanti il sistema ne ha trovati. | M3.3 |
@@ -216,7 +203,6 @@ Ogni termine tecnico che compare nel corso, in ordine alfabetico. Quattro colonn
 | Scarto | Scarto | Percentuale di prodotto buttato o da rilavorare. | M1.2, M3.3 |
 | SCADA, *Supervisory Control And Data Acquisition* | Supervisione e acquisizione dati | Sistema che mostra l'impianto all'operatore e gli permette di intervenire. | M2.2 |
 | Sensore | Sensore | Dispositivo che misura una grandezza fisica e la trasforma in segnale elettrico. | M2.2 |
-| Sincronizzazione oraria | Sincronizzazione oraria | Avere lo stesso orologio su tutti i sistemi, per poter confrontare gli eventi. | M2.4 |
 | Solution owner, *model owner* | Responsabile della soluzione | Chi risponde della logica del sistema, del suo comportamento e della sua manutenzione. | M5.2 |
 | SOP, *Standard Operating Procedure* | Procedura operativa standard | Il documento che descrive cosa fare, passo per passo. | M4.3 |
 | Sovraccarico di allarmi | Sovraccarico di allarmi | Troppi allarmi, tanto che l'operatore smette di guardarli. | M2.2 |

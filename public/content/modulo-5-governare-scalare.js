@@ -226,7 +226,7 @@ export const governareScalareLesson = {
         { id: 'guardrail', term: 'Guardrail', italian: 'Paletti comuni', definition: t('Regole condivise che permettono velocità senza perdere il controllo.', 'Shared rules that allow speed without losing control.') },
         { id: 'operating-model-term', term: 'Operating model', italian: 'Modello operativo', definition: t('Il modo in cui ruoli, decisioni e responsabilità sono distribuiti.', 'The way roles, decisions and accountability are distributed.') },
         { id: 'escalation', term: 'Escalation', italian: 'Passaggio di livello', definition: t('Il percorso dichiarato per portare una decisione a chi ha l\'autorità di prenderla.', 'The declared path to bring a decision to whoever has the authority to take it.') },
-        { id: 'raci', term: 'Decision map', italian: 'Mappa delle decisioni', definition: t('L\'elenco scritto di chi decide, chi si consulta e chi esegue.', 'The written list of who decides, who is consulted and who executes.') }
+        { id: 'raci', plain: true, term: 'Decision map', italian: 'Mappa delle decisioni', definition: t('L\'elenco scritto di chi decide, chi si consulta e chi esegue.', 'The written list of who decides, who is consulted and who executes.') }
       ],
       example: {
         title: t('Un sistema segnala difetti e dopo tre settimane succede tutto insieme', 'A system flags defects and after three weeks everything happens at once'),
@@ -384,11 +384,11 @@ export const governareScalareLesson = {
       ],
       terminology: [
         { id: 'rollout', term: 'Rollout', italian: 'Estensione operativa', definition: t('Il passaggio da un sito pilota a più linee o stabilimenti.', 'The move from a pilot site to several lines or plants.') },
-        { id: 'baseline-locale', term: 'Local baseline', italian: 'Baseline locale', definition: t('Misura iniziale del sito nuovo, prima di introdurre la soluzione.', 'The initial measurement of the new site, before the solution arrives.') },
+        { id: 'baseline-locale', plain: true, term: 'Local baseline', italian: 'Baseline locale', definition: t('Misura iniziale del sito nuovo, prima di introdurre la soluzione.', 'The initial measurement of the new site, before the solution arrives.') },
         { id: 'standardizzazione', term: 'Standardisation', italian: 'Standardizzazione', definition: t('La parte del sistema che resta uguale ovunque, per garantire confronto e controllo.', 'The part of the system that stays the same everywhere, to keep comparison and control.') },
         { id: 'localizzazione', term: 'Localisation', italian: 'Adattamento locale', definition: t('La parte che cambia per rispettare il contesto del sito.', 'The part that changes to respect the context of the site.') },
         { id: 'scalabilita', term: 'Scalability', italian: 'Scalabilità', definition: t('Capacità di estendere senza perdere controllo, qualità o valore.', 'The ability to extend without losing control, quality or value.') },
-        { id: 'ondata', term: 'Wave', italian: 'Ondata di estensione', definition: t('Gruppo di siti che entrano insieme, con condizioni minime verificate.', 'A group of sites entering together, with minimum conditions verified.') }
+        { id: 'ondata', plain: true, term: 'Wave', italian: 'Ondata di estensione', definition: t('Gruppo di siti che entrano insieme, con condizioni minime verificate.', 'A group of sites entering together, with minimum conditions verified.') }
       ],
       example: {
         title: t('Meno 18 percento di microfermi, e tre siti che vogliono la stessa cosa', 'Minus 18 percent micro-stops, and three sites that want the same thing'),
@@ -551,8 +551,8 @@ export const governareScalareLesson = {
         { id: 'engagement', term: 'Engagement', italian: 'Coinvolgimento', definition: t('Partecipazione attiva di chi userà o subirà il cambiamento.', 'Active involvement of the people who will use or undergo the change.') },
         { id: 'champion', term: 'Champion', italian: 'Ambasciatore interno', definition: t('Persona credibile sul campo che aiuta gli altri ad adottare il nuovo modo di lavorare.', 'A credible person on the floor who helps others adopt the new way of working.') },
         { id: 'user-journey', term: 'User journey', italian: 'Percorso utente', definition: t('I passi concreti che una persona compie usando la soluzione.', 'The concrete steps a person takes while using the solution.') },
-        { id: 'attrito', term: 'Friction', italian: 'Attrito', definition: t('Il carico in più che lo strumento chiede nel momento peggiore del turno.', 'The extra load the tool asks for at the worst moment of the shift.') },
-        { id: 'abitudine', term: 'Habit', italian: 'Abitudine', definition: t('Il comportamento che resta quando nessuno sta più guardando il progetto.', 'The behaviour that remains when nobody is watching the project any more.') }
+        { id: 'attrito', plain: true, term: 'Friction', italian: 'Attrito', definition: t('Il carico in più che lo strumento chiede nel momento peggiore del turno.', 'The extra load the tool asks for at the worst moment of the shift.') },
+        { id: 'abitudine', plain: true, term: 'Habit', italian: 'Abitudine', definition: t('Il comportamento che resta quando nessuno sta più guardando il progetto.', 'The behaviour that remains when nobody is watching the project any more.') }
       ],
       example: {
         title: t('Un assistente per classificare le cause di fermo', 'An assistant to classify downtime causes'),
@@ -708,7 +708,7 @@ export const governareScalareLesson = {
         { id: 'incident-response', term: 'Incident response', italian: 'Risposta agli incidenti', definition: t('Come l\'organizzazione reagisce a errori, anomalie o rischi del sistema.', 'How the organisation reacts to errors, anomalies or risks of the system.') },
         { id: 'sunset-criteria', term: 'Sunset criteria', italian: 'Criteri di uscita', definition: t('Condizioni chiare e scritte per fermare o ridisegnare una soluzione.', 'Clear written conditions to stop or redesign a solution.') },
         { id: 'sustain-value', term: 'Sustain value', italian: 'Sostenere il valore', definition: t('Fare in modo che il beneficio resti reale nel tempo, non solo nel pilota.', 'Making sure the benefit stays real over time, not only during the pilot.') },
-        { id: 'inerzia', term: 'Inertia', italian: 'Inerzia', definition: t('Continuare un progetto solo perché è partito, senza rivalutarne il valore.', 'Carrying a project on only because it started, without reassessing its value.') }
+        { id: 'inerzia', plain: true, term: 'Inertia', italian: 'Inerzia', definition: t('Continuare un progetto solo perché è partito, senza rivalutarne il valore.', 'Carrying a project on only because it started, without reassessing its value.') }
       ],
       example: {
         title: t('Nove mesi dopo, con il contesto cambiato', 'Nine months later, with the context changed'),

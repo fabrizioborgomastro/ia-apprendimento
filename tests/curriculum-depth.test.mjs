@@ -100,16 +100,32 @@ test('each module flags exactly one checkpoint question per unit', () => {
   }
 })
 
-test('no acronym is taken for granted: every term of every unit lives in the glossary', () => {
+test('the glossary holds every term worth looking up, and nothing else', () => {
   const glossaryIds = new Set(glossary.map((entry) => entry.id))
   for (const unit of units) {
     assert.ok(unit.terminology.length >= 5, `${unit.id}: meno di cinque termini`)
     for (const term of unit.terminology) {
+      if (term.plain) {
+        assert.ok(!glossaryIds.has(term.id), `${term.id} è una parola comune e non deve stare nel glossario`)
+        continue
+      }
       assert.ok(glossaryIds.has(term.id), `il glossario non contiene ${term.id}`)
     }
   }
-  assert.ok(glossary.length >= 150, `il glossario è troppo corto: ${glossary.length} voci`)
+  assert.ok(glossary.length >= 110, `il glossario è troppo corto: ${glossary.length} voci`)
   assert.ok(glossary.every((entry) => entry.where), 'ogni voce deve dire dove viene spiegata')
+})
+
+test('the words the reader already knows stay out of the glossary', () => {
+  const glossaryIds = new Set(glossary.map((entry) => entry.id))
+  const ordinaryWords = ['allarme', 'contesto', 'regola', 'modello', 'demo', 'abitudine', 'inerzia', 'attrito', 'ipotesi', 'assunzione']
+  for (const id of ordinaryWords) {
+    assert.ok(!glossaryIds.has(id), `${id} è una parola comune: nel glossario fa perdere di vista i termini veri`)
+  }
+  const acronyms = ['oee', 'plc', 'scada', 'mes', 'erp', 'kpi', 'mtbf', 'mttr', 'mvp', 'rag', 'llm', 'acl', 'sop', 'isa-95']
+  for (const id of acronyms) {
+    assert.ok(glossaryIds.has(id), `il glossario deve contenere la sigla ${id}`)
+  }
 })
 
 test('the two complete stories and the two minute answer are where the course says they are', () => {

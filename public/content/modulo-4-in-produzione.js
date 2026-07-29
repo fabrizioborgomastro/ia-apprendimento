@@ -222,7 +222,7 @@ export const inProduzioneLesson = {
       ],
       terminology: [
         { id: 'gruppo-controllo', term: 'Control group', italian: 'Gruppo di controllo', definition: t('Una linea simile dove non si interviene, tenuta per confronto.', 'A similar line where nothing is done, kept for comparison.') },
-        { id: 'criterio-successo', term: 'Success criterion', italian: 'Criterio di successo', definition: t('La soglia scritta prima che definisce se l\'esperimento è riuscito.', 'The threshold written beforehand that defines whether the experiment succeeded.') },
+        { id: 'criterio-successo', plain: true, term: 'Success criterion', italian: 'Criterio di successo', definition: t('La soglia scritta prima che definisce se l\'esperimento è riuscito.', 'The threshold written beforehand that defines whether the experiment succeeded.') },
         { id: 'effetto-novita', term: 'Novelty effect', italian: 'Effetto novità', definition: t('Il miglioramento temporaneo dovuto al fatto che le persone si sanno osservate.', 'The temporary improvement caused by people knowing they are watched.') },
         { id: 'stagionalita', term: 'Seasonality', italian: 'Stagionalità', definition: t('Variazioni regolari legate al periodo dell\'anno.', 'Regular variation linked to the time of year.') },
         { id: 'ab-test', term: 'A/B test', italian: 'Test A/B', definition: t('Confronto fra due varianti applicate a gruppi simili nello stesso periodo.', 'A comparison of two variants applied to similar groups in the same period.') }
@@ -548,7 +548,7 @@ export const inProduzioneLesson = {
         { id: 'riaddestramento', term: 'Retraining', italian: 'Riaddestramento', definition: t('Rifare l\'apprendimento del modello con dati aggiornati.', 'Training the model again with up to date data.') },
         { id: 'owner', term: 'Owner', italian: 'Responsabile', definition: t('La persona che risponde del sistema quando è in produzione.', 'The person who answers for the system once it is in production.') },
         { id: 'runbook', term: 'Runbook', italian: 'Manuale operativo', definition: t('Il documento che dice cosa fare quando il sistema si comporta male.', 'The document that says what to do when the system misbehaves.') },
-        { id: 'costo-mantenimento', term: 'Maintenance cost', italian: 'Costo di mantenimento', definition: t('La spesa annua per tenere in vita la soluzione, di solito il 15-20 percento.', 'The yearly cost of keeping the solution alive, usually 15 to 20 percent.') }
+        { id: 'costo-mantenimento', plain: true, term: 'Maintenance cost', italian: 'Costo di mantenimento', definition: t('La spesa annua per tenere in vita la soluzione, di solito il 15-20 percento.', 'The yearly cost of keeping the solution alive, usually 15 to 20 percent.') }
       ],
       example: {
         title: t('Sei mesi dopo la messa in produzione', 'Six months after go-live'),
@@ -712,9 +712,9 @@ export const inProduzioneLesson = {
       terminology: [
         { id: 'scalare', term: 'Scale up', italian: 'Estendere', definition: t('Portare una soluzione da una linea o sito a molti.', 'Taking a solution from one line or site to many.') },
         { id: 'caso-economico', term: 'Business case', italian: 'Caso economico', definition: t('Il confronto scritto fra benefici e costi che giustifica la decisione.', 'The written comparison of benefits and costs that justifies the decision.') },
-        { id: 'costo-replica', term: 'Replication cost', italian: 'Costo di replica', definition: t('Quanto costa il secondo, il terzo, il decimo sito.', 'What the second, the third, the tenth site costs.') },
+        { id: 'costo-replica', plain: true, term: 'Replication cost', italian: 'Costo di replica', definition: t('Quanto costa il secondo, il terzo, il decimo sito.', 'What the second, the third, the tenth site costs.') },
         { id: 'gestione-cambiamento', term: 'Change management', italian: 'Gestione del cambiamento', definition: t('Il lavoro sulle persone perché la soluzione venga davvero usata.', 'The work with people so the solution is actually used.') },
-        { id: 'lezione-appresa', term: 'Lesson learned', italian: 'Lezione appresa', definition: t('Ciò che resta all\'organizzazione anche da un progetto fermato.', 'What the organisation keeps even from a project that was stopped.') }
+        { id: 'lezione-appresa', plain: true, term: 'Lesson learned', italian: 'Lezione appresa', definition: t('Ciò che resta all\'organizzazione anche da un progetto fermato.', 'What the organisation keeps even from a project that was stopped.') }
       ],
       example: {
         title: t('Il caso economico per estendere alle linee 1 e 2', 'The business case for scaling to lines 1 and 2'),

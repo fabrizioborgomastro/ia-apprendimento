@@ -213,7 +213,7 @@ export const fabbricaDigitaleLesson = {
         { id: 'plc', term: 'PLC', italian: 'Controllore logico programmabile', definition: t('Computer industriale che legge i sensori e comanda gli attuatori con tempi garantiti.', 'An industrial computer that reads sensors and drives actuators within guaranteed times.') },
         { id: 'scada', term: 'SCADA', italian: 'Supervisione e acquisizione dati', definition: t('Sistema che mostra l\'impianto all\'operatore e gli permette di intervenire.', 'The system that shows the plant to the operator and lets them step in.') },
         { id: 'tempo-reale', term: 'Real time', italian: 'Tempo reale', definition: t('La garanzia che una risposta arrivi entro un tempo massimo definito, non semplicemente in fretta.', 'The guarantee that an answer arrives within a defined maximum time, not simply fast.') },
-        { id: 'allarme', term: 'Alarm', italian: 'Allarme', definition: t('Segnalazione che chiede un intervento umano, diversa da una informazione.', 'A signal that asks for human action, different from plain information.') },
+        { id: 'allarme', plain: true, term: 'Alarm', italian: 'Allarme', definition: t('Segnalazione che chiede un intervento umano, diversa da una informazione.', 'A signal that asks for human action, different from plain information.') },
         { id: 'sovraccarico-allarmi', term: 'Alarm flooding', italian: 'Sovraccarico di allarmi', definition: t('Troppi allarmi, tanto che l\'operatore smette di guardarli.', 'So many alarms that the operator stops looking at them.') }
       ],
       example: {
@@ -534,8 +534,8 @@ export const fabbricaDigitaleLesson = {
       ],
       terminology: [
         { id: 'historian', term: 'Historian', italian: 'Archivio storico di processo', definition: t('Sistema che registra nel tempo i valori provenienti dalle macchine.', 'The system that records values coming from the machines over time.') },
-        { id: 'contesto', term: 'Context', italian: 'Contesto', definition: t('Le informazioni che dicono cosa stava succedendo quando il dato è stato registrato.', 'The information that says what was happening when the value was recorded.') },
-        { id: 'sincronizzazione-oraria', term: 'Time sync', italian: 'Sincronizzazione oraria', definition: t('Avere lo stesso orologio su tutti i sistemi, per poter confrontare gli eventi.', 'Having the same clock on every system, so events can be compared.') },
+        { id: 'contesto', plain: true, term: 'Context', italian: 'Contesto', definition: t('Le informazioni che dicono cosa stava succedendo quando il dato è stato registrato.', 'The information that says what was happening when the value was recorded.') },
+        { id: 'sincronizzazione-oraria', plain: true, term: 'Time sync', italian: 'Sincronizzazione oraria', definition: t('Avere lo stesso orologio su tutti i sistemi, per poter confrontare gli eventi.', 'Having the same clock on every system, so events can be compared.') },
         { id: 'dato-grezzo', term: 'Raw data', italian: 'Dato grezzo', definition: t('Valore così come arriva dallo strumento, non ancora validato.', 'A value as it comes from the instrument, not yet validated.') },
         { id: 'data-owner', term: 'Data owner', italian: 'Proprietario del dato', definition: t('La persona che risponde della correttezza di quel dato.', 'The person who answers for the correctness of that data.') },
         { id: 'microfermo', term: 'Micro-stop', italian: 'Microfermo', definition: t('Fermata molto breve, spesso sotto i due minuti, spesso non registrata.', 'A very short stop, often under two minutes, and often not recorded.') },

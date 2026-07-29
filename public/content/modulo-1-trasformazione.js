@@ -380,11 +380,11 @@ export const trasformazioneLesson = {
         t('Output, outcome e impatto sono tre cose diverse, e solo la terza è il risultato.', 'Output, outcome and impact are three different things, and only the third one is the result.')
       ],
       terminology: [
-        { id: 'ipotesi', term: 'Hypothesis', italian: 'Ipotesi', definition: t('Un\'affermazione che può essere smentita dai dati, scritta prima di raccoglierli.', 'A statement that data can prove wrong, written before the data is collected.') },
+        { id: 'ipotesi', plain: true, term: 'Hypothesis', italian: 'Ipotesi', definition: t('Un\'affermazione che può essere smentita dai dati, scritta prima di raccoglierli.', 'A statement that data can prove wrong, written before the data is collected.') },
         { id: 'output', term: 'Output', italian: 'Prodotto consegnato', definition: t('Ciò che il progetto consegna: un cruscotto, un avviso, un report.', 'What the project delivers: a dashboard, an alert, a report.') },
         { id: 'outcome', term: 'Outcome', italian: 'Cambiamento nel lavoro', definition: t('Ciò che le persone fanno di diverso grazie all\'output.', 'What people do differently because of the output.') },
         { id: 'impatto', term: 'Impact', italian: 'Impatto', definition: t('Il cambiamento misurato sulla perdita di partenza.', 'The measured change in the loss you started from.') },
-        { id: 'assunzione', term: 'Assumption', italian: 'Assunzione', definition: t('Qualcosa che diamo per vero senza averlo verificato.', 'Something we take as true without having checked it.') }
+        { id: 'assunzione', plain: true, term: 'Assumption', italian: 'Assunzione', definition: t('Qualcosa che diamo per vero senza averlo verificato.', 'Something we take as true without having checked it.') }
       ],
       example: {
         title: t('"Vogliamo l\'AI per la manutenzione predittiva"', '"We want AI for predictive maintenance"'),
@@ -546,9 +546,9 @@ export const trasformazioneLesson = {
         t('Tempo al valore e replicabilità sono i criteri da lead.', 'Time to value and replicability are the lead-level criteria.')
       ],
       terminology: [
-        { id: 'criterio-pesato', term: 'Weighted criterion', italian: 'Criterio pesato', definition: t('Un aspetto della valutazione a cui si assegna un\'importanza.', 'An aspect of the evaluation that is given a weight.') },
+        { id: 'criterio-pesato', plain: true, term: 'Weighted criterion', italian: 'Criterio pesato', definition: t('Un aspetto della valutazione a cui si assegna un\'importanza.', 'An aspect of the evaluation that is given a weight.') },
         { id: 'hard-gate', term: 'Hard gate', italian: 'Cancello non negoziabile', definition: t('Condizione che, se non soddisfatta, esclude il candidato a prescindere dal punteggio.', 'A condition that rules a candidate out regardless of its score.') },
-        { id: 'reversibilita', term: 'Reversibility', italian: 'Reversibilità', definition: t('Quanto è facile tornare indietro se la soluzione sbaglia.', 'How easy it is to go back if the solution gets it wrong.') },
+        { id: 'reversibilita', plain: true, term: 'Reversibility', italian: 'Reversibilità', definition: t('Quanto è facile tornare indietro se la soluzione sbaglia.', 'How easy it is to go back if the solution gets it wrong.') },
         { id: 'time-to-value', term: 'Time to value', italian: 'Tempo al valore', definition: t('Quanto passa prima del primo risultato misurabile.', 'How long it takes to reach the first measurable result.') },
         { id: 'replicabilita', term: 'Replicability', italian: 'Replicabilità', definition: t('Possibilità di usare la stessa logica su altre linee o altri siti.', 'The chance to use the same logic on other lines or other sites.') },
         { id: 'rilascio-lotto', term: 'Batch release', italian: 'Rilascio del lotto', definition: t('La decisione formale che un lotto di prodotto può essere venduto.', 'The formal decision that a batch of product can be sold.') }
@@ -718,8 +718,8 @@ export const trasformazioneLesson = {
       terminology: [
         { id: 'stakeholder', term: 'Stakeholder', italian: 'Portatore di interesse', definition: t('Chi subisce, decide o paga le conseguenze del progetto.', 'Anyone who bears, decides or pays for the consequences of the project.') },
         { id: 'cross-functional', term: 'Cross-functional', italian: 'Interfunzionale', definition: t('Che coinvolge più reparti diversi con obiettivi diversi.', 'Involving several departments with different goals.') },
-        { id: 'controllo-verificabile', term: 'Verifiable control', italian: 'Controllo verificabile', definition: t('Una risposta a un\'obiezione che qualcuno può misurare.', 'An answer to an objection that somebody can measure.') },
-        { id: 'deroga', term: 'Waiver', italian: 'Deroga', definition: t('Eccezione approvata a una regola, che deve sempre avere una scadenza.', 'An approved exception to a rule, which must always have an expiry date.') },
+        { id: 'controllo-verificabile', plain: true, term: 'Verifiable control', italian: 'Controllo verificabile', definition: t('Una risposta a un\'obiezione che qualcuno può misurare.', 'An answer to an objection that somebody can measure.') },
+        { id: 'deroga', plain: true, term: 'Waiver', italian: 'Deroga', definition: t('Eccezione approvata a una regola, che deve sempre avere una scadenza.', 'An approved exception to a rule, which must always have an expiry date.') },
         { id: 'sponsor', term: 'Sponsor', italian: 'Sponsor', definition: t('Chi ha l\'autorità di sbloccare risorse e di respingere le obiezioni che non reggono.', 'The person with the authority to unlock resources and reject objections that do not hold.') },
         { id: 'adozione', term: 'Adoption', italian: 'Adozione', definition: t('Quanto la soluzione viene davvero usata, misurata su utenti attivi, frequenza e proposte accettate.', 'How much the solution is really used, measured by active users, frequency and accepted suggestions.') },
         { id: 'upskilling', term: 'Upskilling', italian: 'Crescita delle competenze', definition: t('Portare le persone al livello che serve per usare bene lo strumento nuovo.', 'Bringing people to the level they need to use the new tool well.') }

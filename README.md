@@ -12,7 +12,7 @@ URL pubblico: <https://fabrizioborgomastro.github.io/ia-apprendimento/>
 | Moduli | 5 |
 | Unità di apprendimento | 25, da 6 o 7 minuti l'una |
 | Domande di quiz | 175, cioè 7 per unità |
-| Termini nel glossario | 157, ognuno con l'unità che lo spiega |
+| Termini nel glossario | 132, ognuno con l'unità che lo spiega |
 | Parole di teoria in italiano | oltre 7.000 |
 | Parole di teoria in inglese | almeno il 75 percento dell'italiano, unità per unità |
 | Domande di colloquio | 10, con risposta italiana, inglese parlato e tre punti chiave |
