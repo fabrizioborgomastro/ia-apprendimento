@@ -85,10 +85,10 @@ Il corso è costruito attorno a un unico filo, **le 7 tappe**, che ricorre in og
 
 ## 4. Verifica
 
-`npm test` esegue 86 test verdi:
+`npm test` esegue 88 test verdi:
 
 - `content-schema.test.mjs`: contratto del contenuto su fixture, più il corso reale
-- `curriculum-depth.test.mjs`: forma del corso, copertura delle 7 tappe, esempi con numeri, glossario completo, inglese dicibile, italiano senza em dash
+- `curriculum-depth.test.mjs`: forma del corso, copertura delle 7 tappe, esempi con numeri, glossario senza parole comuni, inglese dicibile, italiano senza em dash
 - `learning.test.mjs`: punteggio del modulo, coda di ripasso, checkpoint, unione dei progressi
 - `progress-migration.test.mjs`: progresso di una versione precedente limitato e non buttato
 - `ui.test.mjs`: rotte, stato dell'unità, rendering di unità, glossario, colloquio, navigazione localizzata
