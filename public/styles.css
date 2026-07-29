@@ -165,6 +165,8 @@ code, .eyebrow, small, .module-topline, .lesson-kicker, .activity-label { font-f
 .unit-progress { height: 6px; border-radius: 99px; background: var(--steel); overflow: hidden; }
 .unit-progress span { display: block; height: 100%; background: var(--teal); }
 
+.unit-index-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.unit-index-title b { color: var(--blueprint); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0; }
 .unit-index ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin; }
 .unit-index a { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; border: 1px solid var(--steel); border-radius: 99px; background: var(--white); color: var(--muted); text-decoration: none; font-size: .84rem; white-space: nowrap; }
 .unit-index a[aria-current="step"] { border-color: var(--blueprint); color: var(--blueprint); font-weight: 600; }
@@ -225,7 +227,9 @@ details.reveal summary { cursor: pointer; min-height: 44px; display: flex; align
   .lesson-unit { grid-template-columns: 250px minmax(0, 1fr); align-items: start; }
   .unit-header, .unit-controls, .worked-example, .learning-activity, .unit-checkpoint, .unit-sources, .unit-content { grid-column: 2; }
   .unit-index { grid-column: 1; grid-row: 1 / span 8; position: sticky; top: 96px; }
-  .unit-index ol { flex-direction: column; overflow: visible; }
+  .unit-index-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.unit-index-title b { color: var(--blueprint); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0; }
+.unit-index ol { flex-direction: column; overflow: visible; }
   .unit-index a { white-space: normal; }
   .unit-controls { grid-template-columns: auto 1fr auto; }
 }

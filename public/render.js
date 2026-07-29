@@ -1,10 +1,12 @@
-import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=8'
+import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=9'
 import { sources } from './content/index.js'
 
 const COPY = {
   it: {
     unitOf: (index, total) => `Unità ${index} di ${total}`,
     index: 'Unità della lezione',
+    unitsInModule: 'Unità di questo modulo',
+    unitCounter: (position, total) => `${position} di ${total}`,
     controls: 'Spostamento tra le unità',
     progress: 'Avanzamento nella lezione',
     objective: 'Obiettivo',
@@ -52,6 +54,8 @@ const COPY = {
   en: {
     unitOf: (index, total) => `Unit ${index} of ${total}`,
     index: 'Lesson units',
+    unitsInModule: 'Units in this module',
+    unitCounter: (position, total) => `${position} of ${total}`,
     controls: 'Move between units',
     progress: 'Lesson progress',
     objective: 'Objective',
@@ -218,6 +222,7 @@ function renderSources(sourceIds, locale) {
 function renderUnitIndex(lesson, state, locale) {
   const copy = copyFor(locale)
   return `<nav class="unit-index" data-unit-index aria-label="${copy.index}">
+    <p class="unit-index-title"><span>${copy.unitsInModule}</span><b>${escapeHtml(copy.unitCounter(state.index + 1, state.total))}</b></p>
     <ol>${lesson.units.map((unit, index) => {
       const current = index === state.index
       return `<li><a href="${escapeHtml(unitPath(lesson.slug, unit.id))}" data-link${current ? ' aria-current="step"' : ''} class="${index < state.cursor ? 'is-complete' : ''}"><i>${index + 1}</i><span>${text(unit.title, locale)}</span></a></li>`

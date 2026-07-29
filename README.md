@@ -105,7 +105,7 @@ Il curriculum esteso ha un numero di unità diverso dal contenuto precedente. Il
 
 ## Regola della cache di rilascio
 
-Il service worker usa una cache con versione esplicita, oggi `ai-sprint-v8`.
+Il service worker usa una cache con versione esplicita, oggi `ai-sprint-v9`.
 
 A ogni rilascio che tocca un file in `public`:
 

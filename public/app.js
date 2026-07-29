@@ -1,11 +1,11 @@
-import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=8'
-import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=8'
+import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=9'
+import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=9'
 import {
   getDashboardState, getUnitState, isUnitComplete, normalizeAppHref, parseRoute,
   quizFeedback, readLocale, selectLocale, splitAppPath, unitPath, writeLocale
-} from './ui.js?v=8'
-import { applyShellLocale, localizedFinalQuiz, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from './render.js?v=8'
-import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=8'
+} from './ui.js?v=9'
+import { applyShellLocale, localizedFinalQuiz, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from './render.js?v=9'
+import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=9'
 
 const main = document.querySelector('#main')
 const toast = document.querySelector('#toast')

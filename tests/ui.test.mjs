@@ -563,3 +563,29 @@ test('the answer lab sets its own text colour instead of inheriting the dark sec
   )
   assert.match(css, /\.answer-lab \.eyebrow \{ color:/u, 'the answer lab eyebrow needs its own colour on a light background')
 })
+
+test('the unit index says out loud that it lists units, not modules', () => {
+  const lesson = curriculum[0]
+  const state = getUnitState(lesson, lesson.units[0].id, { cursor: 0 })
+
+  for (const [locale, heading, counter] of [
+    ['it', 'Unità di questo modulo', `1 di ${lesson.units.length}`],
+    ['en', 'Units in this module', `1 of ${lesson.units.length}`]
+  ]) {
+    const html = renderUnitView({ lesson, state, locale, revealed: {}, checkpointChoice: null, activityMarked: false })
+    const index = html.slice(html.indexOf('data-unit-index'), html.indexOf('data-unit-content'))
+    assert.ok(index.includes(heading), `the ${locale} unit index must be labelled "${heading}"`)
+    assert.ok(index.includes(counter), `the ${locale} unit index must show "${counter}"`)
+  }
+})
+
+test('every module keeps its own unit count and none of the six is missing', () => {
+  assert.equal(curriculum.length, 6, 'the course is six modules by specification')
+  assert.deepEqual(curriculum.map(({ id }) => id), [
+    'digital-transformation', 'ot-it-ai-cloud', 'data-ai-use-cases',
+    'llm-agents', 'mvp-governance', 'interview-lab'
+  ])
+  assert.deepEqual(curriculum.map((lesson) => lesson.units.length), [6, 8, 7, 9, 8, 8])
+  assert.equal(curriculum.reduce((sum, lesson) => sum + lesson.units.length, 0), 46)
+  assert.equal(curriculum.reduce((sum, lesson) => sum + lesson.durationMinutes, 0), 420)
+})
