@@ -37,13 +37,41 @@ export const fabbricaDigitaleLesson = {
           'The difference that matters is not where they live, but what they protect first. In IT the order is confidentiality, then integrity, then availability: if the business system is down for twenty minutes, somebody works later. In OT the order flips: first availability and process integrity, then confidentiality. If a line stops for twenty minutes you lose product, and in some cases you create an unsafe situation.'
         ),
         t(
-          'Da questa inversione discende tutto il resto. Gli aggiornamenti in ufficio si installano automaticamente di notte, mentre in reparto un aggiornamento automatico può fermare una linea, quindi si fa solo in fermata programmata e dopo prova. Le scansioni di sicurezza in ufficio sono di routine, mentre in reparto una scansione aggressiva può mandare in crisi un controllore vecchio: il rimedio fa più danni della minaccia.',
-          'Everything else follows from that flip. Office updates install automatically at night, while on the floor an automatic update can stop a line, so it happens only during a planned shutdown and after testing. Security scans are routine in the office, while on the floor an aggressive scan can knock over an old controller: the cure does more damage than the threat.'
+          'Da questa inversione discende tutto il resto, e sono quattro differenze pratiche che vale la pena avere pronte.',
+          'Everything else follows from that flip, and there are four practical differences worth having ready.'
         ),
-        t(
-          'Poi c\'è la durata di vita. Un portatile si cambia ogni quattro anni, un controllore di macchina resta in servizio quindici o venti anni, quindi non puoi dare per scontato che esista un aggiornamento. E cambia anche chi comanda: in OT il proprietario del dato spesso è Produzione o Automazione, non IT, e questo cambia chi deve approvare un accesso.',
-          'Then there is lifetime. A laptop is replaced every four years, a machine controller stays in service fifteen or twenty years, so you cannot assume an update even exists. And ownership changes too: in OT the data owner is often Production or Automation, not IT, and that changes who has to approve an access.'
-        ),
+        {
+          steps: [
+            {
+              name: t('Aggiornamenti, patching', 'Updates, patching'),
+              text: t(
+                'In ufficio si installano automaticamente di notte. In reparto un aggiornamento automatico può fermare una linea, quindi si fa solo in fermata programmata e dopo prova su una linea sola.',
+                'In the office they install automatically at night. On the floor an automatic update can stop a line, so it happens only in a planned shutdown and after testing on one line.'
+              )
+            },
+            {
+              name: t('Scansioni di sicurezza', 'Security scans'),
+              text: t(
+                'In ufficio sono di routine. In reparto una scansione aggressiva può mandare in crisi un controllore vecchio: il rimedio fa più danni della minaccia, quindi si usa la scansione passiva.',
+                'In the office they are routine. On the floor an aggressive scan can knock over an old controller: the cure does more damage than the threat, so you use passive scanning.'
+              )
+            },
+            {
+              name: t('Durata di vita', 'Lifetime'),
+              text: t(
+                'Un portatile si cambia ogni quattro anni, un controllore di macchina resta in servizio quindici o venti anni. Non puoi dare per scontato che esista un aggiornamento.',
+                'A laptop is replaced every four years, a machine controller stays in service fifteen or twenty years. You cannot assume an update even exists.'
+              )
+            },
+            {
+              name: t('Chi comanda sul dato', 'Who owns the data'),
+              text: t(
+                'In OT il proprietario del dato spesso è Produzione o Automazione, non IT. Cambia chi deve approvare un accesso, e saperlo è metà del lavoro.',
+                'In OT the data owner is often Production or Automation, not IT. That changes who has to approve an access, and knowing it is half the job.'
+              )
+            }
+          ]
+        },
         t(
           'La frase da avere pronta è questa: in OT la disponibilità viene prima della riservatezza, ed è per questo che i metodi normali dell\'IT non si applicano tali e quali. Aggiungi il termine brownfield, impianto esistente, cioè un impianto già in funzione con macchine di età e marche diverse su cui bisogna innestarsi senza fermarlo. Quasi tutti i progetti veri sono così.',
           'The sentence to have ready is this: in OT availability comes before confidentiality, and that is why standard IT practice does not transfer as it is. Add the word brownfield, a plant already running with machines of different ages and brands that you have to plug into without stopping it. Almost every real project is like that.'
@@ -185,17 +213,34 @@ export const fabbricaDigitaleLesson = {
           'Immagina una macchina che riempie e chiude pacchetti. Perché funzioni, qualcuno deve continuamente misurare, decidere e agire. In fabbrica questi tre compiti sono divisi fra tre attori diversi, ed è la divisione più importante da avere in testa.',
           'Picture a machine that fills and closes packets. For it to work, somebody has to keep measuring, deciding and acting. In a plant those three jobs are split between three different actors, and it is the most important split to keep in mind.'
         ),
+        {
+          steps: [
+            {
+              name: t('Sensore, sensor', 'Sensor'),
+              text: t(
+                'Misura una grandezza fisica e la trasforma in segnale elettrico: una termocoppia la temperatura, una fotocellula il passaggio del pacchetto, un accelerometro la vibrazione. Non decide nulla, dice solo quanto vale una cosa, molte volte al secondo.',
+                'It measures a physical quantity and turns it into an electrical signal: a thermocouple temperature, a photocell the packet going past, an accelerometer vibration. It decides nothing, it only says how much something is, many times a second.'
+              )
+            },
+            {
+              name: t('PLC, controllore logico programmabile', 'PLC, programmable logic controller'),
+              text: t(
+                'Piccolo computer industriale costruito per una cosa sola: leggere i sensori e comandare motori e valvole con regole fisse, in tempi garantiti. Se la fotocellula non vede il pacchetto entro 200 millisecondi, ferma il nastro. Non è intelligente e non deve esserlo: deve essere prevedibile.',
+                'A small industrial computer built for one job: read the sensors and drive motors and valves with fixed rules, within guaranteed times. If the photocell does not see the packet within 200 milliseconds, it stops the belt. It is not clever and does not need to be: it needs to be predictable.'
+              )
+            },
+            {
+              name: t('SCADA, supervisione e acquisizione dati', 'SCADA, supervision and data acquisition'),
+              text: t(
+                'Lo schermo in sala controllo dove l\'operatore vede l\'impianto disegnato, i valori che cambiano e gli allarmi che si accendono, e da cui può cambiare un parametro o fermare una linea.',
+                'The screen in the control room where the operator sees the plant drawn out, the values changing and the alarms lighting up, and from where a parameter can be changed or a line stopped.'
+              )
+            }
+          ]
+        },
         t(
-          'Il primo è il sensore: misura una grandezza fisica e la trasforma in un segnale elettrico. Una termocoppia misura la temperatura, una fotocellula vede se il pacchetto è passato, un accelerometro sente la vibrazione di un motore. Il sensore non decide nulla, dice soltanto quanto vale una cosa, molte volte al secondo.',
-          'The first one is the sensor: it measures a physical quantity and turns it into an electrical signal. A thermocouple measures temperature, a photocell sees whether the packet went past, an accelerometer feels the vibration of a motor. The sensor decides nothing, it only says how much something is, many times a second.'
-        ),
-        t(
-          'Il secondo è il PLC, Programmable Logic Controller, controllore logico programmabile. È un piccolo computer industriale costruito per una cosa sola: leggere i sensori e comandare motori e valvole seguendo regole fisse, in tempi garantiti. Se la fotocellula non vede il pacchetto entro 200 millisecondi, ferma il nastro. Il PLC non è intelligente e non deve esserlo: deve essere prevedibile.',
-          'The second one is the PLC, Programmable Logic Controller. It is a small industrial computer built for one job: read the sensors and drive motors and valves following fixed rules, within guaranteed times. If the photocell does not see the packet within 200 milliseconds, it stops the belt. The PLC is not clever and does not need to be: it needs to be predictable.'
-        ),
-        t(
-          'Il terzo è lo SCADA, Supervisory Control And Data Acquisition, supervisione e acquisizione dati. È lo schermo in sala controllo dove un operatore vede l\'impianto disegnato, con i valori che cambiano e gli allarmi che si accendono, e da dove può cambiare un parametro o fermare una linea. La regola da ricordare: il sensore misura, il PLC decide in tempo reale, lo SCADA fa vedere e permette all\'uomo di intervenire. Se lo SCADA si spegne, la macchina continua a funzionare.',
-          'The third one is SCADA, Supervisory Control And Data Acquisition. It is the screen in the control room where an operator sees the plant drawn out, with values changing and alarms lighting up, and from where a parameter can be changed or a line stopped. The rule to remember: the sensor measures, the PLC decides in real time, SCADA shows and lets a human step in. If SCADA goes down, the machine keeps running.'
+          'La regola da ricordare è una riga: il sensore misura, il PLC decide in tempo reale, lo SCADA fa vedere e permette all\'uomo di intervenire. E il dettaglio che colpisce di più a un colloquio: se lo SCADA si spegne, la macchina continua a funzionare, perché il controllo sta nel PLC.',
+          'The rule to remember is one line: the sensor measures, the PLC decides in real time, SCADA shows and lets a human step in. And the detail that lands best in an interview: if SCADA goes down, the machine keeps running, because control lives in the PLC.'
         ),
         t(
           'Un\'ultima cosa sugli allarmi. Un allarme è una segnalazione che chiede un intervento umano, ed è diversa da una semplice informazione. Se un sistema segnala tutto come allarme, l\'operatore smette di guardarlo: si chiama sovraccarico di allarmi ed è una causa nota di incidenti. Quando proponi di aggiungere avvisi generati da un modello, questa è la prima obiezione che riceverai, e giustamente.',
@@ -514,14 +559,26 @@ export const fabbricaDigitaleLesson = {
           'Ma un numero da solo non serve a niente. Un dato è utilizzabile solo se porta con sé il contesto. Il valore 78,4 non dice nulla. Il valore 78,4 gradi, sensore TT-204, linea 3, ore 14:32:10 del 12 luglio, mentre era in corso l\'ordine OP-9912, ricetta versione 7, turno 2, valore validato, permette di rispondere a una domanda vera.',
           'But a number on its own is worth nothing. Data is usable only if it carries its context. The value 78.4 says nothing. The value 78.4 degrees, sensor TT-204, line 3, at 14:32:10 on 12 July, while order OP-9912 was running, recipe version 7, shift 2, value validated, lets you answer a real question.'
         ),
+        {
+          steps: [
+            { name: t('Identità', 'Identity'), text: t('Cosa misura e da quale strumento, con un codice che non cambia nel tempo.', 'What it measures and from which instrument, with a code that does not change over time.') },
+            { name: t('Tempo', 'Time'), text: t('Quando, con un orologio sincronizzato. Se due sistemi hanno orologi diversi di 40 secondi, il modello imparerà relazioni false.', 'When, on a synchronised clock. If two systems are 40 seconds apart, the model will learn false relations.') },
+            { name: t('Contesto', 'Context'), text: t('Cosa stava succedendo: quale ordine, quale prodotto, quale turno, quale versione di ricetta.', 'What was happening: which order, which product, which shift, which recipe version.') },
+            { name: t('Fiducia', 'Trust'), text: t('Il valore è validato o è grezzo. Un sensore scollegato può mandare zero per ore, e zero sembra un numero valido.', 'Is the value validated or raw. A disconnected sensor can send zero for hours, and zero looks like a valid number.') }
+          ]
+        },
         t(
-          'Le quattro qualità che un dato deve avere sono identità, tempo, contesto e fiducia. Identità: cosa misura, da quale strumento. Tempo: quando, con un orologio sincronizzato, perché se due sistemi hanno orologi diversi di 40 secondi il modello imparerà relazioni false. Contesto: cosa stava succedendo, quale ordine, quale prodotto, quale turno. Fiducia: il valore è validato o è grezzo, perché un sensore scollegato può mandare zero per ore, e zero sembra un numero valido.',
-          'The four qualities data must have are identity, time, context and trust. Identity: what it measures, from which instrument. Time: when, on a synchronised clock, because if two systems are 40 seconds apart the model will learn false relations. Context: what was happening, which order, which product, which shift. Trust: is the value validated or raw, because a disconnected sensor can send zero for hours, and zero looks like a valid number.'
+          'Poi ci sono tre problemi che trovi quasi sempre, e conviene cercarli per nome.',
+          'Then there are three problems you find almost every time, and it is worth looking for them by name.'
         ),
-        t(
-          'Poi ci sono tre problemi ricorrenti. Il dato che non esiste: i microfermi sotto i due minuti spesso non vengono registrati, quindi cerchi la causa di una perdita che nei dati non compare. Il buco nei dati: un sensore rotto per tre settimane lascia un vuoto, e se non lo sai il modello impara dalle settimane sbagliate. Lo stesso nome per cose diverse: due reparti chiamano scarto cose diverse, uno include le rilavorazioni e l\'altro no, e i numeri non tornano mai.',
-          'Then there are three recurring problems. Data that does not exist: micro-stops under two minutes are often not recorded, so you look for the cause of a loss that is not in the data. The gap: a sensor broken for three weeks leaves a hole, and if you do not know it the model learns from the wrong weeks. The same word for different things: two departments call scrap different things, one includes rework and the other does not, and the numbers never match.'
-        ),
+        {
+          numbered: false,
+          steps: [
+            { name: t('Il dato che non esiste', 'The data that does not exist'), text: t('I microfermi sotto i due minuti spesso non vengono registrati, quindi cerchi la causa di una perdita che nei dati non compare.', 'Micro-stops under two minutes are often not recorded, so you look for the cause of a loss that is not in the data.') },
+            { name: t('Il buco nei dati', 'The gap in the data'), text: t('Un sensore rotto per tre settimane lascia un vuoto, e se non lo sai il modello impara dalle settimane sbagliate.', 'A sensor broken for three weeks leaves a hole, and if you do not know it the model learns from the wrong weeks.') },
+            { name: t('Lo stesso nome per cose diverse', 'The same word for different things'), text: t('Due reparti chiamano scarto cose diverse, uno include le rilavorazioni e l\'altro no, e i numeri non tornano mai.', 'Two departments call scrap different things, one includes rework and the other does not, and the numbers never match.') }
+          ]
+        },
         t(
           'Infine il proprietario del dato, in inglese data owner: la persona che risponde della correttezza di quel dato. Se non esiste, ogni discussione sui numeri finisce in stallo, e nessuna riunione riesce a chiudere.',
           'Finally the data owner: the person who answers for the correctness of that data. If there is none, every discussion about numbers ends in a stalemate, and no meeting ever closes.'
@@ -688,10 +745,25 @@ export const fabbricaDigitaleLesson = {
           'Ora la parte che a un colloquio conta di più: come ci si collega. Il principio si chiama zone e condotti. Le zone sono gruppi di sistemi con lo stesso livello di protezione. I condotti sono i collegamenti permessi fra zone, ognuno con protocollo, direzione e regole dichiarate. Fra la rete d\'ufficio e quella di fabbrica c\'è una zona intermedia, la DMZ industriale, che serve proprio a evitare collegamenti diretti.',
           'Now the part that counts most in an interview: how you connect. The principle is called zones and conduits. Zones are groups of systems with the same level of protection. Conduits are the allowed links between zones, each with a declared protocol, direction and rule set. Between the office network and the plant network there is a middle zone, the industrial DMZ, which exists precisely to avoid direct links.'
         ),
-        t(
-          'E tre regole sugli accessi da sapere a memoria. Si legge, non si scrive: un progetto di analisi legge dati e non manda comandi verso le macchine. Il flusso parte da dentro: se un fornitore vuole dati, glieli mandiamo noi verso l\'esterno, senza aprire un canale in entrata. Accesso a tempo, non permanente: approvazione per singola finestra, sessione registrata, revoca automatica alla chiusura. L\'accesso remoto permanente di un fornitore è la porta più usata negli incidenti industriali.',
-          'And three access rules to know by heart. We read, we do not write: an analysis project reads data and never sends commands to the machines. The flow starts from inside: if a supplier wants data, we send it out to them, without opening an inbound channel. Access is time-bound, not permanent: approval per window, recorded session, automatic revocation at the end. Permanent remote access for a supplier is the most used door in industrial incidents.'
-        )
+        {
+          steps: [
+            {
+              name: t('Si legge, non si scrive', 'We read, we do not write'),
+              text: t('Un progetto di analisi legge dati e non manda comandi verso le macchine. Leggere è reversibile, scrivere no.', 'An analysis project reads data and never sends commands to the machines. Reading is reversible, writing is not.')
+            },
+            {
+              name: t('Il flusso parte da dentro', 'The flow starts from inside'),
+              text: t('Se un fornitore vuole dati, glieli mandiamo noi verso l\'esterno. Non apriamo un canale in entrata.', 'If a supplier wants data, we send it out to them. We do not open an inbound channel.')
+            },
+            {
+              name: t('Accesso a tempo, non permanente', 'Time-bound access, not permanent'),
+              text: t(
+                'Approvazione per singola finestra, sessione registrata, revoca automatica alla chiusura. L\'accesso remoto permanente di un fornitore è la porta più usata negli incidenti industriali.',
+                'Approval per window, recorded session, automatic revocation at the end. Permanent remote access for a supplier is the most used door in industrial incidents.'
+              )
+            }
+          ]
+        }
       ],
       keyPoints: [
         t('Meno di un secondo, edge. Minuti o ore, cloud.', 'Less than a second, edge. Minutes or hours, cloud.'),

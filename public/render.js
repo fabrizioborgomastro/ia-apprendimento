@@ -81,6 +81,19 @@ function renderList(items, locale, className) {
   return `<ul class="${className}">${items.map((item) => `<li>${text(item, locale)}</li>`).join('')}</ul>`
 }
 
+/**
+ * A theory block is either a paragraph or a named list. The named list is what
+ * makes an enumeration readable: one step per line, each with its own name in
+ * bold, so it can be scanned and memorised instead of parsed.
+ */
+function renderTheoryEntry(entry, locale) {
+  if (!Array.isArray(entry?.steps)) return `<p>${text(entry, locale)}</p>`
+  const tag = entry.numbered === false ? 'ul' : 'ol'
+  return `<${tag} class="named-steps" data-named-steps>${
+    entry.steps.map((step) => `<li><b>${text(step.name, locale)}</b><span>${text(step.text, locale)}</span></li>`).join('')
+  }</${tag}>`
+}
+
 function renderTerminology(terminology, locale) {
   const copy = copyFor(locale)
   if (!terminology?.length) return ''
@@ -187,7 +200,7 @@ export function renderUnitView({ lesson, state, locale, answers = {}, unitComple
 
     <section class="unit-content" data-unit-content>
       <h2>${copy.concept}</h2>
-      ${unit.theory.map((paragraph) => `<p>${text(paragraph, locale)}</p>`).join('')}
+      ${unit.theory.map((entry) => renderTheoryEntry(entry, locale)).join('')}
       <h3>${copy.keyPoints}</h3>
       ${renderList(unit.keyPoints, locale, 'key-points')}
     </section>

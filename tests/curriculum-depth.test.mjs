@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { countWords, QUESTIONS_PER_UNIT, TOTAL_QUESTIONS, TOTAL_UNITS, UNITS_PER_LESSON } from '../public/content/schema.js'
+import { countWords, isNamedList, theoryEntryWords, QUESTIONS_PER_UNIT, TOTAL_QUESTIONS, TOTAL_UNITS, UNITS_PER_LESSON } from '../public/content/schema.js'
 import { curriculum, glossary, interviewAnswers, stages } from '../public/content.js'
 
 const units = curriculum.flatMap((lesson) => lesson.units)
@@ -55,8 +55,8 @@ test('every unit carries its own example with numbers and its own English block'
 
 test('theory stays substantial in Italian and close to it in English', () => {
   for (const unit of units) {
-    const italian = unit.theory.reduce((sum, paragraph) => sum + countWords(paragraph.it), 0)
-    const english = unit.theory.reduce((sum, paragraph) => sum + countWords(paragraph.en), 0)
+    const italian = unit.theory.reduce((sum, entry) => sum + theoryEntryWords(entry, 'it'), 0)
+    const english = unit.theory.reduce((sum, entry) => sum + theoryEntryWords(entry, 'en'), 0)
     assert.ok(italian >= 180, `${unit.id}: teoria italiana troppo corta (${italian} parole)`)
     assert.ok(english >= italian * 0.75, `${unit.id}: teoria inglese troppo corta (${english} contro ${italian})`)
   }
@@ -158,7 +158,9 @@ test('the Italian never drops an elision and never uses an em dash', async () =>
   const italianText = [
     ...units.flatMap((unit) => [
       unit.title.it, unit.objective.it, unit.stageLabel.it,
-      ...unit.theory.map((paragraph) => paragraph.it),
+      ...unit.theory.flatMap((entry) => (isNamedList(entry)
+        ? entry.steps.flatMap((step) => [step.name.it, step.text.it])
+        : [entry.it])),
       ...unit.keyPoints.map((point) => point.it),
       ...unit.example.steps.map((step) => step.it),
       unit.example.takeaway.it,

@@ -36,20 +36,65 @@ export const trasformazioneLesson = {
           'Digital transformation is not "installing software". It is changing, in a measurable way, how a decision is made in the plant, using data and technology. That is the whole difference. If people decide the same way after the project, you bought technology and you transformed nothing.'
         ),
         t(
-          'Il processo, dall\'inizio alla fine, sono sempre sette tappe, e valgono per un progetto da tremila euro come per uno da tre milioni. Uno: osservo una perdita concreta. Non parto dalla tecnologia, parto da qualcosa che si perde, cioè tempo, prodotto, energia o qualità. Vado in reparto e guardo come si lavora davvero, non come dice la procedura.',
-          'The process, from start to finish, is always seven steps, and they hold for a three thousand euro project and for a three million one. One: I watch a real loss. I do not start from the technology, I start from something we lose, that is time, product, energy or quality. I go to the floor and I watch how people really work, not how the procedure says they work.'
+          'Il processo, dall\'inizio alla fine, sono sempre sette tappe, e valgono per un progetto da tremila euro come per uno da tre milioni. Ognuna ha un nome, e conviene impararle con quel nome: sono la struttura di ogni risposta che darai a colloquio.',
+          'The process, from start to finish, is always seven steps, and they hold for a three thousand euro project and for a three million one. Each one has a name, and it is worth learning them by that name: they are the structure of every answer you will give in an interview.'
         ),
+        {
+          steps: [
+            {
+              name: t('Osservo la perdita, genchi genbutsu', 'I watch the loss, genchi genbutsu'),
+              text: t(
+                'Non parto dalla tecnologia, parto da qualcosa che si perde: tempo, prodotto, energia, qualità. Vado in reparto e guardo come si lavora davvero, non come dice la procedura.',
+                'I do not start from the technology, I start from something we lose: time, product, energy, quality. I go to the floor and watch how people really work, not how the procedure says they work.'
+              )
+            },
+            {
+              name: t('Misuro il punto di partenza, baseline', 'I measure the starting point, baseline'),
+              text: t(
+                'Metto un numero sulla perdita prima di toccare qualsiasi cosa. Senza baseline non potrai mai dimostrare di aver migliorato: potrai solo dire che ti sembra vada meglio.',
+                'I put a number on the loss before touching anything. Without a baseline you can never prove an improvement: you can only say it feels better.'
+              )
+            },
+            {
+              name: t('Capisco dati e decisioni di oggi', 'I map today\'s data and decisions'),
+              text: t(
+                'Chi decide adesso, con quali informazioni, da quale sistema arrivano. È la tappa in cui incontri sensori, PLC, SCADA, MES ed ERP, e in cui scopri i problemi veri, che quasi mai sono tecnologici.',
+                'Who decides now, with what information, from which system it comes. This is where you meet sensors, PLC, SCADA, MES and ERP, and where you find the real problems, which are almost never technical.'
+              )
+            },
+            {
+              name: t('Scelgo lo strumento più semplice', 'I pick the simplest tool'),
+              text: t(
+                'C\'è una scala: una regola fissa, un grafico, un modello statistico, il machine learning, l\'AI generativa. Si sceglie sempre il gradino più basso che risolve il problema.',
+                'There is a ladder: a fixed rule, a chart, a statistical model, machine learning, generative AI. You always pick the lowest step that solves the problem.'
+              )
+            },
+            {
+              name: t('Provo in ombra, shadow mode', 'I try it in the shadow, shadow mode'),
+              text: t(
+                'Faccio girare la soluzione in parallelo a come si lavora oggi: il sistema propone e registra, ma nessuno lo vede e in linea non cambia niente. Nessuno deve fidarsi per poter provare.',
+                'I run the solution in parallel with today\'s way of working: the system suggests and records, but nobody sees it and nothing changes on the line. Nobody has to trust it for the trial to run.'
+              )
+            },
+            {
+              name: t('Metto in produzione, go live', 'I go live, with a safety net'),
+              text: t(
+                'Tre cose sempre presenti: una persona che decide al posto del sistema, un modo alternativo di lavorare se il sistema si spegne, e qualcuno con nome e cognome che risponde del funzionamento.',
+                'Three things always present: a person who decides instead of the system, another way to work if the system goes down, and someone with a name who answers for it.'
+              )
+            },
+            {
+              name: t('Decido: estendo o mi fermo', 'I decide: scale or stop'),
+              text: t(
+                'Ha funzionato su una linea non vuol dire che funzioni su dieci, perché il risultato dipende spesso dal contesto. Fermarsi è una decisione professionale, non un fallimento.',
+                'It worked on one line does not mean it works on ten, because the result often depends on the context. Stopping is a professional decision, not a failure.'
+              )
+            }
+          ]
+        },
         t(
-          'Due: misuro il punto di partenza. Metto un numero sulla perdita prima di toccare qualsiasi cosa, e quel numero si chiama baseline. Senza baseline non potrai mai dimostrare di aver migliorato qualcosa: potrai solo dire che ti sembra vada meglio. Tre: capisco dove nascono i dati e chi decide oggi, con quali informazioni e da quale sistema.',
-          'Two: I measure the starting point. I put a number on the loss before I touch anything, and that number is called the baseline. Without it you can never show that you improved anything: you can only say that it feels better. Three: I understand where the data is born and who decides today, with what information, and from which system.'
-        ),
-        t(
-          'Quattro: scelgo lo strumento più semplice che risolve. C\'è una scala, cioè una regola fissa, un grafico, un modello statistico, il machine learning, l\'AI generativa, e si sceglie sempre il gradino più basso che risolve il problema. Cinque: provo in piccolo, in parallelo a come si lavora oggi, senza che nessuno debba fidarsi. Questo si chiama shadow mode, modalità ombra.',
-          'Four: I pick the simplest tool that solves the problem. There is a ladder, that is a fixed rule, a chart, a statistical model, machine learning, generative AI, and you always pick the lowest step that solves the problem. Five: I try it small, in parallel with the way people work today, so nobody has to trust it. This is called shadow mode.'
-        ),
-        t(
-          'Sei: metto in produzione con una rete di sicurezza, cioè una persona che decide, un modo alternativo di lavorare se il sistema si spegne, e qualcuno con nome e cognome che risponde del funzionamento. Sette: decido se estendere o fermarmi. Ha funzionato su una linea non vuol dire che funzioni su dieci, e fermarsi è una decisione professionale, non un fallimento.',
-          'Six: I go live with a safety net, that is a person who decides, another way to work if the system goes down, and someone with a name who answers for it. Seven: I decide whether to scale or to stop. It worked on one line does not mean it works on ten, and stopping is a professional decision, not a failure.'
+          'Nota una cosa sulla quarta tappa: salire un gradino senza motivo aggiunge costo, fragilità e persone da formare, senza aggiungere risultato. E sulla settima: dire "non estendiamo finché non abbiamo sistemato X" vale più di un sì entusiasta.',
+          'Note one thing about the fourth step: climbing a step with no reason adds cost, fragility and people to train, without adding any result. And about the seventh: saying "we do not scale until X is fixed" is worth more than an enthusiastic yes.'
         )
       ],
       keyPoints: [
@@ -357,17 +402,43 @@ export const trasformazioneLesson = {
           'Il requisito dell\'annuncio dice: tradurre problemi di business in soluzioni digitali. Questo è il cuore del ruolo, ed è una competenza che si può descrivere con una catena di sei anelli: perdita osservata, causa plausibile, capacità digitale, cambiamento nel lavoro, risultato atteso, prova che potrebbe smentirti.',
           'The advert says: translate business challenges into digital solutions. This is the heart of the role, and it is a skill you can describe as a chain of six links: observed loss, likely cause, digital capability, change in the work, expected result, and the evidence that could prove you wrong.'
         ),
+        {
+          steps: [
+            {
+              name: t('Perdita osservata', 'Observed loss'),
+              text: t('Cosa si perde, misurato. Sei ore di fermo a settimana.', 'What we lose, measured. Six hours of downtime a week.')
+            },
+            {
+              name: t('Causa plausibile', 'Likely cause'),
+              text: t('Perché succede, secondo l\'ipotesi di oggi. Il guasto si scopre solo quando la macchina si ferma.', 'Why it happens, according to today\'s idea. The failure is found only when the machine stops.')
+            },
+            {
+              name: t('Capacità digitale', 'Digital capability'),
+              text: t('Cosa aggiungiamo. Un avviso quando la vibrazione supera una soglia.', 'What we add. An alert when vibration goes over a threshold.')
+            },
+            {
+              name: t('Cambiamento nel lavoro', 'Change in the work'),
+              text: t(
+                'Cosa farà una persona di diverso rispetto a oggi. Il pianificatore inserisce l\'intervento nella fermata programmata invece di aspettare il guasto. Questo è l\'anello che quasi tutti saltano.',
+                'What a person will do differently from today. The planner moves the job into the planned stop instead of waiting for the breakdown. This is the link almost everybody skips.'
+              )
+            },
+            {
+              name: t('Risultato atteso', 'Expected result'),
+              text: t('Quanto ci aspettiamo di guadagnare. Da 6 a 4 ore di fermo a settimana, entro 8 settimane.', 'How much we expect to gain. From 6 to 4 hours of downtime a week, within 8 weeks.')
+            },
+            {
+              name: t('Prova che potrebbe smentirti', 'Evidence that could prove you wrong'),
+              text: t(
+                'Cosa vedremmo se l\'ipotesi fosse sbagliata. Se i fermi non calano, oppure se calano anche sulle linee dove non abbiamo fatto niente.',
+                'What we would see if the idea were wrong. If downtime does not drop, or if it drops on the lines where we did nothing too.'
+              )
+            }
+          ]
+        },
         t(
-          'Vediamola su un caso. Perdita osservata: sei ore di fermo a settimana. Causa plausibile: il guasto si scopre solo quando la macchina si ferma. Capacità digitale: un avviso quando la vibrazione supera una soglia. Fin qui è quello che dicono tutti.',
-          'Let us walk it through. Observed loss: six hours of downtime a week. Likely cause: the failure is found only when the machine stops. Digital capability: an alert when vibration goes over a threshold. So far this is what everybody says.'
-        ),
-        t(
-          'Il quarto anello è quello che quasi tutti saltano: il cambiamento nel lavoro. Cosa farà una persona di diverso rispetto a oggi. Nel nostro caso, il pianificatore inserisce l\'intervento nella fermata programmata invece di aspettare il guasto. Se non cambia il lavoro di nessuno, il valore resta teorico: puoi avere il modello più preciso del mondo, ma se chi riceve l\'avviso non fa niente di diverso, non è successo niente.',
-          'The fourth link is the one almost everybody skips: the change in the work. What will a person do differently from today. In our case, the planner moves the job into the planned stop instead of waiting for the breakdown. If nobody works differently, the value stays theoretical: you can have the most accurate model in the world, but if the person who gets the alert does nothing new, nothing happened.'
-        ),
-        t(
-          'Poi il risultato atteso, cioè da 6 a 4 ore di fermo a settimana. E infine l\'anello che distingue un professionista da un venditore: la prova che potrebbe smentirti. Cosa vedremmo se l\'ipotesi fosse sbagliata? Se i fermi non calano, oppure se calano anche sulle linee dove non abbiamo fatto niente.',
-          'Then the expected result, that is from 6 to 4 hours of downtime a week. And finally the link that separates a professional from a salesperson: the evidence that could prove you wrong. What would we see if the idea were wrong? If downtime does not drop, or if it drops on the lines where we did nothing too.'
+          'Sul quarto anello vale la pena fermarsi: se non cambia il lavoro di nessuno il valore resta teorico. Puoi avere il modello più preciso del mondo, ma se chi riceve l\'avviso non fa niente di diverso non è successo niente. E il sesto anello è quello che distingue un professionista da un venditore.',
+          'The fourth link is worth a pause: if nobody works differently, the value stays theoretical. You can have the most accurate model in the world, but if the person who gets the alert does nothing new, nothing happened. And the sixth link is what separates a professional from a salesperson.'
         ),
         t(
           'Tienile separate anche a parole. Output è ciò che consegni, per esempio un cruscotto con i fermi. Outcome è ciò che le persone fanno di diverso, per esempio il capo reparto che ogni lunedì assegna un responsabile. Impatto è il numero che si muove, cioè i fermi da 6 a 4,2 ore. Molti progetti si fermano all\'output e lo chiamano successo.',
@@ -520,17 +591,48 @@ export const trasformazioneLesson = {
       ),
       theory: [
         t(
-          'Quando ti chiedono come decidi cosa automatizzare per primo, la risposta debole è "quello che porta più valore". La risposta forte ha cinque criteri e un cancello. Primo criterio: il valore economico sulla perdita misurata. Non "è importante", ma quanto vale in ore, scarti o euro all\'anno. Se una linea perde 6 ore a settimana e un\'ora di fermo costa 900 euro, il problema vale circa 280.000 euro l\'anno.',
-          'When they ask how you decide what to automate first, the weak answer is "whatever brings the most value". The strong answer has five criteria and one gate. First criterion: the economic value on the measured loss. Not "it is important", but how much it is worth in hours, scrap or euros a year. If a line loses 6 hours a week and an hour of downtime costs 900 euros, the problem is worth about 280,000 euros a year.'
+          'Quando ti chiedono come decidi cosa automatizzare per primo, la risposta debole è "quello che porta più valore". La risposta forte ha cinque criteri e un cancello.',
+          'When they ask how you decide what to automate first, the weak answer is "whatever brings the most value". The strong answer has five criteria and one gate.'
         ),
-        t(
-          'Secondo: la fattibilità con i dati che ho già. Se devo prima installare sensori per un anno, la fattibilità è bassa. La domanda giusta è: il dato che mi serve esiste già, e qualcuno se ne fida? Terzo: il controllo del rischio e la reversibilità. Se sbaglia, cosa succede, e posso tornare indietro? Leggere dati è reversibile, creare in automatico un record ufficiale spesso no.',
-          'Second: feasibility with the data I already have. If I first need a year of sensor installation, feasibility is low. The right question is: does the data I need already exist, and does anybody trust it? Third: risk control and reversibility. If it gets it wrong, what happens, and can I go back? Reading data is reversible, creating an official record automatically often is not.'
-        ),
-        t(
-          'Quarto: il tempo al valore, cioè quanto passa prima di vedere il primo risultato misurabile. Un caso che rende 100.000 euro fra due anni vale meno, per il primo progetto, di uno che ne rende 40.000 fra tre mesi, perché il secondo ti compra la credibilità per fare il primo. Quinto: la replicabilità su altri siti, ed è il criterio che distingue una scelta da lead da una scelta da specialista.',
-          'Fourth: time to value, that is how long before the first measurable result. A case worth 100,000 euros in two years is worth less, as a first project, than one worth 40,000 in three months, because the second one buys you the credibility to do the first. Fifth: replicability across sites, and this is the criterion that separates a lead\'s choice from a specialist\'s choice.'
-        ),
+        {
+          steps: [
+            {
+              name: t('Valore economico', 'Economic value'),
+              text: t(
+                'Non "è importante", ma quanto vale in ore, scarti o euro all\'anno. Se una linea perde 6 ore a settimana e un\'ora di fermo costa 900 euro, il problema vale circa 280.000 euro l\'anno.',
+                'Not "it is important", but how much it is worth in hours, scrap or euros a year. If a line loses 6 hours a week and an hour of downtime costs 900 euros, the problem is worth about 280,000 euros a year.'
+              )
+            },
+            {
+              name: t('Fattibilità con i dati di oggi', 'Feasibility with today\'s data'),
+              text: t(
+                'Se devo prima installare sensori per un anno la fattibilità è bassa. La domanda giusta è: il dato che mi serve esiste già, e qualcuno se ne fida?',
+                'If I first need a year of sensor installation, feasibility is low. The right question is: does the data I need already exist, and does anybody trust it?'
+              )
+            },
+            {
+              name: t('Rischio e reversibilità', 'Risk and reversibility'),
+              text: t(
+                'Se sbaglia, cosa succede, e posso tornare indietro? Leggere dati è reversibile, creare in automatico un record ufficiale spesso no.',
+                'If it gets it wrong, what happens, and can I go back? Reading data is reversible, creating an official record automatically often is not.'
+              )
+            },
+            {
+              name: t('Tempo al valore, time to value', 'Time to value'),
+              text: t(
+                'Quanto passa prima del primo risultato misurabile. Un caso da 100.000 euro fra due anni vale meno, come primo progetto, di uno da 40.000 fra tre mesi: il secondo ti compra la credibilità per fare il primo.',
+                'How long before the first measurable result. A case worth 100,000 euros in two years is worth less, as a first project, than one worth 40,000 in three months: the second buys you the credibility to do the first.'
+              )
+            },
+            {
+              name: t('Replicabilità su altri siti', 'Replicability across sites'),
+              text: t(
+                'Se funziona qui, quanto è facile portarlo altrove? È il criterio che distingue una scelta da lead da una scelta da specialista.',
+                'If it works here, how easy is it to take it elsewhere? This is the criterion that separates a lead\'s choice from a specialist\'s choice.'
+              )
+            }
+          ]
+        },
         t(
           'Poi c\'è il cancello, in inglese hard gate: una condizione che, se non è soddisfatta, esclude il candidato a prescindere dal punteggio. In una produzione regolamentata il cancello tipico è che nessun sistema può prendere da solo una decisione che libera un prodotto o che riguarda la sicurezza. Può proporre, non decidere.',
           'Then there is the gate, the hard gate: a condition that, if it is not met, rules the candidate out no matter the score. In regulated manufacturing the typical gate is that no system decides on its own to release a product or to settle a safety question. It can suggest, not decide.'
@@ -693,14 +795,24 @@ export const trasformazioneLesson = {
           'In una fabbrica ogni funzione difende qualcosa di reale. Se ti presenti con una soluzione già fatta, ognuna troverà il motivo per bloccarla, e avrà ragione. Se invece sai in anticipo cosa difende ciascuno, puoi costruire la proposta insieme a loro.',
           'In a plant every function is protecting something real. If you show up with a finished solution, each of them will find a reason to block it, and they will be right. If instead you know in advance what each one protects, you can build the proposal with them.'
         ),
-        t(
-          'Produzione difende la continuità della linea e ti dirà che non può fermarla per una prova. Qualità difende la conformità e ti chiederà come lo dimostri a un ispettore. IT difende la sostenibilità nel tempo e ti chiederà chi lo mantiene fra due anni. La sicurezza informatica difende il confine fra rete d\'ufficio e rete di fabbrica. Finanza difende il ritorno. Manutenzione difende la programmazione dei propri tecnici.',
-          'Production protects the continuity of the line and will tell you it cannot stop it for a trial. Quality protects compliance and will ask how you prove it to an inspector. IT protects what it will have to maintain and will ask who keeps it alive in two years. Security protects the boundary between the office network and the plant network. Finance protects the return. Maintenance protects its technicians\' schedule.'
-        ),
-        t(
-          'La tecnica che funziona ha tre passi, sempre gli stessi. Riformula l\'obiezione senza addolcirla, così chi l\'ha sollevata si riconosce. Accetta la parte vera, perché quasi tutte ne hanno una e negarla ti costa credibilità. Proponi un controllo specifico, non una rassicurazione generica.',
-          'The technique that works has three steps, always the same. Say the objection back without softening it, so the person recognises themselves in it. Accept the part that is true, because almost every objection has one and denying it costs you credibility. Then offer a specific check, not a general reassurance.'
-        ),
+        {
+          numbered: false,
+          steps: [
+            { name: t('Produzione', 'Production'), text: t('Difende la continuità della linea. Ti dirà: non posso fermare la linea per una prova.', 'It protects the continuity of the line. It will tell you: I cannot stop the line for a trial.') },
+            { name: t('Qualità', 'Quality'), text: t('Difende la conformità e la tracciabilità. Ti chiederà: come lo dimostri a un ispettore?', 'It protects compliance and traceability. It will ask: how do you prove it to an inspector?') },
+            { name: t('IT', 'IT'), text: t('Difende la sostenibilità nel tempo. Ti chiederà: fra due anni chi lo mantiene?', 'It protects what it will have to maintain. It will ask: who keeps it alive in two years?') },
+            { name: t('Sicurezza informatica', 'Security'), text: t('Difende il confine fra rete d\'ufficio e rete di fabbrica. Ti dirà: non apriamo collegamenti verso la produzione.', 'It protects the boundary between office and plant networks. It will tell you: we do not open links into production.') },
+            { name: t('Finanza', 'Finance'), text: t('Difende il ritorno. Ti chiederà: quanto costa e quando rientra?', 'It protects the return. It will ask: what does it cost and when does it pay back?') },
+            { name: t('Manutenzione', 'Maintenance'), text: t('Difende la programmazione dei tecnici. Ti dirà: i miei tecnici non hanno tempo per una cosa in più.', 'It protects its technicians\' schedule. It will tell you: my technicians have no time for one more thing.') }
+          ]
+        },
+        {
+          steps: [
+            { name: t('Riformula', 'Say it back'), text: t('Ripeti l\'obiezione senza addolcirla, così chi l\'ha sollevata si riconosce.', 'Repeat the objection without softening it, so the person recognises themselves in it.') },
+            { name: t('Accetta la parte vera', 'Accept the true part'), text: t('Quasi tutte le obiezioni ne hanno una, e negarla ti costa credibilità.', 'Almost every objection has one, and denying it costs you credibility.') },
+            { name: t('Proponi un controllo', 'Offer a check'), text: t('Una cosa specifica e verificabile, non una rassicurazione generica.', 'Something specific and verifiable, not a general reassurance.') }
+          ]
+        },
         t(
           'La differenza fra una rassicurazione e un controllo è che il controllo si può verificare. "Sarà semplice da usare" è una rassicurazione. "In modalità ombra non aggiunge nessun passaggio, e nella fase successiva la conferma è un clic con la fonte già aperta" è un controllo.',
           'The difference between a reassurance and a check is that a check can be verified. "It will be easy to use" is a reassurance. "In shadow mode it adds no extra step, and later the confirmation is one click with the source already open" is a check.'

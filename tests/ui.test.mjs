@@ -45,6 +45,9 @@ function memoryStorage(initial = {}) {
   }
 }
 
+const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+const escaped = (value) => String(value).replace(/[&<>"']/gu, (character) => ESCAPES[character])
+
 const sampleLesson = curriculum[2]
 const sampleState = getUnitState(sampleLesson, sampleLesson.units[1].id, { cursor: 0 })
 
@@ -172,8 +175,37 @@ test('the unit view renders exactly one unit with every required section', () =>
     assert.ok(html.includes(hook), `missing hook ${hook}`)
   }
   assert.equal(html.split('data-unit-content').length - 1, 1, 'only one unit may be rendered')
-  assert.ok(html.includes(sampleState.unit.theory[0].it.slice(0, 60)))
+  assert.ok(html.includes(escaped(sampleState.unit.theory[0].it).slice(0, 60)))
   assert.equal(html.split('data-question=').length - 1, 7, 'the unit quiz must render seven questions')
+})
+
+test('an enumeration is rendered as named steps, one per line, not buried in a paragraph', () => {
+  const lessonWithSteps = {
+    ...sampleLesson,
+    units: [{
+      ...sampleState.unit,
+      theory: [
+        { it: 'Un paragrafo normale.', en: 'A normal paragraph.' },
+        {
+          steps: [
+            { name: { it: 'Osservo', en: 'I watch' }, text: { it: 'Parto da una perdita.', en: 'I start from a loss.' } },
+            { name: { it: 'Misuro', en: 'I measure' }, text: { it: 'Prendo la baseline.', en: 'I take the baseline.' } },
+            { name: { it: 'Decido', en: 'I decide' }, text: { it: 'Estendo o mi fermo.', en: 'I scale or I stop.' } }
+          ]
+        }
+      ]
+    }]
+  }
+  const state = getUnitState(lessonWithSteps, lessonWithSteps.units[0].id, { cursor: 0 })
+  const html = renderUnitView({ lesson: lessonWithSteps, state, locale: 'it' })
+
+  assert.ok(html.includes('data-named-steps'), 'the named list needs its own hook')
+  assert.equal(html.split('<li><b>').length - 1, 3, 'every step gets its own line')
+  assert.ok(html.includes('<b>Osservo</b>'), 'the step name must be in bold')
+  assert.ok(html.includes('<p>Un paragrafo normale.</p>'), 'plain paragraphs keep working')
+
+  const english = renderUnitView({ lesson: lessonWithSteps, state, locale: 'en' })
+  assert.ok(english.includes('<b>I watch</b>'), 'step names are bilingual too')
 })
 
 test('the unit view switches every learner-visible string to English', () => {
@@ -181,7 +213,7 @@ test('the unit view switches every learner-visible string to English', () => {
   const italian = renderUnitView({ lesson: sampleLesson, state: sampleState, locale: 'it' })
 
   assert.ok(english.includes(sampleState.unit.title.en))
-  assert.ok(english.includes(sampleState.unit.theory[0].en.slice(0, 50)))
+  assert.ok(english.includes(escaped(sampleState.unit.theory[0].en).slice(0, 50)))
   assert.ok(english.includes('Next unit'))
   assert.ok(italian.includes('Unità successiva'))
   assert.ok(!english.includes('Unità successiva'))

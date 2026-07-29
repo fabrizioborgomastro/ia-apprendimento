@@ -33,13 +33,18 @@ export const governareScalareLesson = {
           'A lead does not manage a list of ideas, a lead manages a portfolio. The difference matters: a list is a pile, a portfolio is a choice, and a choice means giving something up out loud. With ten proposals in front of you, the question is not which one I like most, but which one creates credible value, with manageable risk, in useful time, and can be repeated.'
         ),
         t(
-          'Per governarlo conviene dividere i casi in quattro famiglie. Quick win, vittoria rapida: valore abbastanza chiaro, dati sufficienti, rischio basso, risultato in poche settimane. Capability builder, costruttore di capacità: non è il caso più appariscente, ma crea un pezzo di infrastruttura o di competenza che sblocca casi futuri.',
-          'To govern it, split the cases into four families. Quick win: value clear enough, data good enough, low risk, a result in a few weeks. Capability builder: not the flashiest case, but it creates a piece of infrastructure or skill that unlocks future cases.'
+          'Per governarlo conviene dividere i casi in quattro famiglie, e chiamarle per nome anche in riunione.',
+          'To govern it, split the cases into four families, and name them out loud in the meeting too.'
         ),
-        t(
-          'Big bet, scommessa grande: valore potenziale alto, molte dipendenze da risolvere prima. E distrazione elegante: idea interessante, demo bella, poca probabilità di impatto reale. Saper nominare la quarta famiglia, con calma, è metà del mestiere.',
-          'Big bet: high potential value, many dependencies to solve first. And elegant distraction: an interesting idea, a nice demo, little chance of real impact. Being able to name that fourth family, calmly, is half the job.'
-        ),
+        {
+          numbered: false,
+          steps: [
+            { name: t('Quick win, vittoria rapida', 'Quick win'), text: t('Valore abbastanza chiaro, dati sufficienti, rischio basso, risultato in poche settimane.', 'Value clear enough, data good enough, low risk, a result in a few weeks.') },
+            { name: t('Capability builder', 'Capability builder'), text: t('Non è il caso più appariscente, ma crea un pezzo di infrastruttura o di competenza che sblocca casi futuri.', 'Not the flashiest case, but it creates a piece of infrastructure or skill that unlocks future cases.') },
+            { name: t('Big bet, scommessa grande', 'Big bet'), text: t('Valore potenziale alto, molte dipendenze da risolvere prima. Va bene, ma non come primo progetto.', 'High potential value, many dependencies to solve first. Fine, but not as a first project.') },
+            { name: t('Distrazione elegante', 'Elegant distraction'), text: t('Idea interessante, demo bella, poca probabilità di impatto reale. Saper nominare questa famiglia, con calma, è metà del mestiere.', 'An interesting idea, a nice demo, little chance of real impact. Naming this family, calmly, is half the job.') }
+          ]
+        },
         t(
           'C\'è poi una regola che vale sempre: il primo caso non deve essere il più sofisticato, deve essere il più credibile. Se il primo progetto abbassa fermate, scarti o tempo perso in un modo che chiunque può leggere, crea fiducia. Senza fiducia il secondo progetto parte già in salita.',
           'Then there is a rule that always holds: the first case should not be the most sophisticated, it should be the most credible. If the first project cuts stops, scrap or wasted time in a way anyone can read, it builds trust. Without trust the second project starts uphill.'
@@ -199,14 +204,17 @@ export const governareScalareLesson = {
           'Una trasformazione digitale fallisce spesso per un motivo banale: tutti partecipano, nessuno possiede. La riunione è piena, la responsabilità è vuota. Per evitarlo servono pochi ruoli chiari, e vanno definiti prima del pilota, non dopo.',
           'A digital transformation often fails for a plain reason: everyone takes part, nobody owns. The meeting is full, the accountability is empty. To avoid it you need a few clear roles, defined before the pilot, not after.'
         ),
-        t(
-          'Lo sponsor mette peso, priorità e protezione, e decide se il costo di una correzione vale la pena adesso o il trimestre prossimo. Il responsabile di processo possiede il processo operativo che vuoi migliorare, e decide se una cosa entra davvero nella routine del turno. Il responsabile del dato risponde di definizione, correttezza e qualità del dato.',
-          'The sponsor brings weight, priority and protection, and decides whether the cost of a fix is worth it now or next quarter. The process owner owns the operational process you want to improve, and decides whether something really enters the shift routine. The data owner answers for the definition, correctness and quality of the data.'
-        ),
-        t(
-          'Il responsabile della soluzione, in inglese solution owner o model owner, risponde della logica del sistema, del suo comportamento e della sua manutenzione. IT e piattaforma garantiscono basi, integrazione, registrazione degli eventi e controlli. Qualità e sicurezza definiscono i paletti non negoziabili e i criteri di conformità.',
-          'The solution owner, sometimes model owner, answers for the logic of the system, its behaviour and its maintenance. IT and platform provide the foundations, integration, event logging and controls. Quality and security define the non-negotiable limits and the compliance criteria.'
-        ),
+        {
+          numbered: false,
+          steps: [
+            { name: t('Sponsor', 'Sponsor'), text: t('Mette peso, priorità e protezione. Decide se il costo di una correzione vale adesso o il trimestre prossimo.', 'Brings weight, priority and protection. Decides whether the cost of a fix is worth it now or next quarter.') },
+            { name: t('Process owner', 'Process owner'), text: t('Possiede il processo operativo che vuoi migliorare. Decide se una cosa entra davvero nella routine del turno.', 'Owns the operational process you want to improve. Decides whether something really enters the shift routine.') },
+            { name: t('Data owner', 'Data owner'), text: t('Risponde di definizione, correttezza e qualità del dato, con nome e cognome.', 'Answers for the definition, correctness and quality of the data, by name.') },
+            { name: t('Solution owner', 'Solution owner'), text: t('Risponde della logica del sistema, del suo comportamento e della sua manutenzione.', 'Answers for the logic of the system, its behaviour and its maintenance.') },
+            { name: t('IT e piattaforma', 'IT and platform'), text: t('Garantiscono basi, integrazione, registrazione degli eventi e controlli.', 'Provide the foundations, integration, event logging and controls.') },
+            { name: t('Qualità e sicurezza', 'Quality and security'), text: t('Definiscono i paletti non negoziabili e i criteri di conformità.', 'Define the non-negotiable limits and the compliance criteria.') }
+          ]
+        },
         t(
           'Il modello operativo, in inglese operating model, non è burocrazia: è il contrario, è il modo più veloce per non rifare le stesse discussioni ogni volta. Quando un avviso è sbagliato, quando un indicatore peggiora, quando un sito chiede una variante, devi sapere subito chi decide, chi si consulta e chi esegue.',
           'The operating model is not bureaucracy: it is the opposite, it is the fastest way not to repeat the same discussions every time. When an alert is wrong, when an indicator gets worse, when a site asks for a variation, you have to know immediately who decides, who is consulted and who executes.'
@@ -360,10 +368,15 @@ export const governareScalareLesson = {
           'Scalare non significa copiare e incollare. Se fai solo questo, replichi anche gli errori. Scalare significa decidere che cosa deve restare standard e che cosa va adattato, e dirlo prima di partire.',
           'Scaling does not mean copy and paste. If that is all you do, you copy the mistakes too. Scaling means deciding what has to stay standard and what has to be adapted, and saying so before you start.'
         ),
-        t(
-          'Standard dovrebbero essere almeno cinque cose: l\'indicatore e la sua definizione, la definizione del problema, la logica di decisione, i criteri di successo e i controlli di sicurezza. Se un sito chiama fermo breve quello che un altro chiama microfermo, il confronto si rompe ancora prima di partire.',
-          'At least five things should stay standard: the indicator and its definition, the definition of the problem, the decision logic, the success criteria and the safety controls. If one site calls short stop what another calls micro-stop, the comparison breaks before you even start.'
-        ),
+        {
+          steps: [
+            { name: t('Indicatore e sua definizione', 'The indicator and its definition'), text: t('Se un sito chiama fermo breve quello che un altro chiama microfermo, il confronto si rompe prima di partire.', 'If one site calls short stop what another calls micro-stop, the comparison breaks before you start.') },
+            { name: t('Definizione del problema', 'The definition of the problem'), text: t('Lo stesso problema, descritto con le stesse parole, altrimenti stai risolvendo due cose diverse.', 'The same problem, described in the same words, otherwise you are solving two different things.') },
+            { name: t('Logica di decisione', 'The decision logic'), text: t('Quando il sistema segnala e cosa fa una persona di conseguenza: questo non si personalizza per sito.', 'When the system flags and what a person does about it: this is not customised per site.') },
+            { name: t('Criteri di successo', 'The success criteria'), text: t('La soglia scritta prima, uguale per tutti, altrimenti ogni sito dichiara vittoria a modo suo.', 'The threshold written beforehand, the same for everyone, otherwise each site declares victory its own way.') },
+            { name: t('Controlli di sicurezza', 'The safety controls'), text: t('Il cancello non negoziabile e le reti di sicurezza non sono materia di adattamento locale.', 'The non-negotiable gate and the safety nets are not subject to local adaptation.') }
+          ]
+        },
         t(
           'Locale è invece tutto ciò che dipende dalla realtà del posto: macchine, formati, turni, disciplina di registrazione, competenze presenti, capacità di revisione, vincoli di qualità. Per questo un\'estensione seria parte sempre da una baseline locale, non per rifare il pilota da zero, ma per capire quanto il sito nuovo è davvero simile al primo.',
           'Local is everything that depends on the reality of the place: machines, formats, shifts, recording discipline, skills present, review capacity, quality constraints. That is why a serious rollout always starts from a local baseline, not to redo the pilot from scratch, but to understand how similar the new site really is to the first one.'
@@ -533,9 +546,17 @@ export const governareScalareLesson = {
           'Per questo la domanda non è "abbiamo fatto la formazione". La domanda è: cosa cambia alle sei del mattino, durante il cambio turno, con rumore, fretta e una macchina ferma? Se il sistema non aiuta lì, non aiuta.',
           'That is why the question is not "did we run the training". The question is: what changes at six in the morning, during the shift handover, with noise, hurry and a machine down? If the system does not help there, it does not help.'
         ),
+        {
+          steps: [
+            { name: t('Coinvolgi presto chi userà', 'Involve the users early'), text: t('Non alla fine per la formazione, ma quando il flusso si può ancora cambiare.', 'Not at the end for training, but while the flow can still be changed.') },
+            { name: t('Di\' cosa cambia e cosa no', 'Say what changes and what does not'), text: t('Il silenzio su questo punto viene riempito dal sospetto peggiore.', 'Silence on this point gets filled by the worst suspicion.') },
+            { name: t('Riduci il carico', 'Reduce the load'), text: t('Se lo strumento aggiunge passaggi nel momento peggiore del turno, perde contro Excel e la carta.', 'If the tool adds steps at the worst moment of the shift, it loses against Excel and paper.') },
+            { name: t('Misura uso e utilità', 'Measure usage and usefulness'), text: t('Insieme: un sistema usato ma inutile e uno utile ma ignorato hanno lo stesso valore, cioè zero.', 'Together: a system that is used but useless and one that is useful but ignored are worth the same, that is nothing.') }
+          ]
+        },
         t(
-          'L\'adozione cresce quando fai quattro cose bene: coinvolgi presto chi userà lo strumento, dici chiaramente cosa cambia e cosa non cambia, riduci il carico invece di aggiungerlo, e misuri l\'uso reale insieme all\'utilità reale. Un corso senza una nuova abitudine è documentazione, non trasformazione.',
-          'Adoption grows when you do four things well: involve early the people who will use the tool, say clearly what changes and what does not, reduce the load instead of adding to it, and measure real usage together with real usefulness. Training without a new habit is documentation, not transformation.'
+          'Un corso senza una nuova abitudine è documentazione, non trasformazione. È la frase da tenere in tasca quando qualcuno propone "più formazione" come soluzione a tutto.',
+          'Training without a new habit is documentation, not transformation. That is the line to keep in your pocket when somebody proposes "more training" as the answer to everything.'
         ),
         t(
           'Un lead maturo non dice "abbiamo formato centoventi persone, quindi siamo a posto". Dice: dopo otto settimane lo strumento viene usato nell\'85 percento dei casi previsti, gli avvisi ignorati sono scesi, i tempi di decisione sono migliorati, e il reparto non è tornato al foglio di calcolo. Quella è adozione.',
@@ -681,14 +702,15 @@ export const governareScalareLesson = {
           'Il successo del pilota non è ancora il successo del sistema. Il pilota risponde a una domanda facile: qui e adesso sembra funzionare. Il valore nel tempo risponde a una più difficile: regge dopo sei mesi, dopo un anno, dopo che il contesto è cambiato?',
           'A successful pilot is not yet a successful system. The pilot answers an easy question: here and now it seems to work. Value over time answers a harder one: does it hold after six months, after a year, after the context has changed?'
         ),
-        t(
-          'Per governarlo servono cinque attenzioni. Continua a guardare gli indicatori operativi, non solo quelli tecnici del modello. Misura uso e fiducia, perché un sistema che nessuno guarda non produce valore anche se è preciso. Controlla il costo di mantenimento, che quasi tutti dimenticano nel conto iniziale.',
-          'To govern it you need five habits. Keep watching the operational indicators, not only the technical ones. Measure usage and trust, because a system nobody looks at produces no value even when it is accurate. Watch the maintenance cost, which almost everybody forgets in the first business case.'
-        ),
-        t(
-          'Cerca la deriva, cioè i cambiamenti nei dati, nel processo o nel significato stesso del problema. E tieni chiara la soglia di uscita, cioè le condizioni scritte per cui una soluzione va spenta o ripensata. Scritte prima, sono una decisione presa a mente fredda; scritte dopo, diventano una discussione.',
-          'Look for drift, that is changes in the data, in the process, or in the meaning of the problem itself. And keep the exit threshold clear, that is the written conditions under which a solution is switched off or redesigned. Written before, they are a decision taken calmly; written after, they turn into an argument.'
-        ),
+        {
+          steps: [
+            { name: t('Indicatori operativi', 'Operational indicators'), text: t('Continua a guardare i numeri del processo, non solo quelli tecnici del modello.', 'Keep watching the process numbers, not only the technical ones of the model.') },
+            { name: t('Uso e fiducia', 'Usage and trust'), text: t('Un sistema che nessuno guarda non produce valore, anche se è preciso.', 'A system nobody looks at produces no value, even when it is accurate.') },
+            { name: t('Costo di mantenimento', 'Maintenance cost'), text: t('Quasi tutti lo dimenticano nel conto iniziale, e poi ricompare come sorpresa.', 'Almost everybody forgets it in the first business case, and then it comes back as a surprise.') },
+            { name: t('Deriva, drift', 'Drift'), text: t('Cambiamenti nei dati, nel processo o nel significato stesso del problema.', 'Changes in the data, in the process, or in the meaning of the problem itself.') },
+            { name: t('Soglia di uscita, sunset criteria', 'Exit threshold, sunset criteria'), text: t('Le condizioni scritte per cui una soluzione va spenta o ripensata. Scritte prima sono una decisione a mente fredda, scritte dopo diventano una discussione.', 'The written conditions under which a solution is switched off or redesigned. Written before they are a calm decision, written after they turn into an argument.') }
+          ]
+        },
         t(
           'Una soluzione matura non viene protetta a prescindere. Se il contesto cambia, se il team non la usa più, se il costo di revisione cresce più del beneficio, fermarsi è la decisione più professionale. La trasformazione digitale non premia chi accumula sistemi: premia chi mantiene quelli che valgono e chiude quelli che non valgono più.',
           'A mature solution is not protected no matter what. If the context changes, if the team no longer uses it, if the cost of review grows faster than the benefit, stopping is the most professional decision. Digital transformation does not reward whoever collects systems: it rewards whoever keeps the ones that are worth it and closes the ones that are not.'

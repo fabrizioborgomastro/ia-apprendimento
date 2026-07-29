@@ -45,10 +45,30 @@ export function countWords(value) {
   return text.trim() ? text.trim().split(/\s+/u).length : 0
 }
 
+/**
+ * A theory entry is either a paragraph, `{ it, en }`, or a named list,
+ * `{ steps: [{ name, text }] }`. The named list exists because an enumeration
+ * buried in a paragraph is unreadable and impossible to memorise: each step gets
+ * its own line and its own name, the technical one when it exists.
+ */
+export function isNamedList(entry) {
+  return isObject(entry) && Array.isArray(entry.steps)
+}
+
+export function theoryEntryWords(entry, locale) {
+  if (isNamedList(entry)) {
+    return asArray(entry.steps).reduce(
+      (total, step) => total + countWords(step?.name?.[locale]) + countWords(step?.text?.[locale]),
+      0
+    )
+  }
+  return countWords(entry?.[locale])
+}
+
 export function theoryWords(lesson, locale) {
   return asArray(lesson.units)
     .flatMap((unit) => asArray(unit.theory))
-    .reduce((total, paragraph) => total + countWords(paragraph?.[locale]), 0)
+    .reduce((total, entry) => total + theoryEntryWords(entry, locale), 0)
 }
 
 export function lessonUnits(lessons) {
@@ -253,12 +273,25 @@ export function validateCurriculum(lessons, sources, glossary = []) {
       }
 
       const theory = asArray(unit.theory)
-      if (theory.length < 4) errors.push(`${unitPath} needs at least four theory paragraphs`)
-      for (const [paragraphIndex, paragraph] of theory.entries()) {
-        if (!isLocalized(paragraph)) errors.push(`${unitPath} theory paragraph ${paragraphIndex + 1} is not bilingual`)
+      if (theory.length < 4) errors.push(`${unitPath} needs at least four theory blocks`)
+      for (const [entryIndex, entry] of theory.entries()) {
+        const entryPath = `${unitPath} theory block ${entryIndex + 1}`
+        if (isNamedList(entry)) {
+          const steps = asArray(entry.steps)
+          if (steps.length < 3) errors.push(`${entryPath} is a named list, so it needs at least three steps`)
+          for (const [stepIndex, step] of steps.entries()) {
+            if (!isLocalized(step?.name)) errors.push(`${entryPath} step ${stepIndex + 1} needs a bilingual name`)
+            if (!isLocalized(step?.text)) errors.push(`${entryPath} step ${stepIndex + 1} needs bilingual text`)
+            if (isLocalized(step?.name) && countWords(step.name.it) > 6) {
+              errors.push(`${entryPath} step ${stepIndex + 1} name must stay short enough to remember`)
+            }
+          }
+          continue
+        }
+        if (!isLocalized(entry)) errors.push(`${entryPath} is not bilingual`)
       }
-      const italian = theory.reduce((sum, paragraph) => sum + countWords(paragraph?.it), 0)
-      const english = theory.reduce((sum, paragraph) => sum + countWords(paragraph?.en), 0)
+      const italian = theory.reduce((sum, entry) => sum + theoryEntryWords(entry, 'it'), 0)
+      const english = theory.reduce((sum, entry) => sum + theoryEntryWords(entry, 'en'), 0)
       if (italian < 180) errors.push(`${unitPath} Italian theory is too thin: ${italian} words`)
       if (english < italian * 0.75) {
         errors.push(`${unitPath} English theory must contain at least 75% of its Italian word count`)

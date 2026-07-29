@@ -316,3 +316,10 @@ details.reveal summary { cursor: pointer; min-height: 44px; display: flex; align
   .unit-terms table, .example-table table { font-size: .86rem; }
   .glossary-page [data-term-list] { grid-template-columns: 1fr; }
 }
+
+/* Named steps: an enumeration is a list of named lines, not a paragraph. */
+.named-steps { max-width: 72ch; margin: 0 0 18px; padding-left: 26px; display: grid; gap: 12px; }
+.named-steps li { padding-left: 4px; }
+.named-steps li::marker { color: var(--teal); font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
+.named-steps b { display: block; color: var(--blueprint); font-family: Sora, sans-serif; letter-spacing: -.01em; }
+.named-steps span { display: block; margin-top: 2px; }

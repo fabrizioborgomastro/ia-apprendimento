@@ -28,13 +28,35 @@ export const inProduzioneLesson = {
         'Be able to choose between prototype, MVP and pilot based on the question you need to answer.'
       ),
       theory: [
+        {
+          numbered: false,
+          steps: [
+            {
+              name: t('Prototipo, prototype', 'Prototype'),
+              text: t(
+                'Risponde a una domanda tecnica: si può fare? Non va in mano a nessun utente reale, non deve essere affidabile, si butta. Dura giorni.',
+                'It answers a technical question: can we do it? It never reaches a real user, it does not have to be reliable, it gets thrown away. It takes days.'
+              )
+            },
+            {
+              name: t('MVP, prodotto minimo utilizzabile', 'MVP, minimum viable product'),
+              text: t(
+                'Risponde a una domanda di valore: se lo do a qualcuno, cambia qualcosa nel suo lavoro? È la versione più piccola che una persona vera può usare per lavorare davvero. Dura settimane. Minimum non significa fatto male: significa poche funzioni, ma vere.',
+                'It answers a value question: if I give it to someone, does anything change in their work? It is the smallest version a real person can use to actually work. It takes weeks. Minimum does not mean badly made: it means few functions, but real ones.'
+              )
+            },
+            {
+              name: t('Pilota, pilot', 'Pilot'),
+              text: t(
+                'Risponde a una domanda di scala: funziona in condizioni reali, per un tempo lungo, con persone che non sono nel progetto? Gira su una linea o un reparto, con turni veri e guasti veri. Dura mesi.',
+                'It answers a question of scale: does it work in real conditions, for a long time, with people who are not in the project? It runs on a line or an area, with real shifts and real breakdowns. It takes months.'
+              )
+            }
+          ]
+        },
         t(
-          'Il prototipo serve a rispondere a una domanda tecnica: si può fare? Non va in mano a nessun utente reale, non deve essere affidabile, si butta, e dura giorni. L\'MVP, Minimum Viable Product, prodotto minimo utilizzabile, serve a rispondere a una domanda di valore: se lo do a qualcuno, cambia qualcosa nel suo lavoro? È la versione più piccola che una persona vera può usare per lavorare davvero, e dura settimane.',
-          'A prototype answers a technical question: can we do it? It never reaches a real user, it does not have to be reliable, it gets thrown away, and it takes days. An MVP, Minimum Viable Product, answers a value question: if I give it to someone, does anything change in their work? It is the smallest version a real person can use to actually do their job, and it takes weeks.'
-        ),
-        t(
-          'Attenzione alla parola minimum: non significa fatto male, significa poche funzioni ma vere. Un MVP che non si può usare in produzione non è un MVP, è un prototipo con un nome più ambizioso. Il pilota invece risponde a una domanda di scala: funziona in condizioni reali, per un tempo lungo, con persone che non sono nel progetto? Gira su una linea o un reparto, con turni veri e guasti veri, e dura mesi.',
-          'Careful with the word minimum: it does not mean badly made, it means few functions but real ones. An MVP you cannot use in production is not an MVP, it is a prototype with a more ambitious name. A pilot answers a question of scale: does it work in real conditions, for a long time, with people who are not in the project? It runs on a line or an area, with real shifts and real breakdowns, and it takes months.'
+          'Un MVP che non si può usare in produzione non è un MVP, è un prototipo con un nome più ambizioso. Ed è l\'errore più frequente, sempre nella stessa direzione.',
+          'An MVP you cannot use in production is not an MVP, it is a prototype with a more ambitious name. And it is the most frequent mistake, always in the same direction.'
         ),
         t(
           'La sequenza logica è semplice: prototipo se il dubbio è tecnico, MVP se il dubbio è sul valore, pilota se il dubbio è sulla tenuta. Confondere i tre è l\'errore più frequente, e quasi sempre nella stessa direzione: chiamare MVP un prototipo ben fatto.',
@@ -198,14 +220,38 @@ export const inProduzioneLesson = {
           'Il problema di ogni prova aziendale è che il mondo cambia mentre tu provi. Se dopo il tuo progetto i fermi calano, come fai a sapere che è merito tuo e non del nuovo capo turno, della manutenzione straordinaria di marzo o del fatto che a luglio si produce meno? Servono quattro cose.',
           'The problem with every trial inside a company is that the world moves while you are testing. If downtime drops after your project, how do you know it is your doing and not the new shift leader, the extra maintenance in March, or the fact that July output is lower? You need four things.'
         ),
-        t(
-          'Prima, una baseline, cioè il punto di partenza misurato prima. Va presa su un periodo abbastanza lungo da contenere la variabilità normale, almeno quattro settimane, e va firmata da chi possiede il processo prima di iniziare, perché una baseline decisa dopo è una baseline scelta. Seconda, un confronto: non basta guardare il prima e il dopo, serve un gruppo di controllo, cioè una linea simile dove non fai nulla.',
-          'First, a baseline, that is the starting point measured beforehand. Take it over a period long enough to contain normal variation, at least four weeks, and have it signed by the process owner before you start, because a baseline decided afterwards is a baseline chosen. Second, a comparison: before and after is not enough, you need a control group, that is a similar line where you do nothing.'
-        ),
-        t(
-          'Terza, un criterio di successo scritto prima. Non "vediamo come va", ma per esempio: consideriamo l\'esperimento riuscito se i fermi non pianificati scendono di almeno il 20 percento rispetto alla baseline, mantenendo lo scarto invariato. Scritto prima, altrimenti a fine progetto ognuno trova nei dati la conferma di quello che sperava. Quarta, una durata prefissata: otto settimane, poi si decide. Senza una data, i progetti che non funzionano non muoiono mai, vengono prorogati.',
-          'Third, a success criterion written before. Not "let us see how it goes", but for example: we call the experiment a success if unplanned downtime drops by at least 20 percent against the baseline, with scrap unchanged. Written before, otherwise at the end everyone finds in the data the confirmation of what they hoped for. Fourth, a fixed duration: eight weeks, then we decide. Without a date, projects that do not work never die, they get extended.'
-        ),
+        {
+          steps: [
+            {
+              name: t('Baseline firmata prima', 'A baseline signed beforehand'),
+              text: t(
+                'Il punto di partenza misurato su almeno quattro settimane, firmato da chi possiede il processo prima di iniziare. Una baseline decisa dopo è una baseline scelta.',
+                'The starting point measured over at least four weeks, signed by the process owner before you start. A baseline decided afterwards is a baseline chosen.'
+              )
+            },
+            {
+              name: t('Gruppo di controllo', 'A control group'),
+              text: t(
+                'Una linea simile dove non fai nulla. Se i fermi calano su entrambe, il merito non è tuo; se calano solo dove sei intervenuto, hai un argomento.',
+                'A similar line where you do nothing. If downtime drops on both, the credit is not yours; if it drops only where you acted, you have an argument.'
+              )
+            },
+            {
+              name: t('Criterio di successo scritto prima', 'A success criterion written first'),
+              text: t(
+                'Non "vediamo come va", ma: riuscito se i fermi non pianificati scendono di almeno il 20 percento, con lo scarto invariato. Scritto dopo, ognuno trova nei dati la conferma di quello che sperava.',
+                'Not "let us see how it goes", but: a success if unplanned downtime drops by at least 20 percent, with scrap unchanged. Written afterwards, everyone finds in the data the confirmation of what they hoped for.'
+              )
+            },
+            {
+              name: t('Durata prefissata', 'A fixed duration'),
+              text: t(
+                'Otto settimane, poi si decide, con una data e una persona che decide. Senza una data i progetti che non funzionano non muoiono: vengono prorogati.',
+                'Eight weeks, then we decide, with a date and a person who decides. Without a date, projects that do not work never die: they get extended.'
+              )
+            }
+          ]
+        },
         t(
           'E poi il concetto che vale da solo l\'intera unità: la modalità ombra. Il sistema gira su dati veri, fa la sua previsione, la registra, ma nessuno la vede e niente cambia. Alla fine confronti le previsioni con quello che è successo davvero. È la cosa più intelligente che puoi proporre a un colloquio, perché ha rischio zero: se il modello sbaglia, non è successo niente a nessuno.',
           'And then the idea that is worth the whole unit on its own: shadow mode. The system runs on real data, makes its call, records it, but nobody sees it and nothing changes. At the end you compare the predictions with what really happened. It is the smartest thing you can propose in an interview, because it carries zero risk: if the model is wrong, nothing happened to anybody.'
@@ -352,17 +398,41 @@ export const inProduzioneLesson = {
       ),
       theory: [
         t(
-          'Passare dalla prova alla produzione significa che qualcuno prenderà decisioni vere sulla base di quel sistema. Servono quattro reti di sicurezza, sempre le stesse. La prima è la supervisione umana reale: non basta scrivere che l\'operatore conferma, serve che l\'operatore abbia il tempo, l\'informazione e l\'autorità per dissentire.',
-          'Going from trial to production means somebody will make real decisions based on that system. You need four safety nets, always the same ones. The first is real human oversight: it is not enough to write that the operator confirms, the operator needs the time, the information and the authority to disagree.'
+          'Passare dalla prova alla produzione significa che qualcuno prenderà decisioni vere sulla base di quel sistema. Servono quattro reti di sicurezza, sempre le stesse.',
+          'Going from trial to production means somebody will make real decisions based on that system. You need four safety nets, always the same ones.'
         ),
-        t(
-          'Una domanda da farsi sempre: quante volte, nell\'ultimo mese, qualcuno ha detto no al sistema? Se la risposta è mai, la supervisione non esiste, esiste solo un bottone. La seconda rete è il ripiego: cosa succede se il sistema non risponde? Deve esistere la modalità di prima, ancora funzionante e ancora conosciuta. Se dopo sei mesi nessuno sa più lavorare senza il sistema, hai creato una dipendenza, non un miglioramento.',
-          'A question to always ask: how many times in the last month did somebody say no to the system? If the answer is never, oversight does not exist, only a button does. The second net is the fallback: what happens if the system does not answer? The previous way of working has to exist, still working and still known. If after six months nobody knows how to work without the system, you created a dependency, not an improvement.'
-        ),
-        t(
-          'La terza è la procedura scritta, in inglese SOP, Standard Operating Procedure: il documento che dice cosa fa l\'operatore quando arriva l\'avviso, chi chiama, entro quanto, cosa registra. Senza, ognuno fa a modo suo e il risultato non è ripetibile. La quarta è formazione e registrazione: chi è stato formato, quando, su cosa. In una produzione regolamentata non è burocrazia, è ciò che permette di dimostrare che il processo era sotto controllo.',
-          'The third is the written procedure, the SOP, Standard Operating Procedure: the document that says what the operator does when the alert arrives, who they call, within how long, what they record. Without it everyone does it their own way and the result is not repeatable. The fourth is training and records: who was trained, when, on what. In regulated manufacturing this is not paperwork, it is what lets you show the process was under control.'
-        ),
+        {
+          steps: [
+            {
+              name: t('Supervisione umana reale', 'Real human oversight'),
+              text: t(
+                'Non basta scrivere che l\'operatore conferma: serve che abbia il tempo, l\'informazione e l\'autorità per dissentire. La domanda da farsi è quante volte, nell\'ultimo mese, qualcuno ha detto no al sistema. Se la risposta è mai, esiste solo un bottone.',
+                'It is not enough to write that the operator confirms: they need the time, the information and the authority to disagree. The question to ask is how many times in the last month somebody said no to the system. If the answer is never, all you have is a button.'
+              )
+            },
+            {
+              name: t('Ripiego, fallback', 'Fallback'),
+              text: t(
+                'Cosa succede se il sistema non risponde. Deve esistere la modalità di prima, ancora funzionante e ancora conosciuta. Se dopo sei mesi nessuno sa più lavorare senza il sistema, hai creato una dipendenza.',
+                'What happens if the system does not answer. The previous way of working has to exist, still working and still known. If after six months nobody can work without the system, you created a dependency.'
+              )
+            },
+            {
+              name: t('Procedura scritta, SOP', 'Written procedure, SOP'),
+              text: t(
+                'Il documento che dice cosa fa l\'operatore quando arriva l\'avviso: chi chiama, entro quanto, cosa registra. Senza, ognuno fa a modo suo e il risultato non è ripetibile.',
+                'The document that says what the operator does when the alert arrives: who they call, within how long, what they record. Without it everyone does it their own way and the result is not repeatable.'
+              )
+            },
+            {
+              name: t('Formazione e registrazione', 'Training and records'),
+              text: t(
+                'Chi è stato formato, quando, su cosa. In una produzione regolamentata non è burocrazia: è ciò che permette di dimostrare che il processo era sotto controllo.',
+                'Who was trained, when, on what. In regulated manufacturing this is not paperwork: it is what lets you show the process was under control.'
+              )
+            }
+          ]
+        },
         t(
           'E poi il cancello non negoziabile, quello che attraversa tutto il corso: un sistema probabilistico non decide da solo su rilascio del prodotto, sicurezza delle persone e conformità. Propone, e la decisione resta a una persona identificabile.',
           'And then the non-negotiable gate, the one that runs through the whole course: a probabilistic system does not decide on its own about product release, people safety or compliance. It suggests, and the decision stays with an identifiable person.'
@@ -524,10 +594,22 @@ export const inProduzioneLesson = {
           'La deriva dei dati riguarda gli ingressi: un sensore viene sostituito con un modello diverso, si introduce una nuova materia prima, cambia la velocità di linea, e i numeri che il modello riceve non assomigliano più a quelli su cui ha imparato. La deriva del concetto riguarda la relazione: dopo una revisione della macchina, la vibrazione a 5 mm/s non significa più quello che significava prima. È la più insidiosa, perché non si vede guardando i dati in entrata.',
           'Data drift is about the inputs: a sensor is replaced with a different model, a new raw material comes in, line speed changes, and the numbers the model receives no longer look like the ones it learned from. Concept drift is about the relation: after a machine overhaul, vibration at 5 mm/s no longer means what it meant before. It is the nastier one, because you cannot see it by looking at the incoming data.'
         ),
-        t(
-          'Quindi servono tre cose da misurare ogni settimana. Salute tecnica: il sistema gira, quanti errori, quante volte non ha risposto. Qualità delle previsioni, confrontate con quello che è successo davvero, tenendo conto che nella manutenzione predittiva la verità arriva con settimane di ritardo e quindi si misura su una finestra scorrevole. Adozione e valore: quante persone lo usano, quante volte l\'avviso ha prodotto un\'azione, e soprattutto se l\'indicatore di business è ancora migliore della baseline.',
-          'So there are three things to measure every week. Technical health: is it running, how many errors, how often did it fail to answer. Prediction quality, compared with what actually happened, keeping in mind that in predictive maintenance the truth arrives weeks later, so you measure on a rolling window. Adoption and value: how many people use it, how often the alert produced an action, and above all whether the business number is still better than the baseline.'
-        ),
+        {
+          steps: [
+            {
+              name: t('Salute tecnica', 'Technical health'),
+              text: t('Il sistema gira? Quanti errori, quante volte non ha risposto, da quanto è ferma l\'ultima elaborazione.', 'Is it running? How many errors, how often it failed to answer, how long since the last run.')
+            },
+            {
+              name: t('Qualità delle previsioni', 'Prediction quality'),
+              text: t('Confrontate con quello che è successo davvero. Nella manutenzione predittiva la verità arriva con settimane di ritardo, quindi si misura su una finestra scorrevole.', 'Compared with what actually happened. In predictive maintenance the truth arrives weeks later, so you measure on a rolling window.')
+            },
+            {
+              name: t('Adozione e valore', 'Adoption and value'),
+              text: t('Quante persone lo usano, quante volte l\'avviso ha prodotto un\'azione, e soprattutto se l\'indicatore di business è ancora migliore della baseline.', 'How many people use it, how often the alert produced an action, and above all whether the business number is still better than the baseline.')
+            }
+          ]
+        },
         t(
           'Il terzo è quello che conta di più e quello che nessuno guarda. Un modello può essere tecnicamente perfetto mentre il valore è svanito, perché le persone hanno smesso di usarlo.',
           'The third one matters most and is the one nobody looks at. A model can be technically perfect while the value has gone, because people stopped using it.'
@@ -687,14 +769,30 @@ export const inProduzioneLesson = {
           'Alla fine di un pilota ci sono tre risposte possibili, non due. Estendo: i numeri reggono, l\'adozione è reale, il contesto delle altre linee è abbastanza simile. Estendere significa comunque rifare le tappe 2 e 3 su ogni nuovo sito in versione ridotta, cioè baseline nuova e verifica dei dati nuova, perché copiare un modello su un contesto diverso senza rimisurare è l\'errore che brucia la credibilità di un intero programma.',
           'At the end of a pilot there are three possible answers, not two. I scale: the numbers hold, adoption is real, the context of the other lines is similar enough. Scaling still means redoing steps 2 and 3 on every new site in a reduced form, that is a new baseline and a new data check, because copying a model into a different context without measuring again is the mistake that burns the credibility of a whole programme.'
         ),
-        t(
-          'Mi fermo: i numeri non reggono, oppure reggono ma le condizioni per usarli non esistono, come nella storia della qualità. Fermarsi è una decisione professionale se ha tre elementi: cosa hai imparato, quanto è costato, cosa deve cambiare perché si riprenda. Terza risposta: continuo qui, ma non estendo. È la più frequente nella realtà e la meno raccontata, perché il caso funziona su una linea e crea valore lì, ma la condizione che lo rende possibile non esiste altrove.',
-          'I stop: the numbers do not hold, or they hold but the conditions to use them do not exist, as in the quality story. Stopping is a professional decision if it has three elements: what you learned, what it cost, what has to change for it to restart. Third answer: I keep it here, but I do not scale. It is the most frequent in reality and the least told, because the case works on one line and creates value there, but the condition that makes it possible does not exist elsewhere.'
-        ),
-        t(
-          'Poi c\'è il caso economico per estendere, e servono tre numeri, mai di più. Beneficio annuo per linea, con il metodo di calcolo e chi ha firmato la baseline. Costo di estensione per linea, che scende dalla seconda in poi perché l\'impianto è già fatto. Costo annuo di mantenimento, il 15-20 percento, che quasi tutti dimenticano ed è ciò che rende un caso economico credibile.',
-          'Then there is the business case for scaling, and it needs three numbers, never more. Annual benefit per line, with the method of calculation and who signed the baseline. Cost of extension per line, which falls from the second one onwards because the groundwork is done. Annual maintenance cost, 15 to 20 percent, which almost everybody forgets and which is what makes a business case credible.'
-        ),
+        {
+          numbered: false,
+          steps: [
+            {
+              name: t('Estendo', 'I scale'),
+              text: t('I numeri reggono, l\'adozione è reale, il contesto delle altre linee è abbastanza simile. Ma su ogni sito nuovo si rifanno baseline e verifica dei dati.', 'The numbers hold, adoption is real, the context of the other lines is similar enough. But on every new site you redo the baseline and the data check.')
+            },
+            {
+              name: t('Mi fermo', 'I stop'),
+              text: t('I numeri non reggono, oppure reggono ma le condizioni per usarli non esistono. È una decisione professionale se dici cosa hai imparato, quanto è costato e cosa deve cambiare perché si riprenda.', 'The numbers do not hold, or they hold but the conditions to use them do not exist. It is a professional decision if you say what you learned, what it cost and what has to change for it to restart.')
+            },
+            {
+              name: t('Continuo qui, non estendo', 'I keep it here, I do not scale'),
+              text: t('La risposta più frequente nella realtà e la meno raccontata: il caso crea valore su questa linea, ma la condizione che lo rende possibile non esiste altrove.', 'The most frequent answer in reality and the least told: the case creates value on this line, but the condition that makes it possible does not exist elsewhere.')
+            }
+          ]
+        },
+        {
+          steps: [
+            { name: t('Beneficio annuo per linea', 'Annual benefit per line'), text: t('Con il metodo di calcolo dichiarato e il nome di chi ha firmato la baseline.', 'With the calculation method stated and the name of whoever signed the baseline.') },
+            { name: t('Costo di estensione per linea', 'Cost of extension per line'), text: t('Scende dalla seconda linea in poi, perché raccolta dati, archivio, procedura e formazione esistono già.', 'It falls from the second line onwards, because data collection, storage, procedure and training already exist.') },
+            { name: t('Costo annuo di mantenimento', 'Annual maintenance cost'), text: t('Il 15-20 percento del costo iniziale. Quasi tutti lo dimenticano, ed è proprio ciò che rende credibile il conto.', '15 to 20 percent of the initial cost. Almost everybody forgets it, and it is exactly what makes the case credible.') }
+          ]
+        },
         t(
           'Il quarto elemento non è un numero: cosa serve alle persone. Formazione, tempo, e il fatto che qualcuno cambi il proprio modo di lavorare. La maggior parte delle estensioni fallisce lì, non sulla tecnologia.',
           'The fourth element is not a number: what people need. Training, time, and the fact that somebody changes the way they work. Most extensions fail there, not on the technology.'

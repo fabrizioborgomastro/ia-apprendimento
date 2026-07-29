@@ -30,20 +30,51 @@ export const scegliereStrumentoLesson = {
       ),
       theory: [
         t(
-          'Esiste una scala di strumenti, dal più semplice al più complesso, e si sale un gradino solo quando quello sotto non basta. Gradino uno, la regola fissa: se la vibrazione supera 4,5, avvisa. È una condizione scritta da una persona, si spiega in una frase, funziona subito e chiunque capisce perché ha deciso così. Il limite è che non si adatta.',
-          'There is a ladder of tools, from simplest to most complex, and you climb a step only when the one below is not enough. Step one, the fixed rule: if vibration goes above 4.5, raise a warning. It is a condition written by a person, it is explained in one sentence, it works straight away and anyone understands why it decided that way. Its limit is that it does not adapt.'
+          'Esiste una scala di strumenti, dal più semplice al più complesso, e si sale un gradino solo quando quello sotto non basta. Sono cinque gradini, e vanno imparati in ordine.',
+          'There is a ladder of tools, from simplest to most complex, and you climb a step only when the one below is not enough. There are five steps, and they are worth learning in order.'
         ),
+        {
+          steps: [
+            {
+              name: t('Regola fissa, rule', 'Fixed rule'),
+              text: t(
+                'Se la vibrazione supera 4,5, avvisa. Una condizione scritta da una persona: si spiega in una frase, funziona subito, chiunque capisce perché ha deciso così. Il limite è che non si adatta.',
+                'If vibration goes above 4.5, raise a warning. A condition written by a person: explained in one sentence, works straight away, anyone understands why it decided that way. Its limit is that it does not adapt.'
+              )
+            },
+            {
+              name: t('Analytics descrittiva', 'Descriptive analytics'),
+              text: t(
+                'Guardare i dati per capire cosa è successo: un grafico delle tre cause principali di fermo, un confronto fra turni. Non predice, spiega il passato. È il gradino più sottovalutato e quello che risolve più problemi.',
+                'Looking at the data to understand what happened: a chart of the top three causes of downtime, a comparison between shifts. It does not predict, it explains the past. It is the most underrated step and the one that solves most problems.'
+              )
+            },
+            {
+              name: t('Machine learning', 'Machine learning'),
+              text: t(
+                'Il computer trova da solo le relazioni nei dati storici e le usa per prevedere. Serve quando la regola non si riesce a scrivere perché dipende da troppe cose insieme. Costo: dati storici di qualità, e nessuno saprà spiegare in una frase perché ha deciso così.',
+                'The computer finds relations in historical data by itself and uses them to predict. You need it when the rule cannot be written because it depends on too many things at once. Cost: good historical data, and nobody will explain in one sentence why it decided that way.'
+              )
+            },
+            {
+              name: t('Ottimizzazione', 'Optimisation'),
+              text: t(
+                'Trovare la combinazione migliore fra molte possibili, dati dei vincoli. Non prevede, sceglie: per esempio in che ordine produrre otto articoli per ridurre i cambi formato.',
+                'Finding the best combination among many, given the constraints. It does not predict, it picks: for example in which order to run eight products to cut changeovers.'
+              )
+            },
+            {
+              name: t('AI generativa', 'Generative AI'),
+              text: t(
+                'Sistemi che producono testo. Servono quando il materiale di partenza è linguaggio, cioè documenti, procedure, descrizioni scritte a mano. Non servono per prevedere un guasto da una serie di numeri.',
+                'Systems that produce text. You need them when the input material is language, that is documents, procedures, hand-written descriptions. You do not need them to predict a failure from a series of numbers.'
+              )
+            }
+          ]
+        },
         t(
-          'Gradino due, analytics descrittiva: guardare i dati per capire cosa è successo. Un grafico delle prime tre cause di fermo, un confronto fra turni. Non predice niente, spiega il passato. È il gradino più sottovalutato, perché risolve una quantità enorme di problemi: quasi sempre nessuno aveva ancora guardato i dati insieme.',
-          'Step two, descriptive analytics: looking at data to understand what happened. A chart of the top three causes of downtime, a comparison between shifts. It predicts nothing, it explains the past. It is the most underrated step, because it solves a huge number of problems: almost always, nobody had looked at the data together yet.'
-        ),
-        t(
-          'Gradino tre, machine learning, apprendimento automatico: il computer trova da solo le relazioni nei dati storici e le usa per prevedere. Serve quando la regola non si riesce a scrivere perché dipende da troppe cose insieme. Il costo è che servono dati storici di qualità, e che nessuno saprà spiegare in una frase perché il sistema ha deciso così.',
-          'Step three, machine learning: the computer finds relations in historical data by itself and uses them to predict. You need it when the rule cannot be written because it depends on too many things at once. The cost is that you need good historical data, and that nobody will be able to explain in one sentence why the system decided that way.'
-        ),
-        t(
-          'Gradino quattro, ottimizzazione: trovare la combinazione migliore fra molte possibili, dati dei vincoli. Non prevede, sceglie. Per esempio in che ordine produrre otto articoli per ridurre i cambi formato. Gradino cinque, AI generativa: sistemi che producono testo. Servono quando il materiale di partenza è linguaggio, cioè documenti, procedure, descrizioni scritte a mano. Non servono per prevedere un guasto da una serie di numeri.',
-          'Step four, optimisation: finding the best combination among many, given the constraints. It does not predict, it picks. For example in which order to run eight products to cut changeovers. Step five, generative AI: systems that produce text. You need them when the input material is language, that is documents, procedures, hand-written descriptions. You do not need them to predict a failure from a series of numbers.'
+          'La differenza fra un gradino e il successivo non è solo tecnica, è di costo e di spiegabilità. Ogni gradino aggiunge soldi, fragilità e persone da formare, e toglie la possibilità di spiegare in una frase perché il sistema ha deciso così. In una produzione regolamentata quella frase ha un valore concreto.',
+          'The difference between one step and the next is not only technical, it is cost and explainability. Every step adds money, fragility and people to train, and takes away the ability to explain in one sentence why the system decided that way. In regulated manufacturing that sentence has a concrete value.'
         ),
         t(
           'Tieni a mente la tabella delle domande. "Cosa è successo" chiede analytics descrittiva. "Succederà" chiede machine learning. "Qual è la scelta migliore" chiede ottimizzazione. "Cosa dice questo documento" chiede AI generativa. "Quando devo intervenire" chiede una regola, se la soglia è nota. L\'errore più comune, quello che ti fa sembrare inesperto, è salire due gradini per abitudine.',
@@ -191,24 +222,69 @@ export const scegliereStrumentoLesson = {
       ),
       theory: [
         t(
-          'Osservo. Passo due turni sulla linea 3 e vedo che quando la linea si ferma l\'operatore chiama il manutentore, il manutentore arriva dopo venti minuti, diagnostica e va a prendere il pezzo. Nel frattempo la linea è ferma. Misuro. Baseline su quattro settimane: 6 ore di fermo a settimana. Con un costo stimato di 900 euro l\'ora, il problema vale circa 280.000 euro l\'anno, e il capo reparto firma quel numero.',
-          'I watch. I spend two shifts on line 3 and I see that when the line stops the operator calls the technician, the technician arrives twenty minutes later, diagnoses and goes to fetch the part. Meanwhile the line is down. I measure. Baseline over four weeks: 6 hours of downtime a week. At an estimated 900 euros an hour, the problem is worth about 280,000 euros a year, and the area manager signs that number.'
+          'Segui il caso dall\'inizio alla fine. Ogni tappa ha il suo nome, gli stessi nomi di sempre: è la storia che userai per rispondere alla domanda "descrivi un processo di trasformazione digitale".',
+          'Follow the case from start to finish. Every step has its own name, always the same names: this is the story you will use to answer "describe a digital transformation process".'
+        ),
+        {
+          steps: [
+            {
+              name: t('Osservo', 'I watch'),
+              text: t(
+                'Passo due turni sulla linea 3. Quando la linea si ferma l\'operatore chiama il manutentore, il manutentore arriva dopo venti minuti, diagnostica e va a prendere il pezzo. Nel frattempo la linea è ferma.',
+                'I spend two shifts on line 3. When the line stops the operator calls the technician, the technician arrives twenty minutes later, diagnoses and goes to fetch the part. Meanwhile the line is down.'
+              )
+            },
+            {
+              name: t('Misuro', 'I measure'),
+              text: t(
+                'Baseline su quattro settimane: 6 ore di fermo a settimana. A 900 euro l\'ora il problema vale circa 280.000 euro l\'anno, e il capo reparto firma quel numero prima che si inizi.',
+                'Baseline over four weeks: 6 hours of downtime a week. At 900 euros an hour the problem is worth about 280,000 euros a year, and the area manager signs that number before we start.'
+              )
+            },
+            {
+              name: t('Capisco', 'I understand'),
+              text: t(
+                'I fermi sono già registrati nel MES ma nessuno li guarda aggregati: 3 ore su 6 vengono da un solo gruppo meccanico. I dati di vibrazione esistono da tre anni. Scopro anche che due orologi sono sfasati di 40 secondi, e sistemo prima quello.',
+                'The stops are already recorded in the MES but nobody looks at them together: 3 hours out of 6 come from one mechanical group. Vibration data exists for three years. I also find two clocks 40 seconds apart, and I fix that first.'
+              )
+            },
+            {
+              name: t('Scelgo', 'I choose'),
+              text: t(
+                'Non parto dal machine learning: parto da un grafico settimanale delle tre cause principali con un responsabile assegnato. I fermi scendono da 6 a 4,8 ore, cioè 56.000 euro l\'anno con due giorni di lavoro. Restano i cedimenti del cuscinetto: lì sì, un modello.',
+                'I do not start from machine learning: I start from a weekly chart of the top three causes with an owner assigned. Downtime drops from 6 to 4.8 hours, that is 56,000 euros a year with two days of work. Bearing failures remain: there, a model fits.'
+              )
+            },
+            {
+              name: t('Provo in ombra', 'I try it in the shadow'),
+              text: t(
+                'Sei settimane in modalità ombra: il modello registra la previsione, nessuno la vede, in linea non cambia niente. Su 11 cedimenti reali ne anticipa 8 con due giorni di margine, con 5 falsi allarmi. Il conto torna: 2,5 ore di controlli inutili contro oltre 5 ore di fermate evitate.',
+                'Six weeks in shadow mode: the model records its prediction, nobody sees it, nothing changes on the line. Out of 11 real failures it flags 8 with two days of margin, with 5 false alarms. The maths works: 2.5 hours of useless checks against over 5 hours of stops avoided.'
+              )
+            },
+            {
+              name: t('Metto in produzione', 'I go live'),
+              text: t(
+                'Tre reti di sicurezza: l\'avviso va al pianificatore e non alla macchina, la ronda programmata resta come prima se il modello non risponde, e il responsabile manutenzione della linea 3 risponde del funzionamento.',
+                'Three safety nets: the alert goes to the planner and not to the machine, the planned round stays as before if the model does not answer, and the maintenance supervisor of line 3 answers for it.'
+              )
+            },
+            {
+              name: t('Decido', 'I decide'),
+              text: t(
+                'Dopo tre mesi i fermi sono a 3,9 ore contro le 6 di partenza. Estendo alle linee 1 e 2, che hanno lo stesso gruppo meccanico. Non alle linee 4 e 5, di un altro costruttore: lì il caso va rifatto.',
+                'After three months downtime is at 3.9 hours against the 6 we started from. I scale to lines 1 and 2, which have the same mechanical group. Not to lines 4 and 5, from another manufacturer: there the case has to be rebuilt.'
+              )
+            }
+          ]
+        },
+        t(
+          'Guarda la proporzione, perché è il dato che rende credibile tutto il metodo: il 57 percento del recupero è arrivato dal gradino più basso, con due giorni di lavoro e zero rischio. Il machine learning ha aggiunto il resto, con settimane di lavoro.',
+          'Look at the proportion, because it is the number that makes the whole method credible: 57 percent of the recovery came from the lowest step, with two days of work and zero risk. Machine learning added the rest, with weeks of work.'
         ),
         t(
-          'Capisco. I fermi sono già registrati nel sistema di esecuzione della produzione, ma nessuno li guarda aggregati. Guardandoli scopro che 3 ore su 6 vengono da un solo gruppo meccanico, il trascinamento. I dati di vibrazione esistono nell\'archivio storico, ogni secondo, da tre anni. Scopro anche che gli orologi del sistema di manutenzione e dell\'archivio sono sfasati di 40 secondi, e quella è la prima cosa che sistemo.',
-          'I understand. The stops are already recorded in the manufacturing execution system, but nobody looks at them together. Looking at them, I find that 3 hours out of 6 come from one mechanical group, the drive. Vibration data exists in the historian, every second, for three years. I also find that the maintenance system and the historian are 40 seconds apart, and that is the first thing I fix.'
-        ),
-        t(
-          'Scelgo. Non parto dal machine learning: parto da un grafico settimanale delle tre cause principali, con un responsabile assegnato, a costo quasi zero. I fermi scendono da 6 a 4,8 ore, quindi ho già recuperato circa 56.000 euro l\'anno con due giorni di lavoro. Restano i cedimenti del cuscinetto, che nessuna regola semplice anticipa perché dipendono da vibrazione, temperatura e ore insieme. Qui sì, machine learning.',
-          'I choose. I do not start from machine learning: I start from a weekly chart of the top three causes, with an owner assigned, at almost zero cost. Downtime drops from 6 to 4.8 hours, so I have already recovered about 56,000 euros a year with two days of work. What remains is bearing failure, which no simple rule anticipates because it depends on vibration, temperature and running hours together. Here, machine learning fits.'
-        ),
-        t(
-          'Provo. Sei settimane in modalità ombra: il modello gira e registra la previsione, ma nessuno la vede e niente cambia in linea. Alla fine confronto: su 11 cedimenti realmente avvenuti il modello ne aveva anticipati 8 con almeno due giorni di margine, e ha dato 5 falsi allarmi. I 5 falsi allarmi costano mezz\'ora di controllo ciascuno, cioè 2,5 ore, contro 8 fermate evitate da circa 40 minuti l\'una, cioè oltre 5 ore. Il conto torna.',
-          'I try it. Six weeks in shadow mode: the model runs and records its prediction, but nobody sees it and nothing changes on the line. At the end I compare: out of 11 real failures the model had flagged 8 with at least two days of margin, and it raised 5 false alarms. The 5 false alarms cost half an hour of checking each, that is 2.5 hours, against 8 stops avoided of about 40 minutes each, that is over 5 hours. The maths works.'
-        ),
-        t(
-          'Metto in produzione con tre reti di sicurezza: l\'avviso va al pianificatore della manutenzione e non alla macchina, la ronda programmata resta come prima se il modello non risponde, e il responsabile manutenzione della linea 3 risponde del funzionamento. Decido. Dopo tre mesi i fermi sono a 3,9 ore a settimana contro le 6 di partenza. Estendo alle linee 1 e 2, che hanno lo stesso gruppo meccanico, e non alle linee 4 e 5, che hanno macchine di un altro costruttore.',
-          'I go live with three safety nets: the alert goes to the maintenance planner and not to the machine, the planned round stays exactly as before if the model does not answer, and the maintenance supervisor of line 3 answers for it. I decide. After three months downtime is at 3.9 hours a week against the 6 we started from. I scale to lines 1 and 2, which have the same mechanical group, and not to lines 4 and 5, which have machines from another manufacturer.'
+          'E nota cosa non è mai stato fatto: nessun sistema ferma una macchina, nessuna previsione entra nel controllo in tempo reale, e il primo intervento non ha richiesto nessun modello. Sono le tre cose che a colloquio ti fanno sembrare uno che ha lavorato in produzione.',
+          'And note what was never done: no system stops a machine, no prediction enters real-time control, and the first fix required no model at all. Those are the three things that make you sound like someone who has worked in production.'
         )
       ],
       keyPoints: [
@@ -359,24 +435,69 @@ export const scegliereStrumentoLesson = {
       ),
       theory: [
         t(
-          'Osservo. Un formato nuovo, lanciato da due mesi, produce più scarto del previsto, e in reparto si dice che sembra andare meglio da quando è cambiato il fornitore del film. Misuro. Baseline: scarto al 2,3 percento contro lo standard aziendale dello 0,8. Su 3 milioni di pezzi al mese la differenza è 45.000 pezzi scartati in più.',
-          'I watch. A new format, launched two months ago, scraps more than expected, and on the floor people say it seems better since the film supplier changed. I measure. Baseline: scrap at 2.3 percent against a company standard of 0.8. On 3 million units a month the difference is 45,000 extra units scrapped.'
+          'Seconda storia, stesse sette tappe, finale diverso: questa volta si decide di non estendere. È la storia che a colloquio ti fa sembrare uno che questo mestiere lo ha fatto davvero.',
+          'Second story, the same seven steps, a different ending: this time the decision is not to scale. This is the story that makes you sound like someone who has really done this job.'
+        ),
+        {
+          steps: [
+            {
+              name: t('Osservo', 'I watch'),
+              text: t(
+                'Un formato nuovo, lanciato da due mesi, produce più scarto del previsto. In reparto si dice che sembra andare meglio da quando è cambiato il fornitore del film.',
+                'A new format, launched two months ago, scraps more than expected. On the floor people say it seems better since the film supplier changed.'
+              )
+            },
+            {
+              name: t('Misuro', 'I measure'),
+              text: t(
+                'Scarto al 2,3 percento contro uno standard aziendale dello 0,8. Su 3 milioni di pezzi al mese la differenza è 45.000 pezzi scartati in più.',
+                'Scrap at 2.3 percent against a company standard of 0.8. On 3 million units a month the difference is 45,000 extra units scrapped.'
+              )
+            },
+            {
+              name: t('Capisco', 'I understand'),
+              text: t(
+                'Il dato di scarto è collegato al lotto, buona notizia. Analizzandolo: lo scarto è concentrato nel turno di notte, 3,4 percento contro 1,7, e su un solo formato su sei. Nessuno lo aveva notato perché in riunione si guardava la media mensile.',
+                'The scrap data is linked to the batch, good news. Analysing it: scrap is concentrated on the night shift, 3.4 percent against 1.7, and on one format out of six. Nobody had noticed because meetings looked at the monthly average.'
+              )
+            },
+            {
+              name: t('Scelgo', 'I choose'),
+              text: t(
+                'Prima il gradino più basso: una regola che avvisa se la temperatura di saldatura esce da una banda stretta su quel formato. Lo scarto scende da 2,3 a 1,6. Non basta, perché lo standard è 0,8, e il difetto residuo è visivo: serve un controllo visivo automatico.',
+                'First the lowest step: a rule that warns if the sealing temperature leaves a narrow band on that format. Scrap drops from 2.3 to 1.6. Not enough, because the standard is 0.8, and the remaining defect is visual: automated visual inspection is needed.'
+              )
+            },
+            {
+              name: t('Provo in ombra', 'I try it in the shadow'),
+              text: t(
+                'Otto settimane: il sistema fotografa e giudica ma non scarta niente, un controllore qualificato rivede tutte le segnalazioni. Precisione 60 percento, 96 su 160 segnalazioni erano difetti veri. Richiamo 80 percento, 96 su 120 difetti trovati.',
+                'Eight weeks: the system photographs and judges but rejects nothing, a qualified inspector reviews every flag. Precision 60 percent, 96 out of 160 flags were real defects. Recall 80 percent, 96 out of 120 defects found.'
+              )
+            },
+            {
+              name: t('Metto in produzione', 'I go live'),
+              text: t(
+                'Modalità consultiva su un solo formato: il sistema segnala, una persona guarda e decide. Nessuno scarto automatico, perché scartare è una decisione di conformità.',
+                'Advisory mode on one format only: the system flags, a person looks and decides. No automatic rejection, because rejecting is a compliance decision.'
+              )
+            },
+            {
+              name: t('Decido: mi fermo', 'I decide: I stop'),
+              text: t(
+                'Le segnalazioni sono 160 in otto settimane su un turno. A sei formati e tre turni diventerebbero 3.600, cioè 75 al giorno, contro una capacità di revisione di circa 30. Non estendo: prima alzo la precisione dal 60 ad almeno il 75 percento.',
+                'The flags are 160 in eight weeks on one shift. At six formats and three shifts they would become 3,600, that is 75 a day, against a review capacity of about 30. I do not scale: first I raise precision from 60 to at least 75 percent.'
+              )
+            }
+          ]
+        },
+        t(
+          'Il punto della storia è tutto nell\'ultima tappa. Se estendo, succede una cosa prevedibile: la coda cresce, le persone iniziano a confermare senza guardare, e la supervisione umana diventa finta. A quel punto il rischio è più alto di prima, non più basso.',
+          'The point of the story is all in the last step. If I scale, something predictable happens: the queue grows, people start confirming without looking, and human oversight becomes fake. At that point the risk is higher than before, not lower.'
         ),
         t(
-          'Capisco. Il dato di scarto esiste nel sistema di esecuzione della produzione ed è collegato al lotto, che è una buona notizia. Analizzandolo trovo due cose: lo scarto è concentrato nel turno di notte, 3,4 percento contro l\'1,7 degli altri turni, e riguarda un solo formato su sei. Nessuno lo aveva notato perché il numero riportato in riunione era la media mensile di tutti i turni e tutti i formati.',
-          'I understand. The scrap data is in the manufacturing execution system and it is linked to the batch, which is good news. Analysing it I find two things: scrap is concentrated on the night shift, 3.4 percent against 1.7 on the others, and it concerns one format out of six. Nobody had noticed because the number reported in meetings was the monthly average across all shifts and all formats.'
-        ),
-        t(
-          'Scelgo. Prima ipotesi: è un problema di regolazione, non di controllo. Provo il gradino più basso, una regola che avvisa se la temperatura di saldatura esce da una banda stretta durante quel formato. Lo scarto scende da 2,3 a 1,6 percento. Bene, ma non basta, perché lo standard è 0,8. Il difetto residuo è visivo, una piega irregolare, e nessuna regola sui parametri lo cattura: qui serve un controllo visivo automatico.',
-          'I choose. First idea: it is a settings problem, not an inspection problem. I try the lowest step, a rule that warns if the sealing temperature leaves a narrow band during that format. Scrap drops from 2.3 to 1.6 percent. Good, but not enough, because the standard is 0.8. The remaining defect is visual, an irregular fold, and no rule on parameters catches it: this needs automated visual inspection.'
-        ),
-        t(
-          'Provo. Otto settimane in modalità ombra, il sistema fotografa e giudica ma non scarta niente, e un controllore qualificato rivede tutte le segnalazioni. Da lì si calcolano due numeri. Precisione: di tutti i pezzi segnalati, quanti erano davvero difettosi, cioè 96 su 160, il 60 percento. Richiamo: di tutti i pezzi davvero difettosi, quanti ne ha trovati, cioè 96 su 120, l\'80 percento.',
-          'I try it. Eight weeks in shadow mode, the system photographs and judges but rejects nothing, and a qualified inspector reviews every flag. From there you compute two numbers. Precision: of all the units flagged, how many really were defective, that is 96 out of 160, 60 percent. Recall: of all the truly defective units, how many it found, that is 96 out of 120, 80 percent.'
-        ),
-        t(
-          'Metto in produzione in modalità consultiva su un solo formato: il sistema segnala, una persona guarda e decide, nessuno scarto automatico, perché scartare è una decisione di conformità. E qui arriva il punto della storia. Le segnalazioni sono 160 in otto settimane su un turno; estendendo a sei formati e tre turni diventerebbero circa 3.600, cioè 75 al giorno, mentre il controllo qualità ne può rivedere circa 30. Se estendo, la coda cresce, le persone confermano senza guardare e la supervisione diventa finta. Decisione: non estendo, prima alzo la precisione dal 60 ad almeno il 75 percento.',
-          'I go live in advisory mode on one format only: the system flags, a person looks and decides, no automatic rejection, because rejecting is a compliance decision. And here comes the point of the story. The flags are 160 in eight weeks on one shift; scaling to six formats and three shifts they would become about 3,600, that is 75 a day, while quality control can review about 30. If I scale, the queue grows, people confirm without looking, and oversight becomes fake. Decision: I do not scale, first I raise precision from 60 to at least 75 percent.'
+          'E c\'è una tentazione da riconoscere: alzare la soglia per ridurre i falsi allarmi. Sembra un miglioramento, ma sposta il costo su un errore molto più caro, il difetto che arriva al cliente. I due errori non costano uguale, quindi prima di toccare una soglia guardo quale dei due mi sto comprando.',
+          'And there is a temptation to recognise: raising the threshold to cut false alarms. It looks like an improvement, but it moves the cost onto a far more expensive error, the defect that reaches the customer. The two errors do not cost the same, so before touching a threshold I look at which one I am buying.'
         )
       ],
       keyPoints: [
@@ -688,8 +809,22 @@ export const scegliereStrumentoLesson = {
       ),
       theory: [
         t(
-          'Ci sono cinque situazioni in cui l\'AI non è la risposta. Uno: il dato non c\'è o non è affidabile, e se i microfermi non vengono registrati nessun modello li può prevedere. Due: una regola semplice basta, e se la soglia è nota e scritta nel manuale un modello aggiunge solo costo e opacità.',
-          'There are five situations where AI is not the answer. One: the data is missing or unreliable, and if micro-stops are not recorded no model can predict them. Two: a simple rule is enough, and if the threshold is known and written in the manual a model only adds cost and opacity.'
+          'Ci sono cinque situazioni in cui l\'AI non è la risposta, e conviene saperle riconoscere per nome.',
+          'There are five situations where AI is not the answer, and it is worth recognising them by name.'
+        ),
+        {
+          numbered: false,
+          steps: [
+            { name: t('Il dato non è affidabile', 'The data is unreliable'), text: t('Se i microfermi non vengono registrati, nessun modello li può prevedere. Prima si misura, poi si modella.', 'If micro-stops are not recorded, no model can predict them. First you measure, then you model.') },
+            { name: t('Una regola semplice basta', 'A simple rule is enough'), text: t('Se la soglia è nota e scritta nel manuale, un modello aggiunge solo costo e opacità.', 'If the threshold is known and written in the manual, a model only adds cost and opacity.') },
+            { name: t('Il problema è organizzativo', 'The problem is organisational'), text: t('Se il ritardo nasce dal fatto che due reparti non si parlano, un cruscotto lo rende visibile ma non lo risolve.', 'If the delay comes from two departments not talking, a dashboard makes it visible but does not solve it.') },
+            { name: t('La decisione non è delegabile', 'The decision cannot be delegated'), text: t('Rilascio di un lotto, sicurezza delle persone, conformità: lì un sistema può proporre, mai decidere.', 'Batch release, people safety, compliance: there a system can suggest, never decide.') },
+            { name: t('Nessuno cambierà comportamento', 'Nobody will change behaviour'), text: t('Se chi riceve l\'avviso non ha tempo né autorità per agire, il modello migliore del mondo non produce nulla.', 'If the person receiving the alert has neither time nor authority to act, the best model in the world produces nothing.') }
+          ]
+        },
+        t(
+          'Riconoscere la situazione però non basta: quello che conta è come lo dici, e qui la maggior parte delle persone sbaglia.',
+          'Recognising the situation is not enough though: what counts is how you say it, and this is where most people get it wrong.'
         ),
         t(
           'Tre: il problema è organizzativo, non tecnico, e se il ritardo nasce dal fatto che due reparti non si parlano un cruscotto non lo risolve, lo rende solo più visibile. Quattro: la decisione non può essere delegata, come il rilascio di un lotto, la sicurezza delle persone o la conformità: lì un sistema può proporre, mai decidere. Cinque: nessuno cambierà comportamento, e se chi riceve l\'avviso non ha né tempo né autorità per agire, il modello migliore del mondo non produce nulla.',
@@ -699,10 +834,13 @@ export const scegliereStrumentoLesson = {
           'Ora la parte difficile: come si dice. Un no secco ti fa sembrare l\'ostacolo. Un sì compiacente ti fa sembrare uno che non conosce il mestiere, e fra tre mesi il problema sarà tuo. La formula che funziona ha tre parti.',
           'Now the hard part: how you say it. A flat no makes you look like the obstacle. An agreeable yes makes you look like someone who does not know the trade, and in three months the problem will be yours. The formula that works has three parts.'
         ),
-        t(
-          'Primo, riconosci il problema vero: il problema dei fermi è reale e costa 280.000 euro l\'anno. Secondo, spiega perché quello strumento non lo risolve adesso: i microfermi non sono nei dati, quindi un modello non li vedrebbe. Terzo, proponi cosa fare invece, con tempi: in tre settimane sistemiamo la registrazione, poi rivalutiamo e sapremo se serve un modello.',
-          'First, acknowledge the real problem: the downtime problem is real and it costs 280,000 euros a year. Second, explain why that tool does not solve it now: micro-stops are not in the data, so a model would not see them. Third, propose what to do instead, with dates: in three weeks we fix the recording, then we look again and we will know whether a model is needed.'
-        ),
+        {
+          steps: [
+            { name: t('Riconosci il problema vero', 'Acknowledge the real problem'), text: t('Il problema dei fermi è reale e costa 280.000 euro l\'anno.', 'The downtime problem is real and it costs 280,000 euros a year.') },
+            { name: t('Spiega perché non adesso', 'Explain why not now'), text: t('I microfermi non sono nei dati, quindi un modello non li vedrebbe.', 'Micro-stops are not in the data, so a model would not see them.') },
+            { name: t('Proponi il percorso, con tempi', 'Propose the path, with dates'), text: t('In tre settimane sistemiamo la registrazione, poi rivalutiamo e sapremo se serve un modello.', 'In three weeks we fix the recording, then we look again and we will know whether a model is needed.') }
+          ]
+        },
         t(
           'Non stai dicendo no al progetto, stai dicendo non adesso, e questo è il percorso. È diverso, e nessuno può obiettare. Aggiungi sempre la condizione di rientro, cioè cosa deve succedere perché la proposta rifiutata torni in gioco: un no professionale ne ha sempre una, altrimenti è solo un rifiuto e verrà scavalcato.',
           'You are not saying no to the project, you are saying not now, and this is the path. That is different, and nobody can argue with it. Always add the re-entry condition, that is what has to happen for the rejected proposal to come back: a professional no always has one, otherwise it is just a refusal and it will be bypassed.'
