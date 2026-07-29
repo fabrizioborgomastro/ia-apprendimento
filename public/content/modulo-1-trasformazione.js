@@ -242,9 +242,16 @@ export const trasformazioneLesson = {
           'A plant is measured on three fronts: how much it produces, how well it produces it, how often it stops. Productivity, quality, maintenance. These are the three areas named in the job advert too, and it is worth using the same words.'
         ),
         t(
-          'Il numero più usato in produzione è l\'OEE, Overall Equipment Effectiveness, in italiano efficienza complessiva dell\'impianto. È un numero unico da 0 a 100 percento che mette insieme tre cose moltiplicandole: disponibilità, prestazione e qualità. La disponibilità dice per quanto tempo la macchina era davvero disponibile rispetto a quando avrebbe dovuto produrre. La prestazione dice quanto è andata veloce rispetto alla velocità nominale. La qualità dice quanti pezzi erano buoni.',
-          'The most used number in production is OEE, Overall Equipment Effectiveness. It is a single number from 0 to 100 percent that puts three things together by multiplying them: availability, performance and quality. Availability says how long the machine was really available compared to when it should have been running. Performance says how fast it ran compared to its nominal speed. Quality says how many parts were good.'
+          'Il numero più usato in produzione è l\'OEE, Overall Equipment Effectiveness, in italiano efficienza complessiva dell\'impianto. È un numero unico da 0 a 100 percento, e nasce dalla moltiplicazione di tre fattori.',
+          'The most used number in production is OEE, Overall Equipment Effectiveness. It is a single number from 0 to 100 percent, and it comes from multiplying three factors.'
         ),
+        {
+          steps: [
+            { name: t('Disponibilità, availability', 'Availability'), text: t('Per quanto tempo la macchina era davvero disponibile rispetto a quando avrebbe dovuto produrre. Se doveva lavorare 8 ore e si è fermata 1 ora: 7 su 8, cioè 87,5 percento.', 'How long the machine was really available compared to when it should have been running. If it should have run 8 hours and stopped for 1: 7 out of 8, that is 87.5 percent.') },
+            { name: t('Prestazione, performance', 'Performance'), text: t('Quanto è andata veloce rispetto alla velocità nominale. Se poteva fare 1000 pezzi l\'ora e ne ha fatti 900: 90 percento.', 'How fast it ran compared to its nominal speed. If it could make 1000 parts an hour and made 900: 90 percent.') },
+            { name: t('Qualità, quality', 'Quality'), text: t('Quanti pezzi erano buoni. Se su 900 pezzi 27 sono da buttare: 873 su 900, cioè 97 percento.', 'How many parts were good. If out of 900 parts 27 are scrap: 873 out of 900, that is 97 percent.') }
+          ]
+        },
         t(
           'Un esempio di calcolo. La macchina doveva lavorare 8 ore e si è fermata 1 ora, quindi la disponibilità è 7 su 8, cioè 87,5 percento. Poteva fare 1000 pezzi l\'ora e ne ha fatti 900, quindi la prestazione è 90 percento. Su 900 pezzi 27 sono da buttare, quindi la qualità è 97 percento. Moltiplicando, 0,875 per 0,90 per 0,97 fa 76,4 percento di OEE.',
           'A worked calculation. The machine should have run 8 hours and stopped for 1, so availability is 7 out of 8, that is 87.5 percent. It could make 1000 parts an hour and made 900, so performance is 90 percent. Out of 900 parts, 27 are scrap, so quality is 97 percent. Multiply them: 0.875 times 0.90 times 0.97 gives 76.4 percent OEE.'

@@ -652,9 +652,17 @@ export const scegliereStrumentoLesson = {
           'First: it does not know whether something is true, it knows what is likely. That is why it can confidently write something wrong, and this is called hallucination: it is not a bug to fix, it is how it works. Second: it knows nothing about your company, because your company was not in the text it learned from. The second point is the practical problem to solve.'
         ),
         t(
-          'Qui entra RAG, Retrieval Augmented Generation, generazione con recupero di documenti. In una frase: prima cerco il documento giusto, poi chiedo al modello di rispondere usando solo quello, citando da dove ha preso la risposta. Non è magia, sono quattro passi: controllo chi sei e cosa hai il diritto di vedere, cerco fra i documenti autorizzati, verifico che siano la versione valida oggi, genero la risposta con la citazione.',
-          'This is where RAG comes in, Retrieval Augmented Generation. In one sentence: first I find the right document, then I ask the model to answer using only that, quoting where the answer came from. It is not magic, it is four steps: check who you are and what you are allowed to see, search the documents you are allowed to see, verify they are the version valid today, generate the answer with the citation.'
+          'Qui entra RAG, Retrieval Augmented Generation, generazione con recupero di documenti. In una frase: prima cerco il documento giusto, poi chiedo al modello di rispondere usando solo quello, citando da dove ha preso la risposta. Non è magia, sono quattro passi.',
+          'This is where RAG comes in, Retrieval Augmented Generation. In one sentence: first I find the right document, then I ask the model to answer using only that, quoting where the answer came from. It is not magic, it is four steps.'
         ),
+        {
+          steps: [
+            { name: t('Controllo chi sei', 'Check who you are'), text: t('Quali documenti hai il diritto di vedere, secondo i permessi di accesso già esistenti.', 'Which documents you are allowed to see, according to the access rights that already exist.') },
+            { name: t('Cerco fra i documenti autorizzati', 'Search the allowed documents'), text: t('Solo quelli che riguardano la domanda, e solo quelli che puoi vedere tu.', 'Only those that concern the question, and only those you are allowed to see.') },
+            { name: t('Verifico la versione valida oggi', 'Check the version valid today'), text: t('È il passo che nessuno considera, ed è il più importante in una produzione regolamentata.', 'It is the step nobody considers, and the most important one in regulated manufacturing.') },
+            { name: t('Genero la risposta con la citazione', 'Generate the answer with the citation'), text: t('Il modello risponde solo su quei documenti, e mostra il riferimento apribile con un clic.', 'The model answers only from those documents, and shows the reference, openable with one click.') }
+          ]
+        },
         t(
           'Il terzo passo è quello che nessuno considera e che in una produzione regolamentata è il più importante. Un assistente che risponde con la procedura sbagliata perché superata è peggio di nessun assistente, perché è convincente. E la versione valida oggi non è un dettaglio tecnico: è una questione di conformità.',
           'The third step is the one nobody considers and the most important one in regulated manufacturing. An assistant that answers with the wrong procedure because it is out of date is worse than no assistant at all, because it is convincing. And the version valid today is not a technical detail: it is a compliance matter.'

@@ -392,10 +392,14 @@ export const fabbricaDigitaleLesson = {
           'Il MES, Manufacturing Execution System, sistema di esecuzione della produzione, sta in mezzo tra l\'ERP e le macchine. Prende l\'ordine dall\'ERP e lo traduce in esecuzione: quale linea, quale ricetta, quali materiali, quale operatore, quali controlli di qualità. E soprattutto registra cosa è successo davvero. Ragiona in minuti.',
           'MES, Manufacturing Execution System, sits between ERP and the machines. It takes the order from ERP and turns it into execution: which line, which recipe, which materials, which operator, which quality checks. And above all it records what actually happened. It thinks in minutes.'
         ),
-        t(
-          'Il modo più semplice per ricordarli: ERP dice cosa e quando, cioè pianifica. MES dice come è andata davvero, cioè esegue e registra. SCADA e PLC fanno muovere le cose adesso, cioè controllano. Tre orizzonti di tempo, tre mestieri diversi.',
-          'The simplest way to remember them: ERP says what and when, that is planning. MES says how it really went, that is execution and recording. SCADA and PLC make things move right now, that is control. Three time horizons, three different jobs.'
-        ),
+        {
+          numbered: false,
+          steps: [
+            { name: t('ERP: cosa e quando', 'ERP: what and when'), text: t('Pianifica. Ragiona in giorni e settimane.', 'It plans. It thinks in days and weeks.') },
+            { name: t('MES: come è andata davvero', 'MES: how it really went'), text: t('Esegue e registra. Ragiona in minuti.', 'It executes and records. It thinks in minutes.') },
+            { name: t('SCADA e PLC: adesso', 'SCADA and PLC: right now'), text: t('Controllano e fanno muovere le cose. Ragionano in secondi e millisecondi.', 'They control and make things move. They think in seconds and milliseconds.') }
+          ]
+        },
         t(
           'La funzione del MES che vale più di tutte per il tuo colloquio è la genealogia del lotto, in inglese batch genealogy. È la capacità di risalire da un prodotto finito a tutto ciò che lo ha generato: quali materie prime, da quali lotti in arrivo, su quale macchina, in che turno, con quale versione della ricetta, con quali controlli superati.',
           'The MES function worth most in your interview is batch genealogy. It is the ability to go back from a finished product to everything that made it: which raw materials, from which incoming lots, on which machine, in which shift, with which recipe version, with which checks passed.'
