@@ -273,6 +273,27 @@ test('the application binds the quiz and the glossary search it renders', async 
   assert.ok(source.includes('saveAnswers'), 'answers must be persisted')
 })
 
+test('the quiz feedback is readable: no rule paints its text white on a light card', async () => {
+  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/gu)].map(([, selector, body]) => ({
+    selector: selector.trim(), body
+  }))
+
+  const quizRules = rules.filter(({ selector }) => (
+    /\.feedback|\.quiz-card|\.quiz-options/u.test(selector) && !selector.includes('.unit-english')
+  ))
+  assert.ok(quizRules.length > 0, 'the quiz must be styled')
+
+  for (const { selector, body } of quizRules) {
+    const colour = body.match(/(?:^|;)\s*color:\s*([^;]+)/u)?.[1]?.trim()
+    if (!colour) continue
+    assert.ok(
+      !/rgba\(\s*255\s*,\s*255\s*,\s*255/u.test(colour) && !/^#fff/iu.test(colour) && colour !== 'white',
+      `${selector} paints quiz text white, and the quiz card is light: ${colour}`
+    )
+  }
+})
+
 test('the shell navigation in index.html matches the routes the application knows', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8')
   const navs = [...html.matchAll(/data-nav="([^"]+)"/gu)].map(([, name]) => name)
