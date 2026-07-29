@@ -110,7 +110,7 @@ Il service worker usa una cache con versione esplicita, oggi `ai-sprint-v6`.
 A ogni rilascio che tocca un file in `public`:
 
 1. incrementa `CACHE` in `public/sw.js`;
-2. allinea la stessa versione nei query `?v=` di `public/index.html`, `public/app.js` e `public/render.js`;
+2. allinea la stessa versione in ogni query `?v=` sotto `public/`, oggi `index.html`, `app.js`, `render.js` e `sync.js`; il test fallisce se un file mescola versioni;
 3. aggiungi in `ASSETS` ogni nuovo file del grafo dei moduli, inclusi i file in `public/content/`;
 4. aggiorna `RELEASE_VERSION` in `tests/pwa.test.mjs`.
 
