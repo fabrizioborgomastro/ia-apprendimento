@@ -1,30 +1,6 @@
-import { CONTENT_VERSION, validateCurriculum } from './content/schema.js'
+import { CONTENT_VERSION, UNITS_PER_LESSON, validateCurriculum } from './content/schema.js'
 
-export const LEGACY_BLOCK_COUNTS = {
-  'digital-transformation': 4,
-  'ot-it-ai-cloud': 4,
-  'data-ai-use-cases': 4,
-  'llm-agents': 5,
-  'mvp-governance': 5,
-  'interview-lab': 5
-}
-
-function validateLegacyLessons(lessons) {
-  const errors = []
-  const ids = new Set()
-  for (const lesson of lessons) {
-    if (ids.has(lesson.id)) errors.push(`ID lezione duplicato: ${lesson.id}`)
-    ids.add(lesson.id)
-    if (!lesson.title || !lesson.englishTitle) errors.push(`Titolo bilingue mancante: ${lesson.id}`)
-    if (!lesson.blocks?.length) errors.push(`Contenuto mancante: ${lesson.id}`)
-    for (const question of lesson.quiz || []) {
-      if (!question.explanation?.trim()) errors.push(`Spiegazione mancante: ${lesson.id}/${question.id}`)
-      if (!Array.isArray(question.options) || question.options.length < 2) errors.push(`Opzioni mancanti: ${lesson.id}/${question.id}`)
-      if (question.correctOption < 0 || question.correctOption >= question.options.length) errors.push(`Risposta non valida: ${lesson.id}/${question.id}`)
-    }
-  }
-  return errors
-}
+export const MASTERY_THRESHOLD = 80
 
 export function calculateScore(results) {
   const total = results.length
@@ -32,25 +8,25 @@ export function calculateScore(results) {
   return { correct, total, percent: total === 0 ? 0 : Math.round((correct / total) * 100) }
 }
 
-export function migrateLessonProgress(progress, lesson, legacyBlockCount) {
-  const newUnitCount = Array.isArray(lesson?.units) ? lesson.units.length : 0
-  const maximumCursor = Math.max(0, newUnitCount - 1)
-  const legacyCursor = Math.max(0, Number(progress?.cursor) || 0)
-  const legacyMaximumCursor = Math.max(1, legacyBlockCount - 1)
-  const cursor = legacyBlockCount > 0 && newUnitCount > 0
-    ? Math.round((legacyCursor / legacyMaximumCursor) * maximumCursor)
-    : legacyCursor
-
+/**
+ * Version 2 is a different course, so a stored cursor from an older version can
+ * point past the end of a module. Progress is never thrown away: the cursor is
+ * clamped to the units that exist now and the record is stamped with the current
+ * content version.
+ */
+export function migrateLessonProgress(progress, lesson) {
+  const unitCount = Array.isArray(lesson?.units) ? lesson.units.length : UNITS_PER_LESSON
+  const cursor = Math.max(0, Number(progress?.cursor) || 0)
   return {
     ...progress,
-    cursor: Math.min(maximumCursor, Math.max(0, cursor)),
+    cursor: Math.min(unitCount, cursor),
     contentVersion: CONTENT_VERSION
   }
 }
 
 function currentContentProgress(progress, lesson) {
-  if (!progress || !Array.isArray(lesson?.units) || progress.contentVersion === CONTENT_VERSION) return progress
-  return migrateLessonProgress(progress, lesson, LEGACY_BLOCK_COUNTS[progress.lessonId])
+  if (!progress || progress.contentVersion === CONTENT_VERSION) return progress
+  return migrateLessonProgress(progress, lesson)
 }
 
 export function mergeProgress(local, remote, lesson) {
@@ -71,10 +47,8 @@ export function mergeProgress(local, remote, lesson) {
   }
 }
 
-export function validateLessons(lessons) {
-  return lessons.some((lesson) => Array.isArray(lesson.units) || 'timeBudget' in lesson)
-    ? validateCurriculum(lessons, {})
-    : validateLegacyLessons(lessons)
+export function validateLessons(lessons, sources = {}, glossary = []) {
+  return validateCurriculum(lessons, sources, glossary)
 }
 
 const STORAGE_KEY = 'ai-sprint-progress-v1'
@@ -107,4 +81,38 @@ export function updateLessonProgress(allProgress, lessonId, change) {
   const merged = mergeProgress(current, candidate)
   if (change.replaceReviewQuestionIds) merged.reviewQuestionIds = [...new Set(change.reviewQuestionIds || [])]
   return { ...allProgress, [lessonId]: merged }
+}
+
+/**
+ * Answers live next to progress so a reload does not wipe a quiz half way. They
+ * are keyed by question ID, which is stable for the life of the content.
+ */
+const ANSWERS_KEY = 'ai-sprint-answers-v2'
+
+export function readAnswers(storage = globalThis.localStorage) {
+  if (!storage) return {}
+  try { return JSON.parse(storage.getItem(ANSWERS_KEY) || '{}') }
+  catch { return {} }
+}
+
+export function saveAnswers(answers, storage = globalThis.localStorage) {
+  storage?.setItem(ANSWERS_KEY, JSON.stringify(answers))
+  return answers
+}
+
+/** Score of a module: every question of every unit, right or wrong. */
+export function scoreLesson(lesson, answers = {}) {
+  const questions = lesson.units.flatMap((unit) => unit.quiz)
+  const answered = questions.filter((question) => Number.isInteger(answers[question.id]))
+  const results = answered.map((question) => answers[question.id] === question.correctOption)
+  const missed = answered
+    .filter((question) => answers[question.id] !== question.correctOption)
+    .map((question) => question.id)
+  return {
+    ...calculateScore(results),
+    answeredCount: answered.length,
+    questionCount: questions.length,
+    complete: answered.length === questions.length,
+    missed
+  }
 }

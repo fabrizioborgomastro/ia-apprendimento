@@ -1,118 +1,77 @@
-import { CONTENT_VERSION } from './schema.js'
+import { CONTENT_VERSION, QUESTIONS_PER_UNIT, TOTAL_QUESTIONS, TOTAL_UNITS, UNITS_PER_LESSON } from './schema.js'
 import { sources, sourceById } from './sources.js'
-import { digitalTransformationLesson } from './module-1-transformation.js'
-import { architectureLesson } from './module-2-architecture.js'
-import { dataAiLesson } from './module-3-data-ai.js'
-import { llmAgentsLesson } from './module-4-llm-agents.js'
-import { mvpGovernanceLesson } from './module-5-mvp-governance.js'
-import { interviewLabLesson } from './module-6-interview-lab.js'
+import { buildGlossary, confusedPairs } from './glossary.js'
+import { interviewAnswers } from './interview.js'
+import { trasformazioneLesson } from './modulo-1-trasformazione.js'
+import { fabbricaDigitaleLesson } from './modulo-2-fabbrica-digitale.js'
+import { scegliereStrumentoLesson } from './modulo-3-scegliere-strumento.js'
+import { inProduzioneLesson } from './modulo-4-in-produzione.js'
+import { governareScalareLesson } from './modulo-5-governare-scalare.js'
 
-export { CONTENT_VERSION, sources, sourceById }
+export {
+  CONTENT_VERSION, QUESTIONS_PER_UNIT, TOTAL_QUESTIONS, TOTAL_UNITS, UNITS_PER_LESSON,
+  sources, sourceById, confusedPairs, interviewAnswers
+}
 
 /**
- * The authoritative curriculum order. Lesson IDs and slugs are stable and must
- * never change, because they are the progress keys stored locally and in Supabase.
+ * The authoritative course order. Lesson IDs and slugs are stable and must never
+ * change, because they are the progress keys stored locally and in Supabase.
  * @type {import('../types.js').Lesson[]}
  */
 export const curriculum = [
-  digitalTransformationLesson,
-  architectureLesson,
-  dataAiLesson,
-  llmAgentsLesson,
-  mvpGovernanceLesson,
-  interviewLabLesson
+  trasformazioneLesson,
+  fabbricaDigitaleLesson,
+  scegliereStrumentoLesson,
+  inProduzioneLesson,
+  governareScalareLesson
 ]
 
-const LEGACY_MASTERY_THRESHOLD = 80
+export const lessons = curriculum
 
-const italian = (value) => (typeof value === 'string' ? value : value?.it || '')
-const english = (value) => (typeof value === 'string' ? value : value?.en || '')
+/** Every quiz question of the course, in reading order. */
+export const allQuestions = curriculum.flatMap((lesson) => (
+  lesson.units.flatMap((unit) => unit.quiz.map((question) => ({
+    ...question,
+    lessonId: lesson.id,
+    unitId: unit.id
+  })))
+))
 
-function legacyGlossaryEntry(term) {
-  const englishText = english(term)
-  const italianText = italian(term)
-  const separator = englishText.indexOf(':')
-  return {
-    english: separator === -1 ? englishText : englishText.slice(0, separator).trim(),
-    italian: italianText.slice(0, italianText.indexOf(':') === -1 ? undefined : italianText.indexOf(':')).trim(),
-    definition: italianText.indexOf(':') === -1 ? italianText : italianText.slice(italianText.indexOf(':') + 1).trim()
-  }
-}
+const questionsById = new Map(allQuestions.map((question) => [question.id, question]))
 
-function legacyQuizQuestion(checkpoint, lessonId, index) {
-  const options = (checkpoint?.options || [])
-  return {
-    id: `${lessonId}-check-${index + 1}`,
-    type: 'single',
-    prompt: italian(checkpoint?.prompt),
-    options: options.map((option) => italian(option)),
-    correctOption: checkpoint?.correctOption ?? 0,
-    explanation: italian(options[checkpoint?.correctOption ?? 0]?.explanation)
-  }
+export function questionById(id) {
+  return questionsById.get(id)
 }
 
 /**
- * Projects a bilingual lesson into the Italian block shape the current renderer
- * still expects. This adapter is temporary: Task 11 renders `units` directly and
- * the projection is removed once its end-to-end checks pass.
+ * The module checkpoint is not a second set of questions: it is the one question
+ * per unit the author flagged as the one worth remembering. Reusing them keeps
+ * the review queue pointing at content the reader has already seen.
  */
-export function withLegacyProjection(lesson) {
-  const units = lesson.units || []
-  return {
-    ...lesson,
-    order: lesson.order ?? lesson.moduleNumber,
-    title: italian(lesson.title),
-    englishTitle: english(lesson.title),
-    prerequisites: lesson.prerequisites || [],
-    competencies: lesson.competencies || [],
-    masteryThreshold: lesson.masteryThreshold ?? LEGACY_MASTERY_THRESHOLD,
-    objectives: (lesson.outcomes?.length
-      ? lesson.outcomes
-      : units.map((unit) => unit.objective).filter(Boolean)
-    ).map(italian),
-    blocks: units.map((unit) => ({
-      id: unit.id,
-      eyebrow: italian(unit.eyebrow),
-      title: italian(unit.title),
-      minutes: unit.estimatedMinutes,
-      body: (unit.theory || []).map(italian),
-      keyPoints: (unit.keyPoints || []).map(italian),
-      ...(unit.diagram?.nodes ? { diagram: unit.diagram.nodes.map((node) => italian(node.label)) } : {}),
-      ...(unit.activities?.[0] ? {
-        activity: {
-          prompt: italian(unit.activities[0].prompt),
-          hint: italian(unit.activities[0].hints?.[0])
-        }
-      } : {})
-    })),
-    glossary: units
-      .flatMap((unit) => unit.terminology || [])
-      .map(legacyGlossaryEntry)
-      .filter((entry) => entry.english && entry.definition),
-    quiz: (lesson.finalQuiz || []).map((checkpoint, index) => legacyQuizQuestion(checkpoint, lesson.id, index)),
-    interview: {
-      prompt: english(lesson.interviewAnswers?.[0]?.prompt),
-      short: english(lesson.interviewAnswers?.[0]?.short),
-      long: english(lesson.interviewAnswers?.[0]?.long)
-    }
-  }
+export function finalQuiz(lesson) {
+  return lesson.units
+    .map((unit) => unit.quiz.find((question) => question.final))
+    .filter(Boolean)
+    .map((question) => ({ ...question, lessonId: lesson.id }))
 }
 
-/** @type {import('../types.js').Lesson[]} */
-export const lessons = curriculum.map(withLegacyProjection)
+export const glossary = buildGlossary(curriculum)
 
-export const interviewQuestions = lessons.flatMap((lesson) => (
-  (lesson.interviewAnswers || []).map((answer, index) => ({
-    lessonId: lesson.id,
-    answerId: answer.topicId || `${lesson.id}-answer-${index + 1}`,
-    topic: lesson.englishTitle,
-    prompt: english(answer.prompt),
-    short: english(answer.short),
-    long: english(answer.long),
-    followUps: (answer.followUps || []).map(english)
-  }))
-))
+/** The seven steps, the thread that runs through every unit. */
+export const stages = [
+  { number: 1, it: 'Osservo una perdita concreta in produzione', en: 'I watch a real loss in production' },
+  { number: 2, it: 'Misuro il punto di partenza', en: 'I measure the starting point' },
+  { number: 3, it: 'Capisco dove nascono i dati e chi decide oggi', en: 'I understand where the data is born and who decides today' },
+  { number: 4, it: 'Scelgo lo strumento più semplice che risolve', en: 'I pick the simplest tool that solves it' },
+  { number: 5, it: 'Provo in piccolo, senza rischi', en: 'I try it small, with no risk' },
+  { number: 6, it: 'Metto in produzione con rete di sicurezza', en: 'I go live with a safety net' },
+  { number: 7, it: 'Decido se estendere o fermarmi', en: 'I decide whether to scale or to stop' }
+]
 
-export const allGlossary = lessons.flatMap((lesson) => (
-  lesson.glossary.map((entry) => ({ ...entry, lessonId: lesson.id }))
-))
+export function lessonBySlug(slug) {
+  return curriculum.find((lesson) => lesson.slug === slug)
+}
+
+export function unitById(lesson, unitId) {
+  return lesson?.units?.find((unit) => unit.id === unitId)
+}

@@ -1,17 +1,34 @@
-export const CONTENT_VERSION = 2
+/**
+ * Content contract for course version 2.
+ *
+ * Version 2 is a different course from version 1, not a revision of it: five
+ * modules of five units, one quiz of seven questions per unit, every technical
+ * term explained the first time it appears, and one worked example with real
+ * numbers in every unit. The validation below encodes exactly those promises,
+ * so a regression in the content fails the test suite instead of reaching a
+ * reader.
+ */
 
-const STABLE_LESSONS = [
-  ['digital-transformation', 'digital-transformation'],
-  ['ot-it-ai-cloud', 'ot-it-ai-cloud'],
-  ['data-ai-use-cases', 'data-ai-use-cases'],
-  ['llm-agents', 'llm-agents'],
-  ['mvp-governance', 'mvp-governance'],
-  ['interview-lab', 'interview-lab']
+export const CONTENT_VERSION = 3
+
+/** Lesson IDs and slugs are progress keys. They must never change. */
+export const STABLE_LESSONS = [
+  ['trasformazione', 'trasformazione'],
+  ['fabbrica-digitale', 'fabbrica-digitale'],
+  ['scegliere-strumento', 'scegliere-strumento'],
+  ['in-produzione', 'in-produzione'],
+  ['governare-scalare', 'governare-scalare']
 ]
 
-const TIME_BUDGET_KEYS = ['theory', 'cases', 'practice']
+export const UNITS_PER_LESSON = 5
+export const QUESTIONS_PER_UNIT = 7
+export const TOTAL_UNITS = STABLE_LESSONS.length * UNITS_PER_LESSON
+export const TOTAL_QUESTIONS = TOTAL_UNITS * QUESTIONS_PER_UNIT
+
+const STABLE_SLUG_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
-const asArray = (value) => Array.isArray(value) ? value : []
+const asArray = (value) => (Array.isArray(value) ? value : [])
+const isText = (value) => typeof value === 'string' && Boolean(value.trim())
 
 export function localized(it, en) {
   if (!it?.trim()) throw new Error('Italian localization is required')
@@ -19,1586 +36,325 @@ export function localized(it, en) {
   return { it, en }
 }
 
+export function isLocalized(value) {
+  return isObject(value) && isText(value.it) && isText(value.en)
+}
+
 export function countWords(value) {
   const text = Array.isArray(value) ? value.join(' ') : String(value || '')
   return text.trim() ? text.trim().split(/\s+/u).length : 0
 }
 
-export function lessonPlannedMinutes(lesson) {
-  return TIME_BUDGET_KEYS.reduce((sum, key) => sum + (lesson.timeBudget[key] || 0), 0)
-}
-
-function collectLocalizedErrors(value, path, errors) {
-  if (Array.isArray(value)) {
-    value.forEach((entry, index) => collectLocalizedErrors(entry, `${path}[${index}]`, errors))
-    return
-  }
-  if (!isObject(value)) return
-
-  if ('it' in value || 'en' in value) {
-    if (typeof value.it !== 'string' || !value.it.trim()) errors.push(`${path} is missing Italian localization`)
-    if (typeof value.en !== 'string' || !value.en.trim()) errors.push(`${path} is missing English localization`)
-    return
-  }
-
-  for (const [key, entry] of Object.entries(value)) collectLocalizedErrors(entry, `${path}.${key}`, errors)
-}
-
-function lessonItems(lesson, field) {
-  return [
-    ...asArray(lesson[field]),
-    ...asArray(lesson.units).flatMap((unit) => asArray(unit?.[field]))
-  ]
-}
-
-function lessonArtifacts(lesson) {
-  return [
-    ...(lesson.artifact ? [lesson.artifact] : []),
-    ...asArray(lesson.professionalArtifacts),
-    ...asArray(lesson.units).flatMap((unit) => [
-      ...(unit?.artifact ? [unit.artifact] : []),
-      ...asArray(unit?.professionalArtifacts)
-    ])
-  ]
-}
-
-function theoryWords(lesson, locale) {
-  return asArray(lesson.units).flatMap((unit) => asArray(unit.theory))
+export function theoryWords(lesson, locale) {
+  return asArray(lesson.units)
+    .flatMap((unit) => asArray(unit.theory))
     .reduce((total, paragraph) => total + countWords(paragraph?.[locale]), 0)
+}
+
+export function lessonUnits(lessons) {
+  return asArray(lessons).flatMap((lesson) => asArray(lesson.units))
+}
+
+export function allQuestions(lessons) {
+  return lessonUnits(lessons).flatMap((unit) => asArray(unit.quiz))
+}
+
+/** Every term declared by a unit, in the order the course introduces it. */
+export function allTerms(lessons) {
+  return lessonUnits(lessons).flatMap((unit) => asArray(unit.terminology))
+}
+
+function validateExample(example, path, errors) {
+  if (!isObject(example)) {
+    errors.push(`${path} needs a worked example`)
+    return
+  }
+  if (!isLocalized(example.title)) errors.push(`${path} example needs a localized title`)
+  const steps = asArray(example.steps)
+  if (steps.length < 3) errors.push(`${path} example needs at least three steps`)
+  for (const [index, step] of steps.entries()) {
+    if (!isLocalized(step)) errors.push(`${path} example step ${index + 1} is not bilingual`)
+  }
+  if (!isLocalized(example.takeaway)) errors.push(`${path} example needs a localized takeaway`)
+
+  const tableText = asArray(example.table?.rows)
+    .flatMap((row) => asArray(row).map((cell) => cell?.it || ''))
+    .join(' ')
+  const exampleText = [...steps.map((step) => step?.it || ''), tableText, example.takeaway?.it || ''].join(' ')
+  if (!exampleText.match(/\d/u)) errors.push(`${path} example must contain real numbers`)
+
+  if ('table' in example) {
+    const table = example.table
+    const columns = asArray(table?.columns)
+    const rows = asArray(table?.rows)
+    if (columns.length < 2) errors.push(`${path} example table needs at least two columns`)
+    if (!rows.length) errors.push(`${path} example table needs at least one row`)
+    for (const [index, column] of columns.entries()) {
+      if (!isLocalized(column)) errors.push(`${path} example table column ${index + 1} is not bilingual`)
+    }
+    for (const [index, row] of rows.entries()) {
+      const cells = asArray(row)
+      if (cells.length !== columns.length) {
+        errors.push(`${path} example table row ${index + 1} must have one cell per column`)
+      }
+      for (const cell of cells) {
+        if (!isLocalized(cell)) errors.push(`${path} example table row ${index + 1} has a cell that is not bilingual`)
+      }
+    }
+  }
+}
+
+function validateEnglishBlock(block, path, errors) {
+  if (!isObject(block)) {
+    errors.push(`${path} needs an English speaking block`)
+    return
+  }
+  const lines = asArray(block.lines)
+  if (lines.length < 3) errors.push(`${path} English block needs at least three spoken lines`)
+  for (const [index, line] of lines.entries()) {
+    if (!isText(line)) {
+      errors.push(`${path} English line ${index + 1} is empty`)
+      continue
+    }
+    if (countWords(line) > 32) errors.push(`${path} English line ${index + 1} is too long to say out loud`)
+  }
+  if (!isText(block.why)) errors.push(`${path} English block must explain why those words were chosen`)
+}
+
+function validateTerminology(terminology, path, errors, seen) {
+  if (terminology.length < 5) errors.push(`${path} needs at least five terms`)
+  for (const [index, term] of terminology.entries()) {
+    const termPath = `${path} term ${index + 1}`
+    if (!isObject(term)) {
+      errors.push(`${termPath} must be an object`)
+      continue
+    }
+    if (!STABLE_SLUG_ID.test(term.id || '')) errors.push(`${termPath} needs a stable slug ID`)
+    if (!isText(term.term)) errors.push(`${termPath} needs the term as it is spoken`)
+    if (!isText(term.italian)) errors.push(`${termPath} needs the Italian equivalent`)
+    if (!isLocalized(term.definition)) errors.push(`${termPath} needs a bilingual one-sentence definition`)
+    if (isLocalized(term.definition) && countWords(term.definition.it) > 32) {
+      errors.push(`${termPath} definition must stay within one sentence`)
+    }
+    if (term.id && seen.has(term.id) && seen.get(term.id) !== path) {
+      errors.push(`${termPath} repeats ${term.id}, already introduced in ${seen.get(term.id)}`)
+    } else if (term.id) {
+      seen.set(term.id, path)
+    }
+  }
+}
+
+function validateQuiz(quiz, path, errors, questionIds) {
+  if (quiz.length !== QUESTIONS_PER_UNIT) {
+    errors.push(`${path} must contain exactly ${QUESTIONS_PER_UNIT} questions; received ${quiz.length}`)
+  }
+  for (const [index, question] of quiz.entries()) {
+    const questionPath = `${path} question ${index + 1}`
+    if (!isObject(question)) {
+      errors.push(`${questionPath} must be an object`)
+      continue
+    }
+    if (!STABLE_SLUG_ID.test(question.id || '')) {
+      errors.push(`${questionPath} needs a stable slug ID`)
+    } else if (questionIds.has(question.id)) {
+      errors.push(`${questionPath} has a duplicate ID: ${question.id}`)
+    } else {
+      questionIds.add(question.id)
+    }
+    if (!isText(question.prompt)) errors.push(`${questionPath} needs a prompt`)
+    const options = asArray(question.options)
+    if (options.length !== 4) errors.push(`${questionPath} needs exactly four options`)
+    if (options.some((option) => !isText(option))) errors.push(`${questionPath} has an empty option`)
+    if (!Number.isInteger(question.correctOption) || question.correctOption < 0 || question.correctOption >= options.length) {
+      errors.push(`${questionPath} correctOption must point at one of its options`)
+    }
+    if (!isText(question.explanation)) {
+      errors.push(`${questionPath} needs an explanation that teaches, not just a verdict`)
+    } else if (countWords(question.explanation) < 6) {
+      errors.push(`${questionPath} explanation is too short to teach anything`)
+    }
+  }
+  if (!quiz.some((question) => question?.final)) {
+    errors.push(`${path} must flag one question for the module checkpoint`)
+  }
 }
 
 function validateSource(sourceId, sources, path, errors) {
   if (!sourceId || !sources?.[sourceId]) errors.push(`${path} references a missing source: ${sourceId || '(none)'}`)
 }
 
-function isLocalized(value) {
-  return isObject(value) && typeof value.it === 'string' && value.it.trim() && typeof value.en === 'string' && value.en.trim()
-}
-
-function hasLocalizedFields(value, fields) {
-  return isObject(value) && fields.every((field) => isLocalized(value[field]))
-}
-
-function isMicroExample(value) {
-  return hasLocalizedFields(value, ['title', 'explanation'])
-}
-
-function isWorkedCase(value) {
-  return hasLocalizedFields(value, ['title', 'scenario', 'reasoning', 'decision', 'tradeOff', 'outcome'])
-}
-
-function isSolvedActivity(value) {
-  const solution = value?.solution || value?.modelSolution
-  return isObject(value) && isLocalized(value.prompt) && isLocalized(solution) && asArray(value.rubric).length > 0 && value.rubric.every(isLocalized)
-}
-
-function isValidQuickTaskScope(value) {
-  return isObject(value) &&
-    value.outputCount === 1 &&
-    Number.isInteger(value.decisionCount) && value.decisionCount >= 0 &&
-    Number.isInteger(value.calculationCount) && value.calculationCount >= 0 &&
-    value.decisionCount + value.calculationCount <= 1 &&
-    isLocalized(value.providedContext) &&
-    isLocalized(value.responseFormat)
-}
-
-function isProfessionalAnswer(value) {
-  return isObject(value) &&
-    isLocalized(value.prompt) &&
-    isLocalized(value.short) &&
-    isLocalized(value.long) &&
-    Array.isArray(value.followUps) &&
-    value.followUps.length > 0 &&
-    value.followUps.every(isLocalized)
-}
-
-function isProfessionalArtifact(value) {
-  return hasLocalizedFields(value, ['title', 'description'])
-}
-
-const hasNonEmptyString = (value) => typeof value === 'string' && Boolean(value.trim())
-const isPositiveInteger = (value) => Number.isSafeInteger(value) && value > 0
-const isPositiveNumber = (value) => Number.isFinite(value) && value > 0
-const isISODate = (value) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value || '')) return false
-  const date = new Date(`${value}T00:00:00.000Z`)
-  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value
-}
-const STABLE_SLUG_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
-const STABLE_GRAPH_ID = /^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/u
-
-function validateSensorToDecisionArtifact(artifact, path, errors) {
-  if (!isObject(artifact)) {
-    errors.push(`${path} must be an object`)
-    return
-  }
-  if (!hasLocalizedFields(artifact, ['title', 'description'])) {
-    errors.push(`${path} needs localized title and description`)
-  }
-
-  const edges = asArray(artifact.edges)
-  if (!edges.length) errors.push(`${path} needs at least one edge`)
-  const edgeIds = new Set()
-  let latencyTotal = 0
-  const localizedFields = [
-    'source',
-    'destination',
-    'interface',
-    'cadence',
-    'securityBoundaryCrossing',
-    'dataOwner',
-    'fallback',
-    'humanAction'
-  ]
-  for (const [index, edge] of edges.entries()) {
-    const edgePath = `${path} edge ${index + 1}`
-    if (!isObject(edge)) {
-      errors.push(`${edgePath} must be an object`)
-      continue
-    }
-    if (!STABLE_SLUG_ID.test(edge.id || '') || edgeIds.has(edge.id)) {
-      errors.push(`${edgePath} needs a stable unique ID`)
-    } else {
-      edgeIds.add(edge.id)
-    }
-    if (edge.order !== index + 1) errors.push(`${edgePath} order must be contiguous from 1`)
-    for (const field of ['sourceId', 'destinationId']) {
-      if (!STABLE_SLUG_ID.test(edge[field] || '')) errors.push(`${edgePath} ${field} must be a stable ID`)
-    }
-    if (edge.sourceId === edge.destinationId) errors.push(`${edgePath} sourceId and destinationId must differ`)
-    if (index > 0 && edge.sourceId !== edges[index - 1]?.destinationId) {
-      errors.push(`${edgePath} sourceId must equal the previous edge destinationId`)
-    }
-    for (const field of localizedFields) {
-      if (!isLocalized(edge[field])) errors.push(`${edgePath} needs localized ${field}`)
-    }
-    if (!isPositiveInteger(edge.latencyBudgetMs)) {
-      errors.push(`${edgePath} latencyBudgetMs must be a positive safe integer`)
-    } else {
-      latencyTotal += edge.latencyBudgetMs
-    }
-  }
-  if (!isPositiveInteger(artifact.totalLatencyBudgetMs)) {
-    errors.push(`${path} totalLatencyBudgetMs must be a positive safe integer`)
-  } else if (artifact.totalLatencyBudgetMs !== latencyTotal) {
-    errors.push(`${path} totalLatencyBudgetMs must equal the sum of edge latency budgets`)
-  }
-}
-
-function validateConduitSolution(solution, path, errors) {
-  const conduits = asArray(solution.conduits)
-  if (conduits.length < 3) errors.push(`${path} needs at least three rows`)
-  const conduitIds = new Set()
-  const localizedFields = [
-    'source',
-    'destination',
-    'interface',
-    'dataOwner',
-    'securityBoundaryCrossing',
-    'monitoring',
-    'degradedBehavior',
-    'fallback',
-    'humanAction'
-  ]
-  for (const [index, conduit] of conduits.entries()) {
-    const conduitPath = `${path} row ${index + 1}`
-    if (!isObject(conduit)) {
-      errors.push(`${conduitPath} must be an object`)
-      continue
-    }
-    if (!hasNonEmptyString(conduit.id) || conduitIds.has(conduit.id)) {
-      errors.push(`${conduitPath} needs a unique non-empty ID`)
-    } else {
-      conduitIds.add(conduit.id)
-    }
-    for (const field of localizedFields) {
-      if (!isLocalized(conduit[field])) errors.push(`${conduitPath} needs localized ${field}`)
-    }
-    if (!isPositiveInteger(conduit.latencyBudgetMs)) {
-      errors.push(`${conduitPath} latencyBudgetMs must be a positive safe integer`)
-    }
-  }
-
-  const capacity = solution.capacityCalculation
-  const capacityPath = `${path} capacity calculation`
-  if (!isObject(capacity)) {
-    errors.push(`${capacityPath} is required`)
-    return
-  }
-  for (const field of ['tagCount', 'bytesPerSample', 'samplesPerSecond', 'bufferSeconds']) {
-    if (!isPositiveNumber(capacity[field])) errors.push(`${capacityPath} ${field} must be positive`)
-  }
-  for (const field of ['requiredBytes', 'requiredGigabytes', 'provisionedGigabytes']) {
-    if (!isPositiveNumber(capacity[field])) errors.push(`${capacityPath} ${field} must be positive`)
-  }
-  if (!Number.isFinite(capacity.marginFactor) || capacity.marginFactor < 1) {
-    errors.push(`${capacityPath} marginFactor must be at least 1`)
-  }
-  if (!isLocalized(capacity.formula)) errors.push(`${capacityPath} needs a localized formula`)
-
-  const computedBytes = capacity.tagCount * capacity.bytesPerSample * capacity.samplesPerSecond * capacity.bufferSeconds
-  if (Number.isFinite(computedBytes) && capacity.requiredBytes !== computedBytes) {
-    errors.push(`${capacityPath} requiredBytes must match the declared inputs`)
-  }
-  const computedGigabytes = capacity.requiredBytes / 1_000_000_000
-  if (Number.isFinite(computedGigabytes) && Math.abs(capacity.requiredGigabytes - computedGigabytes) > 1e-9) {
-    errors.push(`${capacityPath} requiredGigabytes must use decimal gigabytes`)
-  }
-  const minimumProvisioned = capacity.requiredGigabytes * capacity.marginFactor
-  if (Number.isFinite(minimumProvisioned) && capacity.provisionedGigabytes < minimumProvisioned) {
-    errors.push(`${capacityPath} provisionedGigabytes must cover required capacity and margin`)
-  }
-}
-
-function isGenealogyArtifact(value) {
-  return isObject(value) && [
-    'inputLots',
-    'outputLots',
-    'reconstructionSteps',
-    'failureHandling',
-    'scopeCalculation',
-    'eventExceptions'
-  ].some((field) => field in value)
-}
-
-function validateGenealogyArtifact(artifact, workedCase, path, errors) {
-  if (!isObject(artifact)) {
-    errors.push(`${path} must be an object`)
-    return
-  }
-
-  const declaredNodeIds = new Set()
-  const inputIds = []
-  const outputIds = []
-  const declareNode = (id, nodePath) => {
-    if (!STABLE_GRAPH_ID.test(id || '') || declaredNodeIds.has(id)) {
-      errors.push(`${nodePath} needs a stable unique ID`)
-      return false
-    }
-    declaredNodeIds.add(id)
-    return true
-  }
-  const validateLots = (lots, role, roleIds) => {
-    if (!lots.length) errors.push(`${path} needs at least one ${role} lot node`)
-    for (const [index, lot] of lots.entries()) {
-      const lotPath = `${path} ${role} lot ${index + 1}`
-      if (isObject(lot) && declareNode(lot.id, lotPath)) roleIds.push(lot.id)
-      else if (!isObject(lot)) errors.push(`${lotPath} must be an object`)
-      if (!isPositiveNumber(lot?.units)) errors.push(`${lotPath} units must be positive`)
-      if (!isLocalized(lot?.evidence)) errors.push(`${lotPath} needs localized evidence`)
-    }
-  }
-  validateLots(asArray(artifact.inputLots), 'input', inputIds)
-  validateLots(asArray(artifact.outputLots), 'output', outputIds)
-  for (const [index, node] of asArray(artifact.nodes).entries()) {
-    const nodePath = `${path} transformation node ${index + 1}`
-    if (!isObject(node)) {
-      errors.push(`${nodePath} must be an object`)
-      continue
-    }
-    declareNode(node.id, nodePath)
-    if (!STABLE_SLUG_ID.test(node.kind || '')) errors.push(`${nodePath} kind must be a stable ID`)
-  }
-
-  const edges = asArray(artifact.edges)
-  if (!edges.length) errors.push(`${path} needs at least one edge`)
-  const edgeIds = new Set()
-  const adjacency = new Map()
-  for (const [index, edge] of edges.entries()) {
-    const edgePath = `${path} edge ${index + 1}`
-    if (!isObject(edge)) {
-      errors.push(`${edgePath} must be an object`)
-      continue
-    }
-    if (!STABLE_SLUG_ID.test(edge.id || '') || edgeIds.has(edge.id)) {
-      errors.push(`${edgePath} needs a stable unique ID`)
-    } else {
-      edgeIds.add(edge.id)
-    }
-    if (!STABLE_GRAPH_ID.test(edge.from || '') || !STABLE_GRAPH_ID.test(edge.to || '') || edge.from === edge.to) {
-      errors.push(`${edgePath} needs distinct non-empty from and to nodes`)
-    }
-    if (STABLE_GRAPH_ID.test(edge.from || '') && !declaredNodeIds.has(edge.from)) {
-      errors.push(`${edgePath} references undeclared from node ${edge.from}`)
-    }
-    if (STABLE_GRAPH_ID.test(edge.to || '') && !declaredNodeIds.has(edge.to)) {
-      errors.push(`${edgePath} references undeclared to node ${edge.to}`)
-    }
-    if (declaredNodeIds.has(edge.from) && declaredNodeIds.has(edge.to) && edge.from !== edge.to) {
-      const destinations = adjacency.get(edge.from) || []
-      destinations.push(edge.to)
-      adjacency.set(edge.from, destinations)
-    }
-    if (!isPositiveNumber(edge.units)) errors.push(`${edgePath} units must be positive`)
-    if (!isLocalized(edge.operation)) errors.push(`${edgePath} needs a localized operation`)
-    if (!isLocalized(edge.evidence)) errors.push(`${edgePath} needs localized evidence`)
-  }
-
-  const reachableFrom = (start) => {
-    const reachable = new Set([start])
-    const pending = [start]
-    while (pending.length) {
-      const current = pending.shift()
-      for (const destination of adjacency.get(current) || []) {
-        if (!reachable.has(destination)) {
-          reachable.add(destination)
-          pending.push(destination)
-        }
-      }
-    }
-    return reachable
-  }
-  const reachableFromInputs = new Set()
-  for (const inputId of inputIds) {
-    const reachable = reachableFrom(inputId)
-    for (const nodeId of reachable) reachableFromInputs.add(nodeId)
-    if (!outputIds.some((outputId) => reachable.has(outputId))) {
-      errors.push(`${path} input lot ${inputId} must connect to an output lot`)
-    }
-  }
-  for (const outputId of outputIds) {
-    if (!reachableFromInputs.has(outputId)) {
-      errors.push(`${path} output lot ${outputId} must be reachable from an input lot`)
-    }
-  }
-
-  for (const [field, label] of [
-    ['reconstructionSteps', 'reconstruction steps'],
-    ['evidence', 'evidence records'],
-    ['failureHandling', 'failure-handling rules']
-  ]) {
-    const values = asArray(artifact[field])
-    if (!values.length || !values.every(isLocalized)) errors.push(`${path} needs localized ${label}`)
-  }
-  const followUps = asArray(workedCase.followUps)
-  if (!followUps.length || !followUps.every(isLocalized)) errors.push(`${path} needs localized follow-up questions`)
-
-  for (const [index, exception] of asArray(artifact.eventExceptions).entries()) {
-    const exceptionPath = `${path} event exception ${index + 1}`
-    if (!hasNonEmptyString(exception?.id) || !hasNonEmptyString(exception?.status)) {
-      errors.push(`${exceptionPath} needs an ID and status`)
-    }
-    if (!isLocalized(exception?.handling) || !isLocalized(exception?.evidence)) {
-      errors.push(`${exceptionPath} needs localized handling and evidence`)
-    }
-  }
-
-  const scope = artifact.scopeCalculation
-  if (!isObject(scope)) {
-    errors.push(`${path} needs a scope calculation`)
-    return
-  }
-  for (const field of ['affectedInputUnits', 'affectedOutputUnits', 'scrapAndLossUnits', 'initialHoldUnits']) {
-    if (!isPositiveNumber(scope[field])) errors.push(`${path} scope ${field} must be positive`)
-  }
-  for (const field of ['outputYieldPercent', 'scopeReductionPercent']) {
-    if (!Number.isFinite(scope[field]) || scope[field] < 0 || scope[field] > 100) {
-      errors.push(`${path} scope ${field} must be between 0 and 100`)
-    }
-  }
-  if (!isLocalized(scope.formula)) errors.push(`${path} scope needs a localized formula`)
-  if (scope.affectedOutputUnits + scope.scrapAndLossUnits !== scope.affectedInputUnits) {
-    errors.push(`${path} scope output and loss must reconcile to affected input`)
-  }
-  const expectedYield = Math.round((scope.affectedOutputUnits / scope.affectedInputUnits) * 10_000) / 100
-  if (Number.isFinite(expectedYield) && scope.outputYieldPercent !== expectedYield) {
-    errors.push(`${path} scope outputYieldPercent must match affected units`)
-  }
-}
-
-function validateDataReadinessScorecard(artifact, path, errors) {
-  if (!isObject(artifact)) {
-    errors.push(`${path} must be an object`)
-    return
-  }
-  if (!hasLocalizedFields(artifact, ['title', 'description', 'scale', 'formula'])) {
-    errors.push(`${path} needs localized title, description, scale and formula`)
-  }
-  if (artifact.attainableScoreRange?.minimum !== 20 || artifact.attainableScoreRange?.maximum !== 100) {
-    errors.push(`${path} attainable score range must be 20 to 100`)
-  }
-
-  const criteria = asArray(artifact.criteria)
-  if (!criteria.length) errors.push(`${path} scorecard needs criteria`)
-  const criterionIds = new Set()
-  let weightTotal = 0
-  for (const [index, criterion] of criteria.entries()) {
-    const criterionPath = `${path} criterion ${index + 1}`
-    if (!STABLE_SLUG_ID.test(criterion?.id || '') || criterionIds.has(criterion.id)) {
-      errors.push(`${criterionPath} needs a stable unique ID`)
-    } else {
-      criterionIds.add(criterion.id)
-    }
-    if (!isPositiveNumber(criterion?.weight)) errors.push(`${criterionPath} weight must be positive`)
-    else weightTotal += criterion.weight
-    if (!isLocalized(criterion?.label)) errors.push(`${criterionPath} needs a localized label`)
-    for (const score of ['1', '3', '5']) {
-      if (!isLocalized(criterion?.anchors?.[score])) errors.push(`${criterionPath} needs localized anchor ${score}`)
-    }
-    if (!isLocalized(criterion?.intermediateScorePolicy)) {
-      errors.push(`${criterionPath} needs a localized policy for scores 2 and 4`)
-    }
-  }
-  if (criteria.length && weightTotal !== 100) errors.push(`${path} criterion weights must total 100`)
-
-  const gates = asArray(artifact.hardGates)
-  if (!gates.length) errors.push(`${path} needs hard gates`)
-  const gateIds = new Set()
-  for (const [index, gate] of gates.entries()) {
-    const gatePath = `${path} hard gate ${index + 1}`
-    if (!STABLE_SLUG_ID.test(gate?.id || '') || gateIds.has(gate.id)) {
-      errors.push(`${gatePath} needs a stable unique ID`)
-    } else {
-      gateIds.add(gate.id)
-    }
-    if (!isLocalized(gate?.label)) errors.push(`${gatePath} needs a localized label`)
-  }
-
-  const audit = artifact.audit
-  if (!isObject(audit)) {
-    errors.push(`${path} needs audit metadata`)
-  } else {
-    if (!hasNonEmptyString(audit.rubricVersion)) errors.push(`${path} audit rubricVersion is required`)
-    if (!isISODate(audit.assessmentDate)) errors.push(`${path} audit assessmentDate must be ISO date`)
-    const participants = asArray(audit.participants)
-    if (!participants.length || !participants.every((participant) => isLocalized(participant?.role))) {
-      errors.push(`${path} audit needs participants with localized roles`)
-    }
-    if (!isLocalized(audit.decisionOwner)) errors.push(`${path} audit needs a localized decisionOwner`)
-    if (!isLocalized(audit.budgetBoundary)) errors.push(`${path} audit needs a localized budgetBoundary`)
-    if (!asArray(audit.dependencies).length || !asArray(audit.dependencies).every(isLocalized)) {
-      errors.push(`${path} audit needs localized dependencies`)
-    }
-  }
-
-  const candidates = asArray(artifact.candidates)
-  if (!candidates.length) errors.push(`${path} needs candidates`)
-  const candidateIds = new Set()
-  for (const [candidateIndex, candidate] of candidates.entries()) {
-    const candidatePath = `${path} candidate ${candidateIndex + 1}`
-    if (!STABLE_SLUG_ID.test(candidate?.id || '') || candidateIds.has(candidate.id)) {
-      errors.push(`${candidatePath} needs a stable unique ID`)
-    } else {
-      candidateIds.add(candidate.id)
-    }
-
-    const assessments = isObject(candidate?.assessments) ? candidate.assessments : {}
-    const assessmentIds = Object.keys(assessments)
-    if (assessmentIds.length !== criterionIds.size || assessmentIds.some((id) => !criterionIds.has(id))) {
-      errors.push(`${candidatePath} assessment coverage must match all criteria`)
-    }
-    let weightedTotal = 0
-    for (const criterion of criteria) {
-      if (!isObject(criterion)) continue
-      const assessmentPath = `${candidatePath} assessment ${criterion.id}`
-      const assessment = assessments[criterion.id]
-      if (!isObject(assessment)) {
-        errors.push(`${assessmentPath} is required`)
-        continue
-      }
-      if (!Number.isInteger(assessment.score) || assessment.score < 1 || assessment.score > 5) {
-        errors.push(`${assessmentPath} score must be an integer from 1 to 5`)
-      } else {
-        weightedTotal += assessment.score * criterion.weight
-      }
-      if (!['low', 'medium', 'high'].includes(assessment.confidence)) {
-        errors.push(`${assessmentPath} confidence must be low, medium or high`)
-      }
-      if (!isLocalized(assessment.evidence) || !isLocalized(assessment.rationale)) {
-        errors.push(`${assessmentPath} needs localized evidence and rationale`)
-      }
-      if (!asArray(assessment.assumptions).length || !asArray(assessment.assumptions).every(isLocalized)) {
-        errors.push(`${assessmentPath} needs localized assumptions`)
-      }
-      const references = asArray(assessment.evidenceReferences)
-      if (!references.length) errors.push(`${assessmentPath} needs at least one evidence reference`)
-      for (const [referenceIndex, reference] of references.entries()) {
-        const referencePath = `${assessmentPath} evidence reference ${referenceIndex + 1}`
-        if (!hasNonEmptyString(reference?.id) || !hasNonEmptyString(reference?.sourceId) || !hasNonEmptyString(reference?.documentId)) {
-          errors.push(`${referencePath} needs ID, sourceId and documentId`)
-        }
-        if (!isISODate(reference?.observationDate) ||
-            !isISODate(reference?.reviewDate) ||
-            reference.observationDate > reference.reviewDate) {
-          errors.push(`${referencePath} needs ordered ISO observation and review dates`)
-        }
-        if (!isLocalized(reference?.description)) errors.push(`${referencePath} needs a localized description`)
-      }
-    }
-    const recomputedScore = weightedTotal / 5
-    if (candidate?.weightedScore !== recomputedScore) {
-      errors.push(`${candidatePath} weightedScore must equal the recomputed weighted score`)
-    }
-
-    const checks = asArray(candidate?.hardGateChecks)
-    const checkIds = checks.map((check) => check?.gateId)
-    if (checkIds.length !== gateIds.size || new Set(checkIds).size !== gateIds.size || checkIds.some((id) => !gateIds.has(id))) {
-      errors.push(`${candidatePath} hard gate coverage must match all declared gates`)
-    }
-    for (const [checkIndex, check] of checks.entries()) {
-      const checkPath = `${candidatePath} hard gate check ${checkIndex + 1}`
-      if (typeof check?.passed !== 'boolean') errors.push(`${checkPath} passed must be Boolean`)
-      if (!isLocalized(check?.evidence) || !isLocalized(check?.rationale)) {
-        errors.push(`${checkPath} needs localized evidence and rationale`)
-      }
-    }
-    if (['selected', 'pilot'].includes(candidate?.portfolioDecision) && checks.some((check) => check?.passed !== true)) {
-      errors.push(`${candidatePath} selected or pilot candidates must pass all hard gates`)
-    }
-    if (!['selected', 'pilot', 'deferred', 'rejected'].includes(candidate?.portfolioDecision)) {
-      errors.push(`${candidatePath} portfolioDecision must be selected, pilot, deferred or rejected`)
-    }
-    if (!isLocalized(candidate?.recommendation)) errors.push(`${candidatePath} needs a localized recommendation`)
-
-    const record = candidate?.decisionRecord
-    if (!isObject(record)) {
-      errors.push(`${candidatePath} needs a decision record`)
-    } else {
-      if (!isLocalized(record.dissent)) errors.push(`${candidatePath} decision record needs localized dissent`)
-      if (!hasNonEmptyString(record.approval?.status) || !isLocalized(record.approval?.owner)) {
-        errors.push(`${candidatePath} decision record needs approval status and localized owner`)
-      }
-      if (!asArray(record.guardrails).length || !asArray(record.guardrails).every(isLocalized)) {
-        errors.push(`${candidatePath} decision record needs localized guardrails`)
-      }
-      if (!asArray(record.stopCriteria).length || !asArray(record.stopCriteria).every(isLocalized)) {
-        errors.push(`${candidatePath} decision record needs localized stop criteria`)
-      }
-      if (!isLocalized(record.target)) errors.push(`${candidatePath} decision record needs a localized target`)
-      if (!isLocalized(record.budgetBoundary)) errors.push(`${candidatePath} decision record needs a localized budget boundary`)
-      if (!asArray(record.dependencies).length || !asArray(record.dependencies).every(isLocalized)) {
-        errors.push(`${candidatePath} decision record needs localized dependencies`)
-      }
-      if (!isISODate(record.reviewDate)) {
-        errors.push(`${candidatePath} decision record reviewDate must be ISO date`)
-      }
-    }
-  }
-  if (!candidateIds.has(artifact.recommendedCandidateId)) {
-    errors.push(`${path} recommendedCandidateId must reference a candidate`)
-  } else if (candidates.find((candidate) => candidate?.id === artifact.recommendedCandidateId)?.portfolioDecision !== 'selected') {
-    errors.push(`${path} recommended candidate must be selected`)
-  }
-}
-
-function validateModule3EngagedTime(lesson, path, errors) {
-  const expectedAllocation = { theory: 31, cases: 20, practice: 14 }
-  const allocationTotals = { theory: 0, cases: 0, practice: 0 }
-  let engagedCaseMinutes = 0
-  let engagedPracticeMinutes = 0
-
-  for (const [unitIndex, unit] of asArray(lesson.units).entries()) {
-    const unitPath = `${path} unit ${unit?.id || unitIndex + 1}`
-    const caseItems = [
-      ...asArray(unit?.microExamples),
-      ...asArray(unit?.caseSegments),
-      ...asArray(unit?.workedCases)
-    ]
-    if (!caseItems.length) errors.push(`${unitPath} must retain learner-visible engaged case content`)
-
-    let unitCaseMinutes = 0
-    let caseDurationsValid = true
-    for (const [caseIndex, item] of caseItems.entries()) {
-      const itemPath = `${unitPath} engaged case item ${caseIndex + 1}`
-      if (!isObject(item) || !isLocalized(item.title) ||
-          (!isLocalized(item.explanation) && !isLocalized(item.scenario))) {
-        errors.push(`${itemPath} must remain localized learner-visible content`)
-      }
-      if (!isPositiveInteger(item?.durationMinutes)) {
-        caseDurationsValid = false
-        errors.push(`${unitPath} engaged case items need positive integer durationMinutes`)
-      } else {
-        unitCaseMinutes += item.durationMinutes
-      }
-    }
-    engagedCaseMinutes += unitCaseMinutes
-    if (caseDurationsValid && Number.isFinite(unit?.timeAllocation?.cases) &&
-        unitCaseMinutes !== unit.timeAllocation.cases) {
-      errors.push(`${unitPath} engaged case durations must equal allocated case minutes`)
-    }
-
-    const activities = asArray(unit?.activities)
-    if (!activities.length) errors.push(`${unitPath} must retain at least one engaged-time activity`)
-    let unitPracticeMinutes = 0
-    let activityDurationsValid = true
-    for (const [activityIndex, activity] of activities.entries()) {
-      const activityPath = `${unitPath} activity ${activityIndex + 1}`
-      if (!isPositiveInteger(activity?.durationMinutes)) {
-        activityDurationsValid = false
-        errors.push(`${activityPath} needs positive integer durationMinutes`)
-      } else {
-        unitPracticeMinutes += activity.durationMinutes
-      }
-      if (!isValidQuickTaskScope(activity?.quickTask)) {
-        errors.push(`${activityPath} quickTask must define one concise localized output`)
-      }
-    }
-    engagedPracticeMinutes += unitPracticeMinutes
-    if (activityDurationsValid && Number.isFinite(unit?.timeAllocation?.practice) &&
-        unitPracticeMinutes !== unit.timeAllocation.practice) {
-      errors.push(`${unitPath} engaged activity durations must equal allocated practice minutes`)
-    }
-
-    for (const mode of TIME_BUDGET_KEYS) {
-      if (Number.isFinite(unit?.timeAllocation?.[mode])) allocationTotals[mode] += unit.timeAllocation[mode]
-    }
-  }
-
-  if (engagedCaseMinutes !== 20) errors.push(`${path} engaged case minutes must total 20`)
-  if (engagedPracticeMinutes !== 14) errors.push(`${path} engaged practice minutes must total 14`)
-  if (TIME_BUDGET_KEYS.some((mode) => allocationTotals[mode] !== expectedAllocation[mode])) {
-    errors.push(`${path} unit allocations must remain 31 theory, 20 cases and 14 practice minutes`)
-  }
-  if (TIME_BUDGET_KEYS.some((mode) => lesson.timeBudget?.[mode] !== expectedAllocation[mode])) {
-    errors.push(`${path} time budget must remain 31 theory, 20 cases and 14 practice minutes`)
-  }
-  if (lesson.durationMinutes !== 65) errors.push(`${path} durationMinutes must remain 65`)
-}
-
-function validateModule4SafetyContracts(lesson, path, errors) {
-  const contractPath = `${path} Module 4 safety contract`
-  const ragStepIds = [
-    'authorize-query',
-    'resolve-effective-version',
-    'retrieve-filtered-passages',
-    'rerank-and-threshold',
-    'generate-with-citations',
-    'verify-claims-or-refuse'
-  ]
-  if (!isObject(lesson.ragControlArtifact)) {
-    errors.push(`${contractPath} RAG control artifact is required`)
-  } else {
-    const actualRagStepIds = asArray(lesson.ragControlArtifact.pipeline).map((step) => step?.id)
-    if (actualRagStepIds.length !== ragStepIds.length ||
-        actualRagStepIds.some((id, index) => id !== ragStepIds[index])) {
-      errors.push(`${contractPath} RAG control must keep six ordered steps`)
-    }
-  }
-
-  const tool = lesson.maintenanceToolContract
-  const requiredToolInputs = [
-    'assetId', 'siteId', 'symptomCode', 'description', 'priority',
-    'requestedWindowStart', 'requestedWindowEnd', 'requesterId', 'authorizationContext',
-    'sourceEvidenceIds', 'idempotencyKey'
-  ]
-  if (!isObject(tool)) {
-    errors.push(`${contractPath} tool contract is required`)
-  } else {
-    const actualToolInputs = asArray(tool.requiredInputs)
-    for (const field of requiredToolInputs) {
-      if (!actualToolInputs.includes(field)) {
-        errors.push(`${contractPath} tool contract must retain ${field}`)
-      }
-    }
-    if (!asArray(tool.auditFields).includes('idempotencyKey')) {
-      errors.push(`${contractPath} tool contract audit must retain idempotencyKey`)
-    }
-    if (asArray(tool.validationRules).length < 5 || asArray(tool.failureModes).length < 3) {
-      errors.push(`${contractPath} tool contract needs validation and failure handling`)
-    }
-  }
-
-  if (!isObject(lesson.mcpBoundary)) {
-    errors.push(`${contractPath} MCP boundary artifact is required`)
-  } else {
-    const participantIds = asArray(lesson.mcpBoundary.participants).map((item) => item?.id)
-    if (participantIds.join(',') !== 'host,client,server') {
-      errors.push(`${contractPath} MCP boundary must retain host, client and server`)
-    }
-    const primitiveIds = asArray(lesson.mcpBoundary.serverPrimitives).map((item) => item?.id)
-    if (primitiveIds.join(',') !== 'resources,tools,prompts') {
-      errors.push(`${contractPath} MCP boundary must retain resources, tools and prompts`)
-    }
-    if (lesson.mcpBoundary.protocolRevision !== '2026-07-28') {
-      errors.push(`${contractPath} MCP boundary must identify protocol revision 2026-07-28`)
-    }
-  }
-
-  const expectedPatterns = [
-    ['single-controlled-summary', 'one-model'],
-    ['mixed-volume-classification', 'model-routing'],
-    ['maintenance-order-transaction', 'deterministic-orchestration'],
-    ['ambiguous-cross-domain-investigation', 'multiple-agents']
-  ]
-  if (!isObject(lesson.multiModelDecisionExercise)) {
-    errors.push(`${contractPath} multi-model exercise artifact is required`)
-  } else {
-    const scenarios = asArray(lesson.multiModelDecisionExercise.scenarios)
-    if (scenarios.length !== expectedPatterns.length || expectedPatterns.some(
-      ([id, pattern], index) => scenarios[index]?.id !== id || scenarios[index]?.recommendedPattern !== pattern
-    )) {
-      errors.push(`${contractPath} multi-model exercise must retain all four patterns`)
-    }
-    for (const [index, scenario] of scenarios.entries()) {
-      if (!hasLocalizedFields(scenario, ['modelSolution', 'handoff', 'stopCondition', 'measurableBenefit'])) {
-        errors.push(`${contractPath} multi-model exercise scenario ${index + 1} needs localized decision evidence`)
-      }
-    }
-  }
-
-  const units = asArray(lesson.units)
-  const timedCaseItems = units.flatMap((unit) => [
-    ...asArray(unit?.microExamples),
-    ...asArray(unit?.caseSegments)
-  ])
-  for (const [index, item] of timedCaseItems.entries()) {
-    const itemPath = `${contractPath} timed case item ${index + 1}`
-    for (const field of ['learnerAction', 'expectedOutput', 'modelReasoning', 'responseFormat']) {
-      if (!isLocalized(item?.[field])) errors.push(`${itemPath} needs localized ${field}`)
-    }
-    const columns = asArray(item?.decisionAid?.columns)
-    const rows = asArray(item?.decisionAid?.rows)
-    if (columns.length < 2 || !columns.every(isLocalized) || rows.length < 2 || rows.some((row) => (
-      !hasNonEmptyString(row?.id) || asArray(row?.cells).length !== columns.length ||
-      !asArray(row?.cells).every(isLocalized)
-    ))) {
-      errors.push(`${itemPath} needs a localized decision aid with at least two rows and columns`)
-    }
-    const scope = item?.scope
-    const scopeCounts = ['decisionCount', 'comparisonCount', 'interpretationCount']
-    const validScope = isObject(scope) && scope.outputCount === 1 && scopeCounts.every(
-      (field) => Number.isInteger(scope[field]) && scope[field] >= 0
-    )
-    if (!validScope || scopeCounts.reduce((sum, field) => sum + (scope?.[field] || 0), 0) !== item?.durationMinutes) {
-      errors.push(`${itemPath} workload must equal durationMinutes and retain one output`)
-    }
-  }
-
-  const caseMinutes = units.reduce((sum, unit) => sum + [
-    ...asArray(unit?.microExamples),
-    ...asArray(unit?.caseSegments),
-    ...asArray(unit?.workedCases)
-  ].reduce((subtotal, item) => subtotal + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0), 0), 0)
-  const activities = units.flatMap((unit) => asArray(unit?.activities))
-  const practiceMinutes = activities.reduce(
-    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
-    0
-  )
-  if (units.length !== 9 || lesson.durationMinutes !== 80 ||
-      lesson.timeBudget?.theory !== 40 || lesson.timeBudget?.cases !== 22 ||
-      lesson.timeBudget?.practice !== 18) {
-    errors.push(`${contractPath} timing must remain nine units and 40 theory, 22 cases, 18 practice minutes`)
-  }
-  if (caseMinutes !== 22) errors.push(`${contractPath} learner-visible case minutes must total 22`)
-  if (timedCaseItems.length !== 7 || timedCaseItems.reduce(
-    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
-    0
-  ) !== 14) {
-    errors.push(`${contractPath} must retain seven substantive timed case items totaling 14 minutes`)
-  }
-  if (activities.length !== 9 || practiceMinutes !== 18 ||
-      activities.some((item) => item?.durationMinutes !== 2 || !isValidQuickTaskScope(item?.quickTask))) {
-    errors.push(`${contractPath} must retain nine two-minute one-output activities`)
-  }
-}
-
-function validateTimedCaseItems(lesson, contractPath, expectedCount, expectedMinutes, errors) {
-  const timedCaseItems = asArray(lesson.units).flatMap((unit) => [
-    ...asArray(unit?.microExamples),
-    ...asArray(unit?.caseSegments)
-  ])
-  for (const [index, item] of timedCaseItems.entries()) {
-    const itemPath = `${contractPath} timed case item ${index + 1}`
-    for (const field of ['learnerAction', 'expectedOutput', 'modelReasoning', 'responseFormat']) {
-      if (!isLocalized(item?.[field])) errors.push(`${itemPath} needs localized ${field}`)
-    }
-    const columns = asArray(item?.decisionAid?.columns)
-    const rows = asArray(item?.decisionAid?.rows)
-    if (columns.length < 2 || !columns.every(isLocalized) || rows.length < 2 || rows.some((row) => (
-      !hasNonEmptyString(row?.id) || asArray(row?.cells).length !== columns.length ||
-      !asArray(row?.cells).every(isLocalized)
-    ))) {
-      errors.push(`${itemPath} needs a localized decision aid with at least two rows and columns`)
-    }
-    const scope = item?.scope
-    const scopeCounts = ['decisionCount', 'comparisonCount', 'interpretationCount']
-    const validScope = isObject(scope) && scope.outputCount === 1 && scopeCounts.every(
-      (field) => Number.isInteger(scope[field]) && scope[field] >= 0
-    )
-    if (!validScope || scopeCounts.reduce((sum, field) => sum + (scope?.[field] || 0), 0) !== item?.durationMinutes) {
-      errors.push(`${itemPath} workload must equal durationMinutes and retain one output`)
-    }
-  }
-  if (timedCaseItems.length !== expectedCount || timedCaseItems.reduce(
-    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
-    0
-  ) !== expectedMinutes) {
-    errors.push(
-      `${contractPath} must retain ${expectedCount} substantive timed case items totaling ${expectedMinutes} minutes`
-    )
-  }
-}
-
-function validateMvpExperimentCanvas(canvas, contractPath, errors) {
-  if (!isObject(canvas)) {
-    errors.push(`${contractPath} MVP experiment canvas is required`)
-    return
-  }
-  const requiredFields = ['title', 'description', 'problem', 'decisionSupported', 'riskiestAssumption', 'hypothesis', 'dissent']
-  for (const field of requiredFields) {
-    if (!isLocalized(canvas[field])) errors.push(`${contractPath} canvas needs localized ${field}`)
-  }
-  if (!isObject(canvas.baseline) || !isPositiveNumber(canvas.baseline.value) ||
-      !isLocalized(canvas.baseline.metric) || !isISODate(canvas.baseline.measuredAt) ||
-      !hasNonEmptyString(canvas.baseline.evidenceRef)) {
-    errors.push(`${contractPath} canvas baseline needs a measured value, metric, date and evidence`)
-  }
-  const criteria = asArray(canvas.successCriteria)
-  if (criteria.length < 3) {
-    errors.push(`${contractPath} canvas needs at least three success criteria`)
-  }
-  if (!criteria.some((criterion) => criterion?.hardGate === true)) {
-    errors.push(`${contractPath} canvas needs at least one hard gate criterion`)
-  }
-  const criterionIds = new Set()
-  for (const [index, criterion] of criteria.entries()) {
-    const criterionPath = `${contractPath} canvas criterion ${criterion?.id || index + 1}`
-    if (!hasNonEmptyString(criterion?.id) || !STABLE_SLUG_ID.test(criterion.id)) {
-      errors.push(`${criterionPath} needs a stable ID`)
-    } else if (criterionIds.has(criterion.id)) {
-      errors.push(`${criterionPath} has a duplicate criterion ID`)
-    } else {
-      criterionIds.add(criterion.id)
-    }
-    if (!isLocalized(criterion?.metric) || !isLocalized(criterion?.measurement)) {
-      errors.push(`${criterionPath} needs a localized metric and measurement method`)
-    }
-    if (!Number.isFinite(criterion?.baselineValue) || !Number.isFinite(criterion?.targetValue)) {
-      errors.push(`${criterionPath} needs numeric baseline and target values`)
-      continue
-    }
-    if (criterion.baselineValue === criterion.targetValue) {
-      errors.push(`${criterionPath} target must differ from baseline`)
-      continue
-    }
-    const expectedDirection = criterion.targetValue > criterion.baselineValue ? 'increase' : 'decrease'
-    if (criterion.direction !== expectedDirection) {
-      errors.push(`${criterionPath} direction must match the target movement`)
-    }
-  }
-  if (asArray(canvas.stopCriteria).length < 2 || !asArray(canvas.stopCriteria).every(isLocalized)) {
-    errors.push(`${contractPath} canvas needs at least two localized stop criteria`)
-  }
-  if (!asArray(canvas.guardrails).length || !asArray(canvas.guardrails).every(isLocalized)) {
-    errors.push(`${contractPath} canvas needs localized guardrails`)
-  }
-  if (!hasNonEmptyString(canvas.owner) || !hasNonEmptyString(canvas.approver)) {
-    errors.push(`${contractPath} canvas needs a named owner and approver`)
-  }
-  if (!isISODate(canvas.reviewDate)) errors.push(`${contractPath} canvas needs a valid review date`)
-}
-
-function validateRiskRegister(register, contractPath, errors) {
-  if (!isObject(register)) {
-    errors.push(`${contractPath} risk register is required`)
-    return
-  }
-  const rows = asArray(register.rows)
-  if (rows.length < 6) errors.push(`${contractPath} risk register needs at least six rows`)
-  if (!Number.isInteger(register.tolerance) || register.tolerance <= 0) {
-    errors.push(`${contractPath} risk register needs a positive integer tolerance`)
-  }
-  if (!isLocalized(register.toleranceRule) || !isLocalized(register.decisionRecord)) {
-    errors.push(`${contractPath} risk register needs a localized tolerance rule and decision record`)
-  }
-
-  const seenIds = new Set()
-  const inScale = (value) => Number.isInteger(value) && value >= 1 && value <= 5
-  for (const [index, row] of rows.entries()) {
-    const rowPath = `${contractPath} risk ${row?.id || index + 1}`
-    if (!hasNonEmptyString(row?.id) || !STABLE_SLUG_ID.test(row.id)) {
-      errors.push(`${rowPath} needs a stable risk ID`)
-    } else if (seenIds.has(row.id)) {
-      errors.push(`${rowPath} has a duplicate risk ID`)
-    } else {
-      seenIds.add(row.id)
-    }
-    if (!isLocalized(row?.category) || !isLocalized(row?.description)) {
-      errors.push(`${rowPath} needs a localized category and description`)
-    }
-    if (!asArray(row?.controls).length || !asArray(row?.controls).every(isLocalized)) {
-      errors.push(`${rowPath} needs at least one control described in both languages`)
-    }
-    if (!hasNonEmptyString(row?.owner) || !hasNonEmptyString(row?.evidenceRef)) {
-      errors.push(`${rowPath} needs an owner and an evidence reference`)
-    }
-    if (!isISODate(row?.dueDate)) errors.push(`${rowPath} needs a valid due date`)
-    if (![inScale(row?.likelihood), inScale(row?.impact), inScale(row?.residualLikelihood), inScale(row?.residualImpact)].every(Boolean)) {
-      errors.push(`${rowPath} needs likelihood and impact values between 1 and 5`)
-      continue
-    }
-    if (row.inherentScore !== row.likelihood * row.impact) {
-      errors.push(`${rowPath} inherent score must equal likelihood multiplied by impact`)
-    }
-    if (row.residualScore !== row.residualLikelihood * row.residualImpact) {
-      errors.push(`${rowPath} residual score must equal residual likelihood multiplied by residual impact`)
-    }
-    if (row.residualScore > row.inherentScore) {
-      errors.push(`${rowPath} controls must not increase the score`)
-    }
-  }
-
-  if (Number.isInteger(register.tolerance)) {
-    const expected = rows.filter((row) => row?.residualScore > register.tolerance)
-      .map((row) => row.id).sort().join(',')
-    const declared = asArray(register.blockingRiskIds).slice().sort().join(',')
-    if (expected !== declared) {
-      errors.push(`${contractPath} blocking risks must list every residual score above tolerance`)
-    }
-  }
-}
-
-function validateRaciMatrix(matrix, contractPath, errors) {
-  if (!isObject(matrix)) {
-    errors.push(`${contractPath} RACI matrix is required`)
-    return
-  }
-  const roles = asArray(matrix.roles)
-  const activities = asArray(matrix.activities)
-  if (roles.length < 4) errors.push(`${contractPath} RACI matrix needs at least four roles`)
-  if (activities.length < 5) errors.push(`${contractPath} RACI matrix needs at least five activities`)
-  const roleIds = new Set()
-  for (const [index, role] of roles.entries()) {
-    const rolePath = `${contractPath} RACI role ${role?.id || index + 1}`
-    if (!hasNonEmptyString(role?.id) || !STABLE_SLUG_ID.test(role.id)) {
-      errors.push(`${rolePath} needs a stable role ID`)
-    } else if (roleIds.has(role.id)) {
-      errors.push(`${rolePath} has a duplicate role ID`)
-    } else {
-      roleIds.add(role.id)
-    }
-    if (!isLocalized(role?.label)) errors.push(`${rolePath} needs a localized label`)
-  }
-
-  const activityIds = new Set()
-  for (const [index, activity] of activities.entries()) {
-    const activityPath = `${contractPath} RACI activity ${activity?.id || index + 1}`
-    if (!hasNonEmptyString(activity?.id) || !STABLE_SLUG_ID.test(activity.id)) {
-      errors.push(`${activityPath} needs a stable activity ID`)
-    } else if (activityIds.has(activity.id)) {
-      errors.push(`${activityPath} has a duplicate activity ID`)
-    } else {
-      activityIds.add(activity.id)
-    }
-    if (!isLocalized(activity?.name)) errors.push(`${activityPath} needs a localized name`)
-    const assignments = activity?.assignments
-    if (!isObject(assignments)) {
-      errors.push(`${activityPath} needs an assignment for every role`)
-      continue
-    }
-    const unknownRoles = Object.keys(assignments).filter((roleId) => !roleIds.has(roleId))
-    if (unknownRoles.length) errors.push(`${activityPath} assigns unknown roles: ${unknownRoles.join(', ')}`)
-    const codes = [...roleIds].map((roleId) => assignments[roleId])
-    if (codes.some((code) => !['R', 'A', 'C', 'I', '-'].includes(code))) {
-      errors.push(`${activityPath} may only use R, A, C, I or a dash`)
-    }
-    if (codes.filter((code) => code === 'A').length !== 1) {
-      errors.push(`${activityPath} needs exactly one accountable role`)
-    }
-    if (!codes.some((code) => code === 'R')) {
-      errors.push(`${activityPath} needs at least one responsible role`)
-    }
-  }
-}
-
-function validateScalingGateChecklist(checklist, contractPath, errors) {
-  if (!isObject(checklist)) {
-    errors.push(`${contractPath} scaling gate checklist is required`)
-    return
-  }
-  const gates = asArray(checklist.gates)
-  if (gates.length < 6) errors.push(`${contractPath} scaling gate checklist needs at least six gates`)
-  if (!gates.some((gate) => gate?.blocking === true)) {
-    errors.push(`${contractPath} scaling gate checklist needs at least one blocking gate`)
-  }
-  const gateIds = new Set()
-  for (const [index, gate] of gates.entries()) {
-    const gatePath = `${contractPath} scaling gate ${gate?.id || index + 1}`
-    if (!hasNonEmptyString(gate?.id) || !STABLE_SLUG_ID.test(gate.id)) {
-      errors.push(`${gatePath} needs a stable gate ID`)
-    } else if (gateIds.has(gate.id)) {
-      errors.push(`${gatePath} has a duplicate gate ID`)
-    } else {
-      gateIds.add(gate.id)
-    }
-    for (const field of ['name', 'question', 'evidenceRequired', 'threshold']) {
-      if (!isLocalized(gate?.[field])) errors.push(`${gatePath} needs a localized ${field}`)
-    }
-    if (typeof gate?.blocking !== 'boolean') errors.push(`${gatePath} must declare whether it is blocking`)
-    if (!['pass', 'fail', 'pending'].includes(gate?.status)) {
-      errors.push(`${gatePath} status must be pass, fail or pending`)
-    }
-    if (!hasNonEmptyString(gate?.evidenceRef)) errors.push(`${gatePath} needs an evidence reference`)
-  }
-
-  const blocked = gates.filter((gate) => gate?.blocking === true && gate?.status !== 'pass')
-  const declared = asArray(checklist.blockedGateIds).slice().sort().join(',')
-  if (blocked.map((gate) => gate.id).sort().join(',') !== declared) {
-    errors.push(`${contractPath} blocked gates must list every unmet blocking gate`)
-  }
-  if (!['scale', 'hold', 'stop'].includes(checklist.decision)) {
-    errors.push(`${contractPath} scaling decision must be scale, hold or stop`)
-  }
-  if (blocked.length && checklist.decision === 'scale') {
-    errors.push(`${contractPath} cannot recommend scale while a blocking gate is unmet`)
-  }
-  if (!isLocalized(checklist.decisionRationale)) {
-    errors.push(`${contractPath} scaling decision needs a localized rationale`)
-  }
-  if (!isISODate(checklist.reviewDate)) errors.push(`${contractPath} scaling checklist needs a valid review date`)
-  if (!hasNonEmptyString(checklist.owner)) errors.push(`${contractPath} scaling checklist needs an owner`)
-}
-
-function validateModule5GovernanceContracts(lesson, path, errors) {
-  const contractPath = `${path} Module 5 governance contract`
-
-  validateMvpExperimentCanvas(lesson.mvpExperimentCanvas, contractPath, errors)
-  validateRiskRegister(lesson.riskRegister, contractPath, errors)
-  validateRaciMatrix(lesson.raciMatrix, contractPath, errors)
-  validateScalingGateChecklist(lesson.scalingGateChecklist, contractPath, errors)
-  validateTimedCaseItems(lesson, contractPath, 6, 14, errors)
-
-  const units = asArray(lesson.units)
-  const caseMinutes = units.reduce((sum, unit) => sum + [
-    ...asArray(unit?.microExamples),
-    ...asArray(unit?.caseSegments),
-    ...asArray(unit?.workedCases)
-  ].reduce((unitSum, item) => unitSum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0), 0), 0)
-  const activities = units.flatMap((unit) => asArray(unit?.activities))
-  const practiceMinutes = activities.reduce(
-    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
-    0
-  )
-  const budget = lesson.timeBudget
-
-  if (units.length !== 8 || !isObject(budget) ||
-      budget.theory !== 36 || budget.cases !== 22 || budget.practice !== 17) {
-    errors.push(`${contractPath} timing must remain eight units and 36 theory, 22 cases, 17 practice minutes`)
-  }
-  if (caseMinutes !== 22) errors.push(`${contractPath} learner-visible case minutes must total 22`)
-  if (practiceMinutes !== 17 || activities.length !== 9 ||
-      activities.some((item) => !isValidQuickTaskScope(item?.quickTask))) {
-    errors.push(`${contractPath} must retain nine one-output activities totaling 17 practice minutes`)
-  }
-
-  const workedCases = units.flatMap((unit) => asArray(unit?.workedCases))
-  const requiredCaseIds = ['shadow-mode-quality-assistant', 'plant-to-multi-plant-rollout']
-  for (const caseId of requiredCaseIds) {
-    if (!workedCases.some((workedCase) => workedCase?.id === caseId)) {
-      errors.push(`${contractPath} must retain the ${caseId} worked case`)
-    }
-  }
-
-  const shadow = workedCases.find((workedCase) => workedCase?.id === 'shadow-mode-quality-assistant')
-  const confusion = shadow?.caseArtifact?.confusion
-  if (isObject(confusion)) {
-    const { truePositives, falsePositives, falseNegatives, trueNegatives } = confusion
-    const counts = [truePositives, falsePositives, falseNegatives, trueNegatives]
-    if (!counts.every((value) => Number.isInteger(value) && value >= 0)) {
-      errors.push(`${contractPath} shadow case confusion matrix needs non-negative integers`)
-    } else {
-      if (counts.reduce((sum, value) => sum + value, 0) !== shadow.caseArtifact.sampleSize) {
-        errors.push(`${contractPath} shadow case confusion matrix must sum to its sample size`)
-      }
-      const precision = truePositives / (truePositives + falsePositives)
-      const recall = truePositives / (truePositives + falseNegatives)
-      if (Math.abs(shadow.caseArtifact.precision - precision) > 0.005) {
-        errors.push(`${contractPath} shadow case precision must be derived from the confusion matrix`)
-      }
-      if (Math.abs(shadow.caseArtifact.recall - recall) > 0.005) {
-        errors.push(`${contractPath} shadow case recall must be derived from the confusion matrix`)
-      }
-    }
-    if (shadow.caseArtifact.reviewQueuePerShift > shadow.caseArtifact.reviewCapacityPerShift) {
-      errors.push(`${contractPath} shadow case review queue must stay within review capacity`)
-    }
-    if (shadow.caseArtifact.canvas?.id !== lesson.mvpExperimentCanvas?.id) {
-      errors.push(`${contractPath} shadow case must reference the lesson MVP experiment canvas`)
-    }
-  } else if (shadow) {
-    errors.push(`${contractPath} shadow case needs a confusion matrix`)
-  }
-
-  const rollout = workedCases.find((workedCase) => workedCase?.id === 'plant-to-multi-plant-rollout')
-  const rolloutArtifact = rollout?.caseArtifact
-  if (isObject(rolloutArtifact)) {
-    const plants = asArray(rolloutArtifact.plants)
-    if (plants.length < 3) errors.push(`${contractPath} rollout case needs at least three plants`)
-    for (const [index, plant] of plants.entries()) {
-      const plantPath = `${contractPath} rollout plant ${plant?.id || index + 1}`
-      const criteria = asArray(plant?.criteria)
-      if (!criteria.length || criteria.some((criterion) => (
-        !Number.isInteger(criterion?.weight) || !Number.isInteger(criterion?.score)
-      ))) {
-        errors.push(`${plantPath} needs integer weighted criteria`)
-        continue
-      }
-      const computed = criteria.reduce((sum, criterion) => sum + criterion.weight * criterion.score, 0)
-      if (plant.readinessScore !== computed) {
-        errors.push(`${plantPath} readiness score must equal its weighted criteria total`)
-      }
-      const expectedEligible = plant.readinessScore >= rolloutArtifact.readinessThreshold &&
-        plant.hardGatesPassed === true
-      if (plant.eligible !== expectedEligible) {
-        errors.push(`${plantPath} eligibility must follow the threshold and the hard gates`)
-      }
-    }
-    const expectedSelection = plants.filter((plant) => plant.eligible).map((plant) => plant.id).join(',')
-    if (asArray(rolloutArtifact.selectedPlantIds).join(',') !== expectedSelection) {
-      errors.push(`${contractPath} rollout selection must contain exactly the eligible plants`)
-    }
-    if (!plants.some((plant) => plant?.hardGatesPassed === false && plant?.eligible === false)) {
-      errors.push(`${contractPath} rollout case must retain a high-scoring plant blocked by a hard gate`)
-    }
-    if (rolloutArtifact.checklist?.id !== lesson.scalingGateChecklist?.id) {
-      errors.push(`${contractPath} rollout case must reference the lesson scaling gate checklist`)
-    }
-  } else if (rollout) {
-    errors.push(`${contractPath} rollout case needs a readiness artifact`)
-  }
-}
-
-const MODULE_6_TOPICS = [
-  'ot-vs-it', 'mes-vs-scada', 'rag', 'agent', 'mcp', 'automation-selection',
-  'mvp', 'kpi', 'risk', 'human-oversight', 'scaling'
-]
-
-const MODULE_6_RUBRIC_CRITERIA = [
-  'structure', 'technical-accuracy', 'business-relevance',
-  'concrete-example', 'trade-offs', 'english-clarity'
-]
-
-const sortedIds = (values) => asArray(values).slice().sort().join(',')
-
-function validateAnswerRubric(rubric, contractPath, errors) {
-  if (!isObject(rubric)) {
-    errors.push(`${contractPath} answer rubric is required`)
-    return
-  }
-  const criteria = asArray(rubric.criteria)
-  if (criteria.map((criterion) => criterion?.id).join(',') !== MODULE_6_RUBRIC_CRITERIA.join(',')) {
-    errors.push(`${contractPath} rubric must retain the six approved criteria in order`)
-  }
-  if (rubric.maxScore !== criteria.length * 2) {
-    errors.push(`${contractPath} rubric maximum score must equal twice the criteria count`)
-  }
-  if (rubric.readinessThreshold !== 10) {
-    errors.push(`${contractPath} rubric readiness threshold must remain 10`)
-  }
-  for (const [index, criterion] of criteria.entries()) {
-    const criterionPath = `${contractPath} rubric criterion ${criterion?.id || index + 1}`
-    if (!isLocalized(criterion?.name)) errors.push(`${criterionPath} needs a localized name`)
-    const anchors = asArray(criterion?.anchors)
-    if (anchors.map((anchor) => anchor?.score).join(',') !== '0,1,2') {
-      errors.push(`${criterionPath} needs anchors for scores 0, 1 and 2`)
-    }
-    if (anchors.some((anchor) => !isLocalized(anchor?.description))) {
-      errors.push(`${criterionPath} needs a localized description for every anchor`)
-    }
-  }
-}
-
-function validateMockInterviewSimulation(mock, lesson, contractPath, errors) {
-  if (!isObject(mock)) {
-    errors.push(`${contractPath} mock interview simulation is required`)
-    return
-  }
-  const segments = asArray(mock.segments)
-  if (mock.totalMinutes !== 20) {
-    errors.push(`${contractPath} simulation must declare 20 total minutes`)
-  }
-  if (segments.reduce(
-    (sum, segment) => sum + (isPositiveInteger(segment?.durationMinutes) ? segment.durationMinutes : 0),
-    0
-  ) !== 20) {
-    errors.push(`${contractPath} simulation segments must total 20 minutes`)
-  }
-  if (mock.withoutNotes !== true) {
-    errors.push(`${contractPath} simulation must be completed without notes`)
-  }
-  const segmentIds = new Set()
-  for (const [index, segment] of segments.entries()) {
-    const segmentPath = `${contractPath} simulation segment ${segment?.id || index + 1}`
-    if (!hasNonEmptyString(segment?.id) || !STABLE_SLUG_ID.test(segment.id)) {
-      errors.push(`${segmentPath} needs a stable segment ID`)
-    } else if (segmentIds.has(segment.id)) {
-      errors.push(`${segmentPath} has a duplicate segment ID`)
-    } else {
-      segmentIds.add(segment.id)
-    }
-    if (!isLocalized(segment?.question)) errors.push(`${segmentPath} needs a localized question`)
-    const expectedPoints = asArray(segment?.expectedPoints)
-    if (expectedPoints.length < 2 || !expectedPoints.every(isLocalized)) {
-      errors.push(`${segmentPath} needs at least two localized expected points`)
-    }
-    if (!['unit-7', 'unit-8'].includes(segment?.unitRef)) {
-      errors.push(`${segmentPath} must reference the mock units`)
-    }
-    if (!asArray(segment?.topicIds).length) errors.push(`${segmentPath} needs at least one topic`)
-  }
-  if (sortedIds([...new Set(segments.flatMap((segment) => asArray(segment?.topicIds)))]) !== sortedIds(MODULE_6_TOPICS)) {
-    errors.push(`${contractPath} simulation must cover every priority topic exactly once as a set`)
-  }
-  const units = asArray(lesson.units)
-  const perUnit = (unitRef) => segments
-    .filter((segment) => segment?.unitRef === unitRef)
-    .reduce((sum, segment) => sum + (isPositiveInteger(segment?.durationMinutes) ? segment.durationMinutes : 0), 0)
-  if (perUnit('unit-7') !== units[6]?.estimatedMinutes || perUnit('unit-8') !== units[7]?.estimatedMinutes) {
-    errors.push(`${contractPath} simulation minutes must match the two mock unit durations`)
-  }
-}
-
-function validateReadinessTracker(tracker, contractPath, errors) {
-  if (!isObject(tracker)) {
-    errors.push(`${contractPath} readiness tracker is required`)
-    return
-  }
-  if (tracker.threshold !== 10) errors.push(`${contractPath} readiness threshold must remain 10`)
-  if (typeof tracker.mockCompletedWithoutNotes !== 'boolean') {
-    errors.push(`${contractPath} readiness tracker must record whether the mock was unaided`)
-  }
-  const entries = asArray(tracker.entries)
-  if (sortedIds(entries.map((entry) => entry?.topicId)) !== sortedIds(MODULE_6_TOPICS)) {
-    errors.push(`${contractPath} readiness tracker must cover every priority topic`)
-  }
-  for (const [index, entry] of entries.entries()) {
-    const entryPath = `${contractPath} readiness entry ${entry?.topicId || index + 1}`
-    const scores = entry?.scores
-    if (!isObject(scores) || sortedIds(Object.keys(scores)) !== sortedIds(MODULE_6_RUBRIC_CRITERIA)) {
-      errors.push(`${entryPath} needs a score for every rubric criterion`)
-      continue
-    }
-    const values = Object.values(scores)
-    if (!values.every((score) => [0, 1, 2].includes(score))) {
-      errors.push(`${entryPath} scores must be 0, 1 or 2`)
-      continue
-    }
-    const total = values.reduce((sum, score) => sum + score, 0)
-    if (entry.total !== total) {
-      errors.push(`${entryPath} total must equal the sum of its rubric scores`)
-    }
-    if (entry.ready !== (entry.total >= tracker.threshold && tracker.mockCompletedWithoutNotes === true)) {
-      errors.push(`${entryPath} readiness must be derived from the threshold and the unaided mock`)
-    }
-    if (!isLocalized(entry?.gapAction)) errors.push(`${entryPath} needs a localized gap action`)
-  }
-  if (sortedIds(tracker.notReadyTopicIds) !== sortedIds(
-    entries.filter((entry) => !entry?.ready).map((entry) => entry?.topicId)
-  )) {
-    errors.push(`${contractPath} not-ready topics must list every entry below the threshold`)
-  }
-}
-
-function validateRapidReviewSheet(sheet, contractPath, errors) {
-  if (!isObject(sheet)) {
-    errors.push(`${contractPath} rapid review sheet is required`)
-    return
-  }
-  const entries = asArray(sheet.entries)
-  if (sortedIds(entries.map((entry) => entry?.topicId)) !== sortedIds(MODULE_6_TOPICS)) {
-    errors.push(`${contractPath} rapid review sheet must cover every priority topic`)
-  }
-  for (const [index, entry] of entries.entries()) {
-    const entryPath = `${contractPath} rapid review entry ${entry?.topicId || index + 1}`
-    if (!isLocalized(entry?.headline)) errors.push(`${entryPath} needs a localized headline`)
-    if (!isLocalized(entry?.trap)) errors.push(`${entryPath} needs a localized common trap`)
-  }
-}
-
-function validateModule6InterviewLab(lesson, path, errors) {
-  const contractPath = `${path} Module 6 interview lab contract`
-
-  validateAnswerRubric(lesson.answerRubric, contractPath, errors)
-  validateMockInterviewSimulation(lesson.mockInterviewSimulation, lesson, contractPath, errors)
-  validateReadinessTracker(lesson.readinessTracker, contractPath, errors)
-  validateRapidReviewSheet(lesson.rapidReviewSheet, contractPath, errors)
-  validateTimedCaseItems(lesson, contractPath, 6, 15, errors)
-
-  const units = asArray(lesson.units)
-  const caseMinutes = units.reduce((sum, unit) => sum + [
-    ...asArray(unit?.microExamples),
-    ...asArray(unit?.caseSegments),
-    ...asArray(unit?.workedCases)
-  ].reduce((unitSum, item) => unitSum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0), 0), 0)
-  const activities = units.flatMap((unit) => asArray(unit?.activities))
-  const practiceMinutes = activities.reduce(
-    (sum, item) => sum + (isPositiveInteger(item?.durationMinutes) ? item.durationMinutes : 0),
-    0
-  )
-  const budget = lesson.timeBudget
-
-  if (units.length !== 8 || !isObject(budget) ||
-      budget.theory !== 19 || budget.cases !== 25 || budget.practice !== 31) {
-    errors.push(`${contractPath} timing must remain eight units and 19 theory, 25 cases, 31 practice minutes`)
-  }
-  if (caseMinutes !== 25) errors.push(`${contractPath} learner-visible case minutes must total 25`)
-  if (practiceMinutes !== 31 || activities.length !== 13 ||
-      activities.some((item) => !isValidQuickTaskScope(item?.quickTask))) {
-    errors.push(`${contractPath} must retain thirteen one-output activities totaling 31 practice minutes`)
-  }
-
-  const answers = asArray(lesson.interviewAnswers)
-  if (sortedIds(answers.map((answer) => answer?.topicId)) !== sortedIds(MODULE_6_TOPICS)) {
-    errors.push(`${contractPath} answer bank must cover every priority topic`)
-  }
-
-  const matrix = lesson.automationDefenceMatrix
-  if (!isObject(matrix)) {
-    errors.push(`${contractPath} automation defence matrix is required`)
-  } else {
-    const candidates = asArray(matrix.candidates)
-    if (candidates.length < 4) errors.push(`${contractPath} defence matrix needs at least four candidates`)
-    for (const [index, candidate] of candidates.entries()) {
-      const candidatePath = `${contractPath} defence candidate ${candidate?.id || index + 1}`
-      const scores = asArray(candidate?.scores)
-      if (!scores.length || scores.some((score) => (
-        !Number.isInteger(score?.weight) || !Number.isInteger(score?.score)
-      ))) {
-        errors.push(`${candidatePath} needs integer weighted scores`)
-        continue
-      }
-      const computed = scores.reduce((sum, score) => sum + score.weight * score.score, 0)
-      if (candidate.weightedScore !== computed) {
-        errors.push(`${candidatePath} weighted score must equal its criteria total`)
-      }
-      if (candidate.eligible !== (candidate.hardGatePassed === true)) {
-        errors.push(`${candidatePath} eligibility must follow the hard gate`)
-      }
-    }
-    const eligible = candidates.filter((candidate) => candidate?.eligible)
-    const best = eligible.reduce(
-      (top, candidate) => (top && top.weightedScore >= candidate.weightedScore ? top : candidate),
-      null
-    )
-    if (matrix.selectedCandidateId !== best?.id) {
-      errors.push(`${contractPath} defence matrix must select the highest scoring eligible candidate`)
-    }
-    if (!candidates.some((candidate) => candidate?.hardGatePassed === false)) {
-      errors.push(`${contractPath} defence matrix must retain a candidate rejected by the hard gate`)
-    }
-  }
-
-  const pathArtifact = lesson.sensorToDecisionPath
-  if (!isObject(pathArtifact)) {
-    errors.push(`${contractPath} sensor-to-decision path is required`)
-  } else {
-    const hops = asArray(pathArtifact.hops)
-    if (hops.length < 5) errors.push(`${contractPath} sensor-to-decision path needs at least five hops`)
-    if (hops.some((hop) => !isPositiveNumber(hop?.latencySeconds) || !hasNonEmptyString(hop?.owner))) {
-      errors.push(`${contractPath} every hop needs a positive latency and an owner`)
-    } else {
-      const total = hops.reduce((sum, hop) => sum + hop.latencySeconds, 0)
-      if (pathArtifact.endToEndSeconds !== total) {
-        errors.push(`${contractPath} end-to-end latency must equal the sum of its hops`)
-      }
-      const dominant = hops.reduce((top, hop) => (top.latencySeconds >= hop.latencySeconds ? top : hop))
-      if (pathArtifact.dominantHopId !== dominant.id) {
-        errors.push(`${contractPath} dominant hop must be the largest latency contributor`)
-      }
-    }
-  }
-}
-
-function validateCheckpoint(checkpoint, path, errors) {
-  if (!checkpoint) {
-    errors.push(`${path} is missing a checkpoint`)
-    return
-  }
-
-  const options = asArray(checkpoint.options)
-  if (options.length < 2) errors.push(`${path} needs at least two checkpoint options`)
-  for (const [optionIndex, option] of options.entries()) {
-    if (!option?.explanation) errors.push(`${path} option explanation missing: ${optionIndex + 1}`)
-  }
-  if (!Number.isInteger(checkpoint.correctOption) || checkpoint.correctOption < 0 || checkpoint.correctOption >= options.length) {
-    errors.push(`${path} has an invalid checkpoint correct option`)
-  }
-}
-
-export function validateCurriculum(lessons, sources) {
+/**
+ * Validates the whole course. Returns human-readable errors; an empty list means
+ * the content honours every promise made to the reader.
+ */
+export function validateCurriculum(lessons, sources, glossary = []) {
   if (!Array.isArray(lessons)) return ['Curriculum lessons must be an array']
 
   const errors = []
-  const ids = new Set()
+  const lessonIds = new Set()
+  const questionIds = new Set()
+  const termsById = new Map()
+  const stagesSeen = new Set()
   let totalMinutes = 0
-  let practicalMinutes = 0
   let italianWords = 0
 
   if (lessons.length !== STABLE_LESSONS.length) {
-    errors.push(`Curriculum requires exactly ${STABLE_LESSONS.length} lessons; received ${lessons.length}`)
+    errors.push(`Curriculum requires exactly ${STABLE_LESSONS.length} modules; received ${lessons.length}`)
   }
 
   for (const [index, lesson] of lessons.entries()) {
-    const path = `Lesson ${lesson.id || index + 1}`
+    const path = `Module ${lesson?.id || index + 1}`
     const expected = STABLE_LESSONS[index]
-    if (expected && (lesson.id !== expected[0] || lesson.slug !== expected[1])) {
+    if (expected && (lesson?.id !== expected[0] || lesson?.slug !== expected[1])) {
       errors.push(`${path} must keep stable ID and slug ${expected[0]}/${expected[1]}`)
     }
-    if (ids.has(lesson.id)) errors.push(`${path} has a duplicate lesson ID`)
-    ids.add(lesson.id)
+    if (lessonIds.has(lesson?.id)) errors.push(`${path} has a duplicate module ID`)
+    lessonIds.add(lesson?.id)
 
-    const timeBudget = lesson.timeBudget
-    if (!isObject(timeBudget) || TIME_BUDGET_KEYS.some((key) => !Number.isFinite(timeBudget[key]) || timeBudget[key] < 0)) {
-      errors.push(`${path} must define non-negative theory, cases and practice minutes`)
-    } else {
-      const unknownTimeBudgetKeys = Object.keys(timeBudget).filter((key) => !TIME_BUDGET_KEYS.includes(key))
-      if (unknownTimeBudgetKeys.length) errors.push(`${path} has unknown time budget fields: ${unknownTimeBudgetKeys.join(', ')}`)
-      const plannedMinutes = lessonPlannedMinutes(lesson)
-      totalMinutes += plannedMinutes
-      practicalMinutes += timeBudget.cases + timeBudget.practice
-      if (lesson.durationMinutes !== plannedMinutes) {
-        errors.push(`${path} durationMinutes must equal its planned minutes`)
-      }
+    if (!isLocalized(lesson?.title)) errors.push(`${path} needs a bilingual title`)
+    if (!isLocalized(lesson?.summary)) errors.push(`${path} needs a bilingual summary`)
+    if (!Number.isInteger(lesson?.moduleNumber) || lesson.moduleNumber !== index + 1) {
+      errors.push(`${path} moduleNumber must match its position in the curriculum`)
     }
 
-    const units = asArray(lesson.units)
-    if (units.length < 6 || units.length > 9) errors.push(`${path} must contain six to nine learning units`)
-    const unitMinutes = units.reduce((sum, unit) => sum + (Number.isFinite(unit.estimatedMinutes) ? unit.estimatedMinutes : 0), 0)
-    if (units.length && Number.isFinite(lesson.durationMinutes) && unitMinutes !== lesson.durationMinutes) {
-      errors.push(`${path} unit minutes must equal durationMinutes`)
+    const units = asArray(lesson?.units)
+    if (units.length !== UNITS_PER_LESSON) {
+      errors.push(`${path} must contain exactly ${UNITS_PER_LESSON} units; received ${units.length}`)
     }
 
-    const allocatedMinutes = { theory: 0, cases: 0, practice: 0 }
+    const unitMinutes = units.reduce((sum, unit) => sum + (Number.isFinite(unit?.estimatedMinutes) ? unit.estimatedMinutes : 0), 0)
+    if (Number.isFinite(lesson?.durationMinutes) && unitMinutes !== lesson.durationMinutes) {
+      errors.push(`${path} durationMinutes must equal the sum of its unit minutes`)
+    }
+    totalMinutes += unitMinutes
+    italianWords += theoryWords(lesson, 'it')
+
+    const unitIds = new Set()
     for (const [unitIndex, unit] of units.entries()) {
-      const unitPath = `${path} unit ${unit.id || unitIndex + 1}`
-      if (!Number.isFinite(unit.estimatedMinutes) || unit.estimatedMinutes < 5 || unit.estimatedMinutes > 10) {
-        errors.push(`${unitPath} estimatedMinutes must be between 5 and 10`)
-      }
-      const allocation = unit.timeAllocation
-      if (!isObject(allocation) || TIME_BUDGET_KEYS.some((key) => !Number.isFinite(allocation[key]) || allocation[key] < 0)) {
-        errors.push(`${unitPath} must allocate non-negative theory, cases and practice minutes`)
+      const unitPath = `${path} unit ${unit?.id || unitIndex + 1}`
+      if (!isObject(unit)) {
+        errors.push(`${unitPath} must be an object`)
         continue
       }
-      const unknownKeys = Object.keys(allocation).filter((key) => !TIME_BUDGET_KEYS.includes(key))
-      if (unknownKeys.length) errors.push(`${unitPath} has unknown time allocation fields: ${unknownKeys.join(', ')}`)
-      const allocationTotal = TIME_BUDGET_KEYS.reduce((sum, key) => sum + allocation[key], 0)
-      if (allocationTotal !== unit.estimatedMinutes) {
-        errors.push(`${unitPath} time allocation must equal estimatedMinutes`)
-      }
-      for (const key of TIME_BUDGET_KEYS) allocatedMinutes[key] += allocation[key]
-    }
-    if (isObject(timeBudget)) {
-      for (const key of TIME_BUDGET_KEYS) {
-        if (allocatedMinutes[key] !== timeBudget[key]) {
-          errors.push(`${path} unit ${key} allocation must equal its time budget`)
-        }
-      }
-    }
+      if (!STABLE_SLUG_ID.test(unit.id || '')) errors.push(`${unitPath} needs a stable slug ID`)
+      if (unitIds.has(unit.id)) errors.push(`${unitPath} has a duplicate unit ID`)
+      unitIds.add(unit.id)
 
-    collectLocalizedErrors(lesson, path, errors)
-    const italianLessonWords = theoryWords(lesson, 'it')
-    const englishLessonWords = theoryWords(lesson, 'en')
-    italianWords += italianLessonWords
-    if (englishLessonWords < italianLessonWords * 0.85) {
-      errors.push(`${path} English theory must contain at least 85% of its Italian word count`)
-    }
-
-    const workedCases = lessonItems(lesson, 'workedCases').filter(isWorkedCase)
-    if (workedCases.length < 2) errors.push(`${path} needs at least two valid worked cases`)
-    for (const [caseIndex, workedCase] of workedCases.entries()) {
-      if (workedCase?.pmiCase && (!workedCase.hypothetical || !workedCase.publicContext)) {
-        errors.push(`${path} worked case ${caseIndex + 1} must be hypothetical and use public context`)
+      if (!isLocalized(unit.title)) errors.push(`${unitPath} needs a bilingual title`)
+      if (!isLocalized(unit.objective)) errors.push(`${unitPath} needs a bilingual objective`)
+      if (!isLocalized(unit.stageLabel)) errors.push(`${unitPath} must say where the reader is in the seven steps`)
+      if (!Number.isInteger(unit.stage) || unit.stage < 1 || unit.stage > 7) {
+        errors.push(`${unitPath} stage must be one of the seven steps`)
+      } else {
+        stagesSeen.add(unit.stage)
       }
-    }
-
-    const microExamples = lessonItems(lesson, 'microExamples').filter(isMicroExample)
-    if (microExamples.length < 4) errors.push(`${path} needs at least four valid micro-examples`)
-    if (lessonItems(lesson, 'activities').filter(isSolvedActivity).length < 2) {
-      errors.push(`${path} needs at least two solved activities with rubrics`)
-    }
-    if (!lessonArtifacts(lesson).some(isProfessionalArtifact)) errors.push(`${path} needs one valid professional artifact`)
-
-    const answers = asArray(lesson.interviewAnswers).length ? lesson.interviewAnswers : [lesson.interview]
-    if (!answers.length || !answers.every(isProfessionalAnswer)) {
-      errors.push(`${path} needs fully localized professional interview answers`)
-    }
-
-    if ('sensorToDecisionArtifact' in lesson) {
-      validateSensorToDecisionArtifact(
-        lesson.sensorToDecisionArtifact,
-        `${path} sensor-to-decision artifact`,
-        errors
-      )
-    }
-    if ('dataReadinessUseCaseArtifact' in lesson) {
-      validateDataReadinessScorecard(
-        lesson.dataReadinessUseCaseArtifact,
-        `${path} data-readiness scorecard`,
-        errors
-      )
-      validateModule3EngagedTime(lesson, path, errors)
-    }
-    if (lesson.id === 'llm-agents') {
-      validateModule4SafetyContracts(lesson, path, errors)
-    }
-    if (lesson.id === 'mvp-governance') {
-      validateModule5GovernanceContracts(lesson, path, errors)
-    }
-    if (lesson.id === 'interview-lab') {
-      validateModule6InterviewLab(lesson, path, errors)
-    }
-
-    for (const [unitIndex, unit] of units.entries()) {
-      const unitPath = `${path} unit ${unit.id || unitIndex + 1}`
-      const caseItems = [
-        ...asArray(unit.microExamples),
-        ...asArray(unit.caseSegments),
-        ...asArray(unit.workedCases)
-      ]
-      if (caseItems.some((item) => 'durationMinutes' in (item || {}))) {
-        if (!caseItems.every((item) => isPositiveInteger(item?.durationMinutes))) {
-          errors.push(`${unitPath} explicit case items need positive integer durationMinutes`)
-        } else if (Number.isFinite(unit.timeAllocation?.cases) &&
-                   caseItems.reduce((sum, item) => sum + item.durationMinutes, 0) !== unit.timeAllocation.cases) {
-          errors.push(`${unitPath} explicit case item durations must equal allocated case minutes`)
-        }
+      if (!Number.isFinite(unit.estimatedMinutes) || unit.estimatedMinutes < 4 || unit.estimatedMinutes > 10) {
+        errors.push(`${unitPath} estimatedMinutes must be between 4 and 10`)
       }
-      for (const [activityIndex, activity] of asArray(unit.activities).entries()) {
-        if ('quickTask' in (activity || {})) {
-          const quickTask = activity.quickTask
-          if (!isValidQuickTaskScope(quickTask)) {
-            errors.push(`${unitPath} activity ${activityIndex + 1} quickTask must define one concise localized output`)
-          }
-        }
-        const solution = activity?.solutionArtifact
-        if (isObject(solution) && ('conduits' in solution || 'capacityCalculation' in solution)) {
-          validateConduitSolution(solution, `${unitPath} activity ${activityIndex + 1} conduit solution`, errors)
-        }
+
+      const theory = asArray(unit.theory)
+      if (theory.length < 4) errors.push(`${unitPath} needs at least four theory paragraphs`)
+      for (const [paragraphIndex, paragraph] of theory.entries()) {
+        if (!isLocalized(paragraph)) errors.push(`${unitPath} theory paragraph ${paragraphIndex + 1} is not bilingual`)
       }
-      for (const [caseIndex, workedCase] of asArray(unit.workedCases).entries()) {
-        if (isObject(workedCase) && isGenealogyArtifact(workedCase.caseArtifact)) {
-          validateGenealogyArtifact(
-            workedCase.caseArtifact,
-            workedCase,
-            `${unitPath} worked case ${caseIndex + 1} genealogy artifact`,
-            errors
-          )
-        }
+      const italian = theory.reduce((sum, paragraph) => sum + countWords(paragraph?.it), 0)
+      const english = theory.reduce((sum, paragraph) => sum + countWords(paragraph?.en), 0)
+      if (italian < 180) errors.push(`${unitPath} Italian theory is too thin: ${italian} words`)
+      if (english < italian * 0.75) {
+        errors.push(`${unitPath} English theory must contain at least 75% of its Italian word count`)
       }
-      validateCheckpoint(unit.checkpoint, unitPath, errors)
+
+      const keyPoints = asArray(unit.keyPoints)
+      if (keyPoints.length < 3) errors.push(`${unitPath} needs at least three key points`)
+      for (const [pointIndex, point] of keyPoints.entries()) {
+        if (!isLocalized(point)) errors.push(`${unitPath} key point ${pointIndex + 1} is not bilingual`)
+      }
+
+      validateTerminology(asArray(unit.terminology), unitPath, errors, termsById)
+      validateExample(unit.example, unitPath, errors)
+      validateEnglishBlock(unit.englishBlock, unitPath, errors)
+      validateQuiz(asArray(unit.quiz), unitPath, errors, questionIds)
+
       const sourceIds = asArray(unit.sourceIds)
       if (!sourceIds.length) errors.push(`${unitPath} needs at least one source`)
       sourceIds.forEach((sourceId) => validateSource(sourceId, sources, unitPath, errors))
     }
   }
 
-  if (totalMinutes !== 420) errors.push(`Curriculum planned duration must equal 420 minutes; received ${totalMinutes}`)
-  if (practicalMinutes !== 231) errors.push(`Curriculum cases and practice must equal 231 minutes; received ${practicalMinutes}`)
-  if (italianWords < 34000) errors.push(`Curriculum Italian theory must contain at least 34000 words; received ${italianWords}`)
-
-  for (const [sourceId, source] of Object.entries(sources || {})) {
-    if (source?.type === 'educational') {
-      const verifiedAgainst = asArray(source.verifiedAgainst)
-      if (!verifiedAgainst.length) {
-        errors.push(`Educational source ${sourceId} must identify verified primary sources`)
-      }
-      for (const primarySourceId of verifiedAgainst) {
-        if (sources[primarySourceId]?.type !== 'primary') {
-          errors.push(`Educational source ${sourceId} must reference a verified primary source: ${primarySourceId}`)
-        }
-      }
+  if (lessons.length === STABLE_LESSONS.length) {
+    for (const stage of [1, 2, 3, 4, 5, 6, 7]) {
+      if (!stagesSeen.has(stage)) errors.push(`No unit covers step ${stage} of the seven-step thread`)
+    }
+    if (totalMinutes < 120 || totalMinutes > 180) {
+      errors.push(`Curriculum must last between 120 and 180 minutes; received ${totalMinutes}`)
+    }
+    // Version 2 is deliberately compact: about two and a half hours of reading.
+    // Depth is guarded per unit (at least 180 Italian words of theory each); this
+    // floor only catches a module being gutted.
+    if (italianWords < 7000) {
+      errors.push(`Curriculum Italian theory must contain at least 7000 words; received ${italianWords}`)
     }
   }
 
+  errors.push(...validateGlossaryCoverage(lessons, glossary))
+  return errors
+}
+
+/**
+ * Every term introduced by a unit must also live in the glossary. The promise to
+ * the reader was that no acronym is ever taken for granted, and the glossary is
+ * where that promise is kept once the unit is closed.
+ */
+export function validateGlossaryCoverage(lessons, glossary) {
+  if (!Array.isArray(glossary) || !glossary.length) return []
+  const errors = []
+  const glossaryIds = new Set(glossary.map((entry) => entry?.id))
+  for (const term of allTerms(lessons)) {
+    if (term?.id && !glossaryIds.has(term.id)) {
+      errors.push(`Glossary is missing a term introduced by the course: ${term.id}`)
+    }
+  }
+  const entryIds = new Set()
+  for (const [index, entry] of glossary.entries()) {
+    const path = `Glossary entry ${entry?.id || index + 1}`
+    if (!STABLE_SLUG_ID.test(entry?.id || '')) errors.push(`${path} needs a stable slug ID`)
+    if (entryIds.has(entry?.id)) errors.push(`${path} is duplicated`)
+    entryIds.add(entry?.id)
+    if (!isText(entry?.term)) errors.push(`${path} needs the term`)
+    if (!isText(entry?.italian)) errors.push(`${path} needs the Italian equivalent`)
+    if (!isLocalized(entry?.definition)) errors.push(`${path} needs a bilingual definition`)
+    if (!isText(entry?.where)) errors.push(`${path} must say where the course explains it`)
+  }
+  return errors
+}
+
+/** The ten interview answers are a deliverable of their own, so they validate separately. */
+export function validateInterviewAnswers(answers) {
+  const errors = []
+  if (!Array.isArray(answers) || answers.length !== 10) {
+    errors.push(`The interview page needs exactly ten questions; received ${answers?.length ?? 0}`)
+    return errors
+  }
+  const ids = new Set()
+  for (const [index, answer] of answers.entries()) {
+    const path = `Interview question ${index + 1}`
+    if (!STABLE_SLUG_ID.test(answer?.id || '')) errors.push(`${path} needs a stable slug ID`)
+    if (ids.has(answer?.id)) errors.push(`${path} is duplicated`)
+    ids.add(answer?.id)
+    if (!isLocalized(answer?.prompt)) errors.push(`${path} needs a bilingual prompt`)
+    if (!isText(answer?.expectation)) errors.push(`${path} must say what the interviewer wants to hear`)
+    if (!isText(answer?.italian)) errors.push(`${path} needs the Italian answer`)
+    if (countWords(answer?.italian) < 70) errors.push(`${path} Italian answer is too short to fix the idea`)
+    const spoken = asArray(answer?.english)
+    if (spoken.length < 3) errors.push(`${path} needs at least three spoken English lines`)
+    for (const [lineIndex, line] of spoken.entries()) {
+      if (countWords(line) > 40) errors.push(`${path} English line ${lineIndex + 1} is too long to say out loud`)
+    }
+    if (asArray(answer?.keyPoints).length !== 3) errors.push(`${path} needs exactly three key points`)
+    if (!isText(answer?.mistake)) errors.push(`${path} must name the mistake to avoid`)
+  }
+  if (countWords(answers[0]?.italian) < countWords(answers[1]?.italian) * 1.8) {
+    errors.push('The first interview answer must be about twice as long as the others')
+  }
   return errors
 }

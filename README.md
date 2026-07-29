@@ -8,34 +8,37 @@ URL pubblico: <https://fabrizioborgomastro.github.io/ia-apprendimento/>
 
 | Misura | Valore |
 |---|---:|
-| Durata pianificata | 420 minuti esatti |
-| Moduli | 6 |
-| Unità di apprendimento | 46, ciascuna da 5 a 10 minuti |
-| Teoria | 189 minuti |
-| Casi e pratica | 231 minuti, cioè il 55 percento |
-| Parole di teoria in italiano | oltre 34.000 |
-| Parole di teoria in inglese | almeno l'85 percento dell'italiano, per ogni modulo |
-| Risposte professionali da colloquio | 27, con forma da 30 secondi e da 2 minuti |
+| Durata pianificata | 154 minuti |
+| Moduli | 5 |
+| Unità di apprendimento | 25, da 6 o 7 minuti l'una |
+| Domande di quiz | 175, cioè 7 per unità |
+| Termini nel glossario | 157, ognuno con l'unità che lo spiega |
+| Parole di teoria in italiano | oltre 7.000 |
+| Parole di teoria in inglese | almeno il 75 percento dell'italiano, unità per unità |
+| Domande di colloquio | 10, con risposta italiana, inglese parlato e tre punti chiave |
 
-I numeri sono verificati a ogni build da `npm run build`, che fallisce se la durata non è esattamente 420 minuti o se una soglia di profondità non è raggiunta.
+I numeri sono verificati a ogni build da `npm run build`, che fallisce se manca un quiz, se un esempio non contiene numeri, se un termine non è nel glossario o se una soglia di profondità non è raggiunta.
 
 ## Contenuti
 
-1. Digital Transformation e Industry 4.0
-2. Architettura OT / IT / AI / Cloud
-3. Dati, analytics e casi d'uso AI industriali
-4. LLM, RAG, agenti, MCP e orchestrazione multi-modello
-5. MVP, sicurezza, governance e scaling
-6. Interview Lab tecnico, con simulazione da 20 minuti e scheda di ripasso rapido
+1. Capire la trasformazione digitale in fabbrica
+2. Com'è fatta una fabbrica digitale: OT, IT, AI, cloud
+3. Analytics, automazione e AI: scegliere lo strumento
+4. Portare un'idea in produzione
+5. Governare, scalare e far adottare la trasformazione
+
+Il corso è un unico processo raccontato dall'inizio alla fine, le **sette tappe**, che ricorrono in ogni unità: osservo una perdita, misuro il punto di partenza, capisco dove nascono i dati, scelgo lo strumento più semplice, provo in piccolo, metto in produzione con rete di sicurezza, decido se estendere o fermarmi.
+
+Oltre ai moduli: il **glossario** con ogni termine tecnico usato nelle 25 unità, e le **dieci domande** del colloquio.
 
 ## Come si studia
 
-Il corso mostra **una unità alla volta**. Ogni unità contiene teoria, esempi e casi cronometrati, una attività con soluzione e rubric, un checkpoint e le fonti usate.
+Il corso mostra **una unità alla volta**, e ogni unità ha sempre la stessa struttura: dove siamo nel percorso, il concetto, i termini di questa unità, un esempio pratico con numeri, come lo dici in inglese, sette domande di quiz, le fonti.
 
 - Deep link stabile: `/lesson/:slug?unit=:unitId`. Un link senza `unit` apre la prima unità non completata.
-- Una unità risulta completata dopo aver risposto al checkpoint e, quando l'unità ha una attività, dopo averla segnata come svolta. Non esistono attese a tempo.
-- I pulsanti indizio, soluzione e rubric si aprono in modo indipendente.
-- Il checkpoint finale del modulo compare sull'ultima unità.
+- Una unità è completata quando **tutte e sette le domande** hanno una risposta. Sbagliare non blocca: la spiegazione insegna e la domanda entra nella coda di ripasso.
+- Il modulo è completato quando ogni domanda delle sue cinque unità ha una risposta e il punteggio raggiunge l'80 percento.
+- Le risposte restano salvate sul dispositivo in `ai-sprint-answers-v2`, quindi una ricarica non azzera un quiz a metà.
 
 ## Bilinguismo
 
@@ -45,9 +48,9 @@ Cambiare lingua **non** cambia la posizione: restano invariati unità corrente, 
 
 ## Politica delle fonti
 
-- Per standard, norme, protocolli e sicurezza si usano fonti primarie: ISA-95, ISA-18, ISA/IEC 62443, OPC UA, NIST SP 800-82 Rev. 3, NIST SP 800-61 Rev. 3, NIST AI RMF 1.0, NIST AI 600-1, Regolamento (UE) 2024/1689.
-- Per i concetti di AI si usano i paper originali: Transformer, RAG, RouteLLM, AutoGen, AgentBench, e la specifica ufficiale MCP.
-- Una fonte didattica è ammessa solo se migliora davvero la spiegazione e dichiara `verifiedAgainst` verso una fonte primaria.
+- Per standard, norme, protocolli e sicurezza si usano fonti primarie: ISA-95, ISA-18, ISA/IEC 62443, NIST SP 800-82 Rev. 3, NIST AI RMF 1.0, NIST AI 600-1, NIST Cybersecurity Framework, CISA ICS, Regolamento (UE) 2024/1689.
+- Per il contesto del ruolo si usano le pagine pubbliche PMI; per delivery e industrializzazione, Scrum Guide, AWS MLOps e Microsoft Cloud Adoption Framework.
+- Le fonti stanno **in fondo all'unità**, non citate riga per riga: il testo resta leggibile.
 - Ogni unità cita soltanto gli ID che usa davvero. Il catalogo unico è `public/content/sources.js`.
 - Tutti gli scenari aziendali sono dichiarati ipotetici e costruiti solo su contesto pubblico.
 
@@ -71,8 +74,8 @@ npm run test:e2e
 ```
 
 - `npm run lint` esegue `node --check` su ogni modulo applicativo e su tutti i file del curriculum.
-- `npm test` esegue la suite Node: schema e validazione, profondità del curriculum, migrazione del progresso, helper di navigazione, rendering delle unità, contratto PWA.
-- `npm run build` valida il curriculum contro il catalogo fonti reale e stampa minuti, quota pratica, parole per lingua e fonti risolte.
+- `npm test` esegue la suite Node: schema e validazione del contenuto, profondità del curriculum, copertura del glossario, migrazione del progresso, helper di navigazione, rendering delle unità, contratto PWA.
+- `npm run build` valida il curriculum contro il catalogo fonti reale e stampa moduli, unità, domande, termini e minuti.
 - `npm run test:e2e` richiede Playwright e Microsoft Edge installati. Copre: una sola unità visibile, reveal indipendenti, checkpoint, avanzamento, cambio lingua senza perdita di posizione, ricarica di un deep link, checkpoint finale, assenza di overflow a 360, 390 e 1440 px, e stato Supabase nella pagina di login.
 
 ## Sincronizzazione Gmail con Supabase
@@ -101,11 +104,11 @@ La publishable key può stare nel client perché l'accesso ai dati è protetto d
 
 ### Perché serve `content_version`
 
-Il curriculum esteso ha un numero di unità diverso dal contenuto precedente. Il progresso salvato prima di questa versione viene migrato in modo proporzionale al primo caricamento: il cursore viene rimappato sul nuovo numero di unità, mentre completamento e punteggio migliore non regrediscono mai. `content_version` distingue il progresso già migrato da quello ancora da migrare, sul dispositivo e nel database.
+La versione 2 del corso è un corso diverso, con moduli e unità nuovi. Il progresso salvato prima non viene buttato: al primo caricamento il cursore viene limitato al numero di unità che esistono adesso, mentre completamento e punteggio migliore non regrediscono mai. `content_version`, oggi 3, distingue il progresso già migrato da quello ancora da migrare, sul dispositivo e nel database.
 
 ## Regola della cache di rilascio
 
-Il service worker usa una cache con versione esplicita, oggi `ai-sprint-v9`.
+Il service worker usa una cache con versione esplicita, oggi `ai-sprint-v10`.
 
 A ogni rilascio che tocca un file in `public`:
 

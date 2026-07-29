@@ -1,112 +1,77 @@
-import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=9'
+import { selectLocale, unitPath } from './ui.js?v=10'
 import { sources } from './content/index.js'
 
 const COPY = {
   it: {
     unitOf: (index, total) => `Unità ${index} di ${total}`,
-    index: 'Unità della lezione',
+    index: 'Unità di questo modulo',
     unitsInModule: 'Unità di questo modulo',
     unitCounter: (position, total) => `${position} di ${total}`,
     controls: 'Spostamento tra le unità',
-    progress: 'Avanzamento nella lezione',
+    progress: 'Avanzamento nel modulo',
+    stage: 'Dove siamo nel percorso',
     objective: 'Obiettivo',
+    concept: 'Il concetto',
     keyPoints: 'Punti chiave',
-    terminology: 'Terminologia',
-    examples: 'Esempi e casi',
-    scenario: 'Scenario',
-    yourTask: 'Il tuo compito',
-    expectedOutput: 'Output atteso',
-    responseFormat: 'Formato della risposta',
-    decisionAid: 'Dati per decidere',
-    showReasoning: 'Mostra il ragionamento',
-    reasoning: 'Ragionamento del modello',
-    assumptions: 'Assunzioni',
-    analysis: 'Analisi',
-    decision: 'Decisione',
-    tradeOff: 'Trade-off',
-    outcome: 'Esito',
-    followUps: 'Domande di approfondimento',
-    artifact: 'Artefatto professionale',
-    activity: 'Attività',
-    activityOf: (minutes) => `${minutes} min`,
-    providedContext: 'Contesto fornito',
-    showHint: 'Mostra un indizio',
-    showSolution: 'Mostra la soluzione',
-    showRubric: 'Mostra la rubric',
-    hint: 'Indizio',
-    solution: 'Soluzione modello',
-    rubric: 'Rubric',
-    markDone: 'Ho svolto questa attività',
-    marked: 'Attività svolta',
-    checkpoint: 'Checkpoint',
+    terminology: 'Termini di questa unità',
+    termColumn: 'Termine',
+    italianColumn: 'In italiano',
+    definitionColumn: 'Che cos\'è, in una frase',
+    example: 'Esempio pratico',
+    takeaway: 'Cosa portarsi via',
+    english: 'Come lo dici in inglese',
+    whyThoseWords: 'Perché queste parole',
+    quiz: 'Quiz',
+    quizHelper: 'Sette domande. Ogni risposta sbagliata entra nella coda di ripasso.',
+    quizProgress: (answered, total) => `${answered} di ${total} domande`,
     correct: 'Corretto',
     review: 'Da rivedere',
     sources: 'Fonti di questa unità',
     previous: 'Unità precedente',
     next: 'Unità successiva',
-    finish: 'Vai al checkpoint finale',
-    completeFirst: 'Rispondi al checkpoint e segna l’attività per completare l’unità.',
+    finish: 'Chiudi il modulo',
+    completeFirst: 'Rispondi a tutte e sette le domande per completare l\'unità.',
     unitDone: 'Unità completata',
-    interview: 'Risposte da colloquio',
-    shortAnswer: 'Risposta da 30 secondi',
-    longAnswer: 'Risposta da 2 minuti'
+    minutes: (value) => `${value} min`
   },
   en: {
     unitOf: (index, total) => `Unit ${index} of ${total}`,
-    index: 'Lesson units',
+    index: 'Units in this module',
     unitsInModule: 'Units in this module',
     unitCounter: (position, total) => `${position} of ${total}`,
     controls: 'Move between units',
-    progress: 'Lesson progress',
+    progress: 'Module progress',
+    stage: 'Where we are in the path',
     objective: 'Objective',
+    concept: 'The idea',
     keyPoints: 'Key points',
-    terminology: 'Terminology',
-    examples: 'Examples and cases',
-    scenario: 'Scenario',
-    yourTask: 'Your task',
-    expectedOutput: 'Expected output',
-    responseFormat: 'Response format',
-    decisionAid: 'Decision data',
-    showReasoning: 'Show the reasoning',
-    reasoning: 'Model reasoning',
-    assumptions: 'Assumptions',
-    analysis: 'Analysis',
-    decision: 'Decision',
-    tradeOff: 'Trade-off',
-    outcome: 'Outcome',
-    followUps: 'Follow-up questions',
-    artifact: 'Professional artifact',
-    activity: 'Activity',
-    activityOf: (minutes) => `${minutes} min`,
-    providedContext: 'Provided context',
-    showHint: 'Show a hint',
-    showSolution: 'Show the model solution',
-    showRubric: 'Show the rubric',
-    hint: 'Hint',
-    solution: 'Model solution',
-    rubric: 'Rubric',
-    markDone: 'I completed this activity',
-    marked: 'Activity completed',
-    checkpoint: 'Checkpoint',
+    terminology: 'Terms in this unit',
+    termColumn: 'Term',
+    italianColumn: 'In Italian',
+    definitionColumn: 'What it is, in one sentence',
+    example: 'Worked example',
+    takeaway: 'What to take away',
+    english: 'How you say it in English',
+    whyThoseWords: 'Why these words',
+    quiz: 'Quiz',
+    quizHelper: 'Seven questions. Every wrong answer joins your review queue.',
+    quizProgress: (answered, total) => `${answered} of ${total} questions`,
     correct: 'Correct',
     review: 'Review this',
     sources: 'Sources for this unit',
     previous: 'Previous unit',
     next: 'Next unit',
-    finish: 'Go to the final checkpoint',
-    completeFirst: 'Answer the checkpoint and mark the activity to complete this unit.',
+    finish: 'Close the module',
+    completeFirst: 'Answer all seven questions to complete the unit.',
     unitDone: 'Unit completed',
-    interview: 'Interview answers',
-    shortAnswer: '30-second answer',
-    longAnswer: '2-minute answer'
+    minutes: (value) => `${value} min`
   }
 }
 
-const escapeHtml = (value) => String(value ?? '')
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;')
+const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+export function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/gu, (character) => ESCAPES[character])
+}
 
 const copyFor = (locale) => COPY[locale] || COPY.it
 const text = (value, locale) => escapeHtml(selectLocale(value, locale))
@@ -116,94 +81,68 @@ function renderList(items, locale, className) {
   return `<ul class="${className}">${items.map((item) => `<li>${text(item, locale)}</li>`).join('')}</ul>`
 }
 
-function renderDecisionAid(decisionAid, locale, label) {
-  if (!decisionAid?.columns?.length || !decisionAid?.rows?.length) return ''
-  return `<div class="decision-aid"><table><caption>${label}</caption><thead><tr>${
-    decisionAid.columns.map((column) => `<th scope="col">${text(column, locale)}</th>`).join('')
+function renderTerminology(terminology, locale) {
+  const copy = copyFor(locale)
+  if (!terminology?.length) return ''
+  return `<section class="unit-terms" data-unit-terms>
+    <h3>${copy.terminology}</h3>
+    <table><thead><tr><th scope="col">${copy.termColumn}</th><th scope="col">${copy.italianColumn}</th><th scope="col">${copy.definitionColumn}</th></tr></thead>
+    <tbody>${terminology.map((term) => `<tr data-term="${escapeHtml(term.id)}"><th scope="row"><code>${escapeHtml(term.term)}</code></th><td>${escapeHtml(term.italian)}</td><td>${text(term.definition, locale)}</td></tr>`).join('')}</tbody></table>
+  </section>`
+}
+
+function renderExampleTable(table, locale) {
+  if (!table?.columns?.length || !table?.rows?.length) return ''
+  return `<div class="example-table"><table><thead><tr>${
+    table.columns.map((column) => `<th scope="col">${text(column, locale)}</th>`).join('')
   }</tr></thead><tbody>${
-    decisionAid.rows.map((row) => `<tr>${
-      row.cells.map((cell, cellIndex) => (cellIndex === 0
+    table.rows.map((row) => `<tr>${
+      row.map((cell, cellIndex) => (cellIndex === 0
         ? `<th scope="row">${text(cell, locale)}</th>`
         : `<td>${text(cell, locale)}</td>`)).join('')
     }</tr>`).join('')
   }</tbody></table></div>`
 }
 
-function renderTimedItem(item, locale) {
+function renderExample(example, locale) {
   const copy = copyFor(locale)
-  const heading = item.title ? `<h3>${text(item.title, locale)}</h3>` : ''
-  const intro = item.explanation || item.scenario
-  return `<article class="timed-item" data-case-item="${escapeHtml(item.id)}">
-    ${heading}<p class="item-duration">${escapeHtml(copy.activityOf(item.durationMinutes))}</p>
-    ${intro ? `<p>${text(intro, locale)}</p>` : ''}
-    ${item.learnerAction ? `<p class="learner-action"><b>${copy.yourTask}:</b> ${text(item.learnerAction, locale)}</p>` : ''}
-    ${item.expectedOutput ? `<p><b>${copy.expectedOutput}:</b> ${text(item.expectedOutput, locale)}</p>` : ''}
-    ${item.responseFormat ? `<p class="response-format"><b>${copy.responseFormat}:</b> ${text(item.responseFormat, locale)}</p>` : ''}
-    ${renderDecisionAid(item.decisionAid, locale, copy.decisionAid)}
-    ${item.modelReasoning ? `<details class="reveal"><summary>${copy.showReasoning}</summary><p><b>${copy.reasoning}:</b> ${text(item.modelReasoning, locale)}</p></details>` : ''}
-  </article>`
-}
-
-function renderWorkedCase(workedCase, locale) {
-  const copy = copyFor(locale)
-  return `<article class="worked-case" data-worked-case="${escapeHtml(workedCase.id)}">
-    <h3>${text(workedCase.title, locale)}</h3>
-    <p class="item-duration">${escapeHtml(copy.activityOf(workedCase.durationMinutes))}</p>
-    <p><b>${copy.scenario}:</b> ${text(workedCase.scenario, locale)}</p>
-    ${workedCase.assumptions ? `<h4>${copy.assumptions}</h4>${renderList(workedCase.assumptions, locale, 'case-list')}` : ''}
-    ${workedCase.analysisSteps ? `<h4>${copy.analysis}</h4>${renderList(workedCase.analysisSteps, locale, 'case-list')}` : ''}
-    ${workedCase.reasoning ? `<p><b>${copy.reasoning}:</b> ${text(workedCase.reasoning, locale)}</p>` : ''}
-    <p><b>${copy.decision}:</b> ${text(workedCase.decision, locale)}</p>
-    <p><b>${copy.tradeOff}:</b> ${text(workedCase.tradeOff, locale)}</p>
-    <p><b>${copy.outcome}:</b> ${text(workedCase.outcome, locale)}</p>
-    ${workedCase.followUps ? `<h4>${copy.followUps}</h4>${renderList(workedCase.followUps, locale, 'case-list')}` : ''}
-  </article>`
-}
-
-function renderArtifact(artifact, locale) {
-  if (!artifact?.title || !artifact?.description) return ''
-  const copy = copyFor(locale)
-  return `<section class="unit-artifact" data-unit-artifact="${escapeHtml(artifact.id || '')}">
-    <p class="eyebrow">${copy.artifact}</p>
-    <h3>${text(artifact.title, locale)}</h3>
-    <p>${text(artifact.description, locale)}</p>
+  if (!example) return ''
+  return `<section class="unit-example" data-unit-example>
+    <p class="eyebrow">${copy.example}</p>
+    <h3>${text(example.title, locale)}</h3>
+    ${renderExampleTable(example.table, locale)}
+    <ol class="example-steps">${example.steps.map((step) => `<li>${text(step, locale)}</li>`).join('')}</ol>
+    <p class="example-takeaway"><b>${copy.takeaway}:</b> ${text(example.takeaway, locale)}</p>
   </section>`
 }
 
-function renderActivity(activity, locale, revealed, activityMarked) {
+function renderEnglishBlock(block, locale) {
   const copy = copyFor(locale)
-  const hint = activity.hints?.[0]
-  const solution = activity.modelSolution || activity.solution
-  const rubric = activity.rubric?.[0]
-  return `<section class="learning-activity" data-learning-activity="${escapeHtml(activity.id)}">
-    <p class="eyebrow">${copy.activity} · ${escapeHtml(copy.activityOf(activity.durationMinutes))}</p>
-    <h3>${text(activity.prompt, locale)}</h3>
-    ${activity.expectedArtifact ? `<p><b>${copy.expectedOutput}:</b> ${text(activity.expectedArtifact, locale)}</p>` : ''}
-    ${activity.quickTask?.providedContext ? `<p><b>${copy.providedContext}:</b> ${text(activity.quickTask.providedContext, locale)}</p>` : ''}
-    ${activity.quickTask?.responseFormat ? `<p class="response-format"><b>${copy.responseFormat}:</b> ${text(activity.quickTask.responseFormat, locale)}</p>` : ''}
-    <div class="reveal-actions">
-      ${hint ? `<button type="button" class="button secondary" data-reveal-toggle="hint" aria-pressed="${revealed.hint ? 'true' : 'false'}" aria-controls="reveal-hint">${copy.showHint}</button>` : ''}
-      ${solution ? `<button type="button" class="button secondary" data-reveal-toggle="solution" aria-pressed="${revealed.solution ? 'true' : 'false'}" aria-controls="reveal-solution">${copy.showSolution}</button>` : ''}
-      ${rubric ? `<button type="button" class="button secondary" data-reveal-toggle="rubric" aria-pressed="${revealed.rubric ? 'true' : 'false'}" aria-controls="reveal-rubric">${copy.showRubric}</button>` : ''}
-    </div>
-    ${hint && revealed.hint ? `<div class="reveal-panel" id="reveal-hint"><span>${copy.hint}</span><p>${text(hint, locale)}</p></div>` : ''}
-    ${solution && revealed.solution ? `<div class="reveal-panel" id="reveal-solution"><span>${copy.solution}</span><p>${text(solution, locale)}</p></div>` : ''}
-    ${rubric && revealed.rubric ? `<div class="reveal-panel" id="reveal-rubric"><span>${copy.rubric}</span><p>${text(rubric, locale)}</p></div>` : ''}
-    <button type="button" class="button ${activityMarked ? 'primary' : 'secondary'} activity-mark" data-activity-mark aria-pressed="${activityMarked ? 'true' : 'false'}">${activityMarked ? copy.marked : copy.markDone}</button>
+  if (!block) return ''
+  return `<section class="unit-english" data-unit-english>
+    <p class="eyebrow">${copy.english}</p>
+    <ul class="english-lines" lang="en">${block.lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+    <p class="english-why" lang="it"><b>${copy.whyThoseWords}.</b> ${escapeHtml(block.why)}</p>
   </section>`
 }
 
-function renderCheckpoint(checkpoint, locale, checkpointChoice) {
+function renderQuiz(unit, locale, answers) {
   const copy = copyFor(locale)
-  const answered = Number.isInteger(checkpointChoice)
-  const correct = answered && checkpointChoice === checkpoint.correctOption
-  return `<section class="unit-checkpoint" data-unit-checkpoint>
-    <p class="eyebrow">${copy.checkpoint}</p>
-    <h3>${text(checkpoint.prompt, locale)}</h3>
-    <div class="checkpoint-options" role="group" aria-label="${copy.checkpoint}">
-      ${checkpoint.options.map((option, index) => `<button type="button" data-checkpoint-option="${index}" aria-pressed="${checkpointChoice === index ? 'true' : 'false'}"${answered && index === checkpoint.correctOption ? ' data-correct-option' : ''}>${text(option, locale)}</button>`).join('')}
-    </div>
-    ${answered ? `<div class="checkpoint-feedback ${correct ? 'is-correct' : 'is-review'}" role="status" aria-live="polite"><b>${correct ? copy.correct : copy.review}</b><p>${text(checkpoint.options[checkpointChoice]?.explanation, locale)}</p></div>` : ''}
+  const answered = unit.quiz.filter((question) => Number.isInteger(answers[question.id])).length
+  return `<section class="unit-quiz" data-unit-quiz>
+    <p class="eyebrow">${copy.quiz}</p>
+    <p class="quiz-helper">${copy.quizHelper}</p>
+    <p class="quiz-progress" data-quiz-progress>${escapeHtml(copy.quizProgress(answered, unit.quiz.length))}</p>
+    ${unit.quiz.map((question, index) => {
+      const choice = answers[question.id]
+      const done = Number.isInteger(choice)
+      const correct = done && choice === question.correctOption
+      return `<fieldset class="quiz-card" data-question="${escapeHtml(question.id)}">
+        <legend><span>${index + 1}</span>${escapeHtml(question.prompt)}</legend>
+        <div class="quiz-options">${question.options.map((option, optionIndex) => `<button type="button" data-quiz-option="${optionIndex}" data-question-id="${escapeHtml(question.id)}"${done ? ' disabled' : ''}${done && optionIndex === question.correctOption ? ' data-correct-option' : ''}${done && optionIndex === choice && !correct ? ' data-wrong-option' : ''} aria-pressed="${choice === optionIndex ? 'true' : 'false'}">${escapeHtml(option)}</button>`).join('')}</div>
+        ${done ? `<div class="feedback visible ${correct ? 'correct' : 'wrong'}" role="status" aria-live="polite"><b>${correct ? copy.correct : copy.review}</b><p>${escapeHtml(question.explanation)}</p></div>` : ''}
+      </fieldset>`
+    }).join('')}
   </section>`
 }
 
@@ -214,7 +153,7 @@ function renderSources(sourceIds, locale) {
     <ul>${(sourceIds || []).map((sourceId) => {
       const source = sources[sourceId]
       if (!source) return `<li data-source="${escapeHtml(sourceId)}">${escapeHtml(sourceId)}</li>`
-      return `<li data-source="${escapeHtml(sourceId)}"><a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer noopener">${escapeHtml(source.title)}</a><small>${escapeHtml(source.organization)} · ${escapeHtml(sourceId)}</small></li>`
+      return `<li data-source="${escapeHtml(sourceId)}"><a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer noopener">${escapeHtml(source.title)}</a><small>${escapeHtml(source.organization)}</small></li>`
     }).join('')}</ul>
   </footer>`
 }
@@ -230,46 +169,33 @@ function renderUnitIndex(lesson, state, locale) {
   </nav>`
 }
 
-export function renderUnitView({ lesson, state, locale, revealed = {}, checkpointChoice = null, activityMarked = false }) {
+export function renderUnitView({ lesson, state, locale, answers = {}, unitComplete = false }) {
   const copy = copyFor(locale)
   const unit = state.unit
-  const timedItems = [...(unit.microExamples || []), ...(unit.caseSegments || [])]
-  const workedCases = unit.workedCases || []
-  const activities = unit.activities || []
-  const unitComplete = isUnitComplete({
-    checkpointAnswered: Number.isInteger(checkpointChoice),
-    activityMarked,
-    hasActivity: activities.length > 0
-  })
 
   return `<article class="lesson-unit shell">
     <header class="unit-header" data-unit-header>
-      <a href="/sprint" data-link class="back-link">← ${escapeHtml(locale === 'en' ? 'All modules' : 'Tutti i moduli')}</a>
-      <p class="unit-kicker"><span>${text(lesson.title, locale)}</span><span>${escapeHtml(copy.unitOf(state.index + 1, state.total))}</span><span>${escapeHtml(copy.activityOf(unit.estimatedMinutes))}</span></p>
+      <a href="/corso" data-link class="back-link">← ${escapeHtml(locale === 'en' ? 'All modules' : 'Tutti i moduli')}</a>
+      <p class="unit-kicker"><span>${text(lesson.title, locale)}</span><span>${escapeHtml(copy.unitOf(state.index + 1, state.total))}</span><span>${escapeHtml(copy.minutes(unit.estimatedMinutes))}</span></p>
       <h1>${text(unit.title, locale)}</h1>
-      ${unit.objective ? `<p class="unit-objective"><b>${copy.objective}:</b> ${text(unit.objective, locale)}</p>` : ''}
+      <p class="unit-stage" data-unit-stage><b>${copy.stage}:</b> ${text(unit.stageLabel, locale)}</p>
+      <p class="unit-objective"><b>${copy.objective}:</b> ${text(unit.objective, locale)}</p>
       <div class="unit-progress" role="progressbar" aria-label="${copy.progress}" aria-valuemin="1" aria-valuemax="${state.total}" aria-valuenow="${state.index + 1}" aria-valuetext="${escapeHtml(copy.unitOf(state.index + 1, state.total))}"><span style="width:${Math.round(((state.index + 1) / state.total) * 100)}%"></span></div>
     </header>
 
     ${renderUnitIndex(lesson, state, locale)}
 
     <section class="unit-content" data-unit-content>
-      ${(unit.theory || []).map((paragraph) => `<p>${text(paragraph, locale)}</p>`).join('')}
-      ${unit.keyPoints?.length ? `<h3>${copy.keyPoints}</h3>${renderList(unit.keyPoints, locale, 'key-points')}` : ''}
-      ${unit.terminology?.length ? `<h3>${copy.terminology}</h3>${renderList(unit.terminology, locale, 'terminology-list')}` : ''}
+      <h2>${copy.concept}</h2>
+      ${unit.theory.map((paragraph) => `<p>${text(paragraph, locale)}</p>`).join('')}
+      <h3>${copy.keyPoints}</h3>
+      ${renderList(unit.keyPoints, locale, 'key-points')}
     </section>
 
-    ${timedItems.length || workedCases.length ? `<section class="worked-example" data-worked-example>
-      <p class="eyebrow">${copy.examples}</p>
-      ${timedItems.map((item) => renderTimedItem(item, locale)).join('')}
-      ${workedCases.map((workedCase) => renderWorkedCase(workedCase, locale)).join('')}
-      ${workedCases.map((workedCase) => renderArtifact(workedCase.caseArtifact, locale)).join('')}
-    </section>` : ''}
-
-    ${activities.map((activity) => renderActivity(activity, locale, revealed, activityMarked)).join('')}
-
-    ${renderCheckpoint(unit.checkpoint, locale, checkpointChoice)}
-
+    ${renderTerminology(unit.terminology, locale)}
+    ${renderExample(unit.example, locale)}
+    ${renderEnglishBlock(unit.englishBlock, locale)}
+    ${renderQuiz(unit, locale, answers)}
     ${renderSources(unit.sourceIds, locale)}
 
     <nav class="unit-controls" data-unit-controls aria-label="${copy.controls}">
@@ -277,26 +203,50 @@ export function renderUnitView({ lesson, state, locale, revealed = {}, checkpoin
       <p class="unit-status" data-unit-status>${unitComplete ? `✓ ${copy.unitDone}` : copy.completeFirst}</p>
       ${state.next
         ? `<a class="button primary" data-link data-unit-next href="${escapeHtml(unitPath(lesson.slug, state.next.id))}">${copy.next} →</a>`
-        : `<a class="button primary" data-lesson-finish href="#final-checkpoint">${copy.finish} →</a>`}
+        : `<a class="button primary" data-link data-module-finish href="/corso">${copy.finish} →</a>`}
     </nav>
   </article>`
 }
 
-export function renderLessonInterviewAnswers(lesson, locale) {
-  const copy = copyFor(locale)
-  return `<section class="answer-lab" data-interview-answers>
-    <p class="eyebrow">${copy.interview}</p>
-    ${(lesson.interviewAnswers || []).map((answer, index) => `<article class="interview-answer" data-interview-answer="${escapeHtml(answer.topicId || index)}">
-      <h3>${text(answer.prompt, locale)}</h3>
-      <div class="answer-actions">
-        <button type="button" class="button secondary" data-answer-toggle="${index}-short" aria-pressed="false">${copy.shortAnswer}</button>
-        <button type="button" class="button secondary" data-answer-toggle="${index}-long" aria-pressed="false">${copy.longAnswer}</button>
+/** The ten interview questions, with the spoken English kept visible. */
+export function renderInterviewAnswers(answers, locale) {
+  const labels = locale === 'en'
+    ? { expectation: 'What they want to hear', italian: 'Answer in Italian', english: 'In English, thirty seconds', keyPoints: 'Three points to remember', mistake: 'Mistake to avoid', show: 'Show the answer' }
+    : { expectation: 'Cosa vogliono sentire', italian: 'Risposta in italiano', english: 'In inglese, trenta secondi', keyPoints: 'Tre punti da non dimenticare', mistake: 'Errore da evitare', show: 'Mostra la risposta' }
+
+  return `<section class="shell interview-list" data-interview-list>${answers.map((answer, index) => `
+    <article class="interview-card" data-interview-answer="${escapeHtml(answer.id)}">
+      <div class="question-number">${String(index + 1).padStart(2, '0')}</div>
+      <div class="interview-body">
+        <h2>${text(answer.prompt, locale)}</h2>
+        <p class="interview-expectation"><b>${labels.expectation}:</b> ${escapeHtml(answer.expectation)}</p>
+        <details class="interview-reveal">
+          <summary>${labels.show}</summary>
+          <h3>${labels.italian}</h3>
+          <p class="interview-italian" lang="it">${escapeHtml(answer.italian)}</p>
+          <h3>${labels.english}</h3>
+          <ul class="english-lines" lang="en">${answer.english.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+          <h3>${labels.keyPoints}</h3>
+          <ol class="key-points">${answer.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join('')}</ol>
+          <p class="interview-mistake"><b>${labels.mistake}:</b> ${escapeHtml(answer.mistake)}</p>
+        </details>
       </div>
-      <div class="model-answer" data-answer="${index}-short" hidden><span>${copy.shortAnswer}</span><p>${text(answer.short, locale)}</p></div>
-      <div class="model-answer" data-answer="${index}-long" hidden><span>${copy.longAnswer}</span><p>${text(answer.long, locale)}</p></div>
-      ${answer.followUps?.length ? `<details class="reveal"><summary>${copy.followUps}</summary>${renderList(answer.followUps, locale, 'case-list')}</details>` : ''}
-    </article>`).join('')}
-  </section>`
+    </article>`).join('')}</section>`
+}
+
+export function renderGlossaryEntries(entries, locale) {
+  if (!entries.length) {
+    return `<p class="empty-inline">${locale === 'en' ? 'No term found.' : 'Nessun termine trovato.'}</p>`
+  }
+  return entries.map((entry) => `<article class="term-row" data-term-entry="${escapeHtml(entry.id)}">
+    <code>${escapeHtml(entry.term)}</code><b>${escapeHtml(entry.italian)}</b>
+    <p>${text(entry.definition, locale)}</p>
+    <small>${escapeHtml(entry.where)}</small>
+  </article>`).join('')
+}
+
+export function renderConfusedPairs(pairs, locale) {
+  return `<div class="confused-pairs">${pairs.map((pair) => `<article class="confused-pair"><b>${text(pair.pair, locale)}</b><p>${text(pair.difference, locale)}</p></article>`).join('')}</div>`
 }
 
 export function renderLocaleSwitch(locale) {
@@ -308,72 +258,74 @@ export function renderLocaleSwitch(locale) {
 
 const SHELL = {
   it: {
-    navToday: 'Oggi', navSprint: 'Sprint', navReview: 'Ripasso', navInterview: 'Interview',
-    heroEyebrow: '2-3 giorni · colloquio tecnico',
-    heroTitle: 'Preparati a guidare<br><em>la trasformazione.</em>',
-    heroLead: 'Dalla linea produttiva all’AI, con il linguaggio tecnico inglese che ti serve per ragionare ad alta voce.',
-    heroCtaStart: 'Inizia lo sprint', heroCtaContinue: 'Continua lo sprint',
-    signalPathLabel: 'Flusso dalla fabbrica alla decisione',
-    nextMove: 'Prossima mossa', openLesson: 'Apri la lezione',
-    readiness: 'Sprint readiness', ready: 'pronto',
+    navToday: 'Oggi', navCourse: 'Corso', navReview: 'Ripasso', navGlossary: 'Glossario', navInterview: 'Colloquio',
+    heroEyebrow: '5 moduli · 25 unità · circa 2 ore e mezza',
+    heroTitle: 'Un processo solo,<br><em>raccontato bene.</em>',
+    heroLead: 'Dalla perdita misurata in reparto alla decisione finale, con le parole inglesi che ti servono per dirlo a voce.',
+    heroCtaStart: 'Inizia il corso', heroCtaContinue: 'Continua il corso',
+    stagesLabel: 'Le sette tappe',
+    nextMove: 'Prossima mossa', openLesson: 'Apri il modulo',
+    readiness: 'Avanzamento', ready: 'pronto',
     modulesDone: (done, total) => `${done} di ${total} moduli completati`,
-    activeRecall: 'Active recall', questionsToReview: 'domande da ripassare', reviewNow: 'Ripassa ora',
-    sprintEyebrow: 'Interview sprint',
-    sprintTitle: 'Sei moduli. Un filo logico.',
-    sprintLead: 'Puoi aprire qualunque modulo in qualsiasi momento. L’ordine è un consiglio, non un vincolo: seguilo una volta, poi torna solo sui punti deboli.',
+    activeRecall: 'Ripasso attivo', questionsToReview: 'domande da rivedere', reviewNow: 'Ripassa ora',
+    courseEyebrow: 'Il corso',
+    courseTitle: 'Cinque moduli. Un filo solo.',
+    courseLead: 'Ogni unità ha la stessa struttura: dove sei nel percorso, il concetto, i termini, un esempio con numeri, le frasi inglesi e sette domande.',
     completed: 'completato',
     statusNext: 'Prossimo', statusOpen: 'Da fare', statusBest: 'Miglior punteggio',
+    unitsLabel: 'unità',
     reviewTitle: 'Ripassa ciò che conta.',
     reviewLead: 'Gli errori non sono una penalità. Sono la lista esatta di ciò che devi rendere più solido.',
     questionsLabel: 'Domande da rivedere',
     showAnswer: 'Mostra risposta e spiegazione',
     emptyQueue: 'La coda è vuota.',
-    emptyQueueHint: 'Completa i checkpoint finali oppure ripassa i termini inglesi qui accanto.',
-    goToSprint: 'Vai allo sprint',
-    glossaryLabel: 'Glossario · IT / EN', glossaryPlaceholder: 'Cerca PLC, drift, MVP...',
+    emptyQueueHint: 'Rispondi ai quiz delle unità: ogni errore finisce qui.',
+    goToCourse: 'Vai al corso',
+    glossaryEyebrow: 'Glossario',
+    glossaryTitle: 'Ogni termine del corso,<br><em>in una frase.</em>',
+    glossaryLead: 'Italiano e inglese, con l\'unità in cui il termine viene spiegato per esteso.',
+    glossaryLabel: 'Cerca un termine', glossaryPlaceholder: 'Cerca PLC, deriva, MVP...',
+    confusedTitle: 'Coppie che vengono confuse',
+    termsCount: (count) => `${count} termini`,
     noTerms: 'Nessun termine trovato.',
-    interviewEyebrow: 'Prova da 20 minuti',
-    interviewTitle: 'Think clearly.<br><em>Speak simply.</em>',
-    interviewLead: 'Avvia il timer, rispondi ad alta voce e rivela il modello soltanto dopo.',
-    answerCorrect: 'Corretto', answerReview: 'Da rivedere',
-    startSimulation: 'Avvia simulazione', pauseSimulation: 'Pausa',
-    resumeSimulation: 'Riprendi simulazione', restartSimulation: 'Ricomincia',
-    timeOver: 'Tempo concluso. Valuta struttura, termini, metriche e rischi.',
-    thirtySec: '30 sec', twoMin: '2 min'
+    interviewEyebrow: 'Le dieci domande',
+    interviewTitle: 'Le domande che ti faranno<br><em>davvero.</em>',
+    interviewLead: 'Risposta in italiano per fissare il concetto, inglese semplice da dire a voce, tre punti da non dimenticare.'
   },
   en: {
-    navToday: 'Today', navSprint: 'Sprint', navReview: 'Review', navInterview: 'Interview',
-    heroEyebrow: '2-3 days · technical interview',
-    heroTitle: 'Get ready to lead<br><em>the transformation.</em>',
-    heroLead: 'From the production line to AI, with the technical English you need to reason out loud.',
-    heroCtaStart: 'Start the sprint', heroCtaContinue: 'Continue the sprint',
-    signalPathLabel: 'Flow from the shop floor to the decision',
-    nextMove: 'Next move', openLesson: 'Open the lesson',
-    readiness: 'Sprint readiness', ready: 'ready',
+    navToday: 'Today', navCourse: 'Course', navReview: 'Review', navGlossary: 'Glossary', navInterview: 'Interview',
+    heroEyebrow: '5 modules · 25 units · about two and a half hours',
+    heroTitle: 'One process,<br><em>told well.</em>',
+    heroLead: 'From a measured loss on the floor to the final decision, with the English words you need to say it out loud.',
+    heroCtaStart: 'Start the course', heroCtaContinue: 'Continue the course',
+    stagesLabel: 'The seven steps',
+    nextMove: 'Next move', openLesson: 'Open the module',
+    readiness: 'Progress', ready: 'ready',
     modulesDone: (done, total) => `${done} of ${total} modules completed`,
     activeRecall: 'Active recall', questionsToReview: 'questions to review', reviewNow: 'Review now',
-    sprintEyebrow: 'Interview sprint',
-    sprintTitle: 'Six modules. One line of reasoning.',
-    sprintLead: 'You can open any module at any time. The order is advice, not a constraint: follow it once, then return only to the weak spots.',
+    courseEyebrow: 'The course',
+    courseTitle: 'Five modules. One single thread.',
+    courseLead: 'Every unit has the same shape: where you are in the path, the idea, the terms, an example with numbers, the English lines and seven questions.',
     completed: 'completed',
     statusNext: 'Next', statusOpen: 'Not started', statusBest: 'Best score',
+    unitsLabel: 'units',
     reviewTitle: 'Review what matters.',
     reviewLead: 'Mistakes are not a penalty. They are the exact list of what you still need to make solid.',
     questionsLabel: 'Questions to review',
     showAnswer: 'Show the answer and the explanation',
     emptyQueue: 'The queue is empty.',
-    emptyQueueHint: 'Complete the final checkpoints or review the English terms beside this panel.',
-    goToSprint: 'Go to the sprint',
-    glossaryLabel: 'Glossary · IT / EN', glossaryPlaceholder: 'Search PLC, drift, MVP...',
+    emptyQueueHint: 'Answer the unit quizzes: every miss lands here.',
+    goToCourse: 'Go to the course',
+    glossaryEyebrow: 'Glossary',
+    glossaryTitle: 'Every term of the course,<br><em>in one sentence.</em>',
+    glossaryLead: 'Italian and English, with the unit where the term is explained in full.',
+    glossaryLabel: 'Search a term', glossaryPlaceholder: 'Search PLC, drift, MVP...',
+    confusedTitle: 'Pairs that get confused',
+    termsCount: (count) => `${count} terms`,
     noTerms: 'No term found.',
-    interviewEyebrow: '20-minute rehearsal',
-    interviewTitle: 'Think clearly.<br><em>Speak simply.</em>',
-    interviewLead: 'Start the timer, answer out loud, and reveal the model answer only afterwards.',
-    answerCorrect: 'Correct', answerReview: 'Review this',
-    startSimulation: 'Start the simulation', pauseSimulation: 'Pause',
-    resumeSimulation: 'Resume the simulation', restartSimulation: 'Start again',
-    timeOver: 'Time is up. Score structure, terminology, metrics, and risks.',
-    thirtySec: '30 sec', twoMin: '2 min'
+    interviewEyebrow: 'The ten questions',
+    interviewTitle: 'The questions they will<br><em>actually ask.</em>',
+    interviewLead: 'The Italian answer to fix the idea, simple English to say out loud, three points to remember.'
   }
 }
 
@@ -385,8 +337,8 @@ export function shellCopy(locale) {
 export function applyShellLocale(document, locale) {
   const copy = shellCopy(locale)
   const labels = {
-    dashboard: copy.navToday, sprint: copy.navSprint,
-    review: copy.navReview, interview: copy.navInterview
+    dashboard: copy.navToday, course: copy.navCourse, review: copy.navReview,
+    glossary: copy.navGlossary, interview: copy.navInterview
   }
   for (const link of document.querySelectorAll('[data-nav]')) {
     const icon = link.querySelector('span')
@@ -396,20 +348,4 @@ export function applyShellLocale(document, locale) {
     if (icon) link.appendChild(icon)
     link.append(label)
   }
-}
-
-/**
- * Projects a lesson final checkpoint into the shape the quiz flow expects, in the
- * requested language. The generated IDs match `withLegacyProjection`, so a
- * language change never invalidates the stored review queue.
- */
-export function localizedFinalQuiz(lesson, locale) {
-  return (lesson.finalQuiz || []).map((checkpoint, index) => ({
-    id: `${lesson.id}-check-${index + 1}`,
-    type: 'single',
-    prompt: selectLocale(checkpoint.prompt, locale),
-    options: (checkpoint.options || []).map((option) => selectLocale(option, locale)),
-    correctOption: checkpoint.correctOption,
-    explanation: selectLocale(checkpoint.options?.[checkpoint.correctOption]?.explanation, locale)
-  }))
 }

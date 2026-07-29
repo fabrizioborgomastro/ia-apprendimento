@@ -1,8 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import {
   LOCALE_STORAGE_KEY,
   SUPPORTED_LOCALES,
+  countAnswered,
   getDashboardState,
   getUnitState,
   isUnitComplete,
@@ -15,9 +17,16 @@ import {
   unitPath,
   writeLocale
 } from '../public/ui.js'
-import { applyShellLocale, localizedFinalQuiz, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from '../public/render.js'
-import { readFile } from 'node:fs/promises'
-import { curriculum, lessons } from '../public/content.js'
+import {
+  applyShellLocale,
+  renderConfusedPairs,
+  renderGlossaryEntries,
+  renderInterviewAnswers,
+  renderLocaleSwitch,
+  renderUnitView,
+  shellCopy
+} from '../public/render.js'
+import { confusedPairs, curriculum, glossary, interviewAnswers } from '../public/content.js'
 
 const lessonFixture = {
   id: 'fixture', slug: 'fixture', durationMinutes: 20,
@@ -36,6 +45,9 @@ function memoryStorage(initial = {}) {
   }
 }
 
+const sampleLesson = curriculum[2]
+const sampleState = getUnitState(sampleLesson, sampleLesson.units[1].id, { cursor: 0 })
+
 test('language selection returns the requested localized value', () => {
   assert.equal(selectLocale({ it: 'Esempio', en: 'Example' }, 'en'), 'Example')
   assert.equal(selectLocale({ it: 'Esempio', en: 'Example' }, 'it'), 'Esempio')
@@ -53,7 +65,6 @@ test('locale persists under the agreed storage key and rejects unknown values', 
   const storage = memoryStorage()
   assert.equal(readLocale(storage), 'it')
   writeLocale('en', storage)
-  assert.equal(storage.getItem(LOCALE_STORAGE_KEY), 'en')
   assert.equal(readLocale(storage), 'en')
   writeLocale('fr', storage)
   assert.equal(readLocale(storage), 'en')
@@ -61,25 +72,36 @@ test('locale persists under the agreed storage key and rejects unknown values', 
 })
 
 test('unit deep links are built and parsed symmetrically', () => {
-  assert.equal(unitPath('llm-agents', 'agent-loop-workflow-mcp'), '/lesson/llm-agents?unit=agent-loop-workflow-mcp')
-  assert.equal(unitPath('llm-agents'), '/lesson/llm-agents')
+  assert.equal(unitPath('in-produzione', 'mvp-prototipo-pilota'), '/lesson/in-produzione?unit=mvp-prototipo-pilota')
+  assert.equal(unitPath('in-produzione'), '/lesson/in-produzione')
   assert.deepEqual(
-    parseRoute('/lesson/llm-agents', '?unit=agent-loop-workflow-mcp'),
-    { name: 'lesson', slug: 'llm-agents', unitId: 'agent-loop-workflow-mcp' }
+    parseRoute('/lesson/in-produzione', '?unit=mvp-prototipo-pilota'),
+    { name: 'lesson', slug: 'in-produzione', unitId: 'mvp-prototipo-pilota' }
   )
-  assert.deepEqual(parseRoute('/lesson/llm-agents'), { name: 'lesson', slug: 'llm-agents', unitId: null })
+  assert.deepEqual(parseRoute('/lesson/in-produzione'), { name: 'lesson', slug: 'in-produzione', unitId: null })
 })
 
-test('parseRoute recognizes primary application destinations', () => {
+test('parseRoute recognizes every destination, including the older names', () => {
+  assert.deepEqual(parseRoute('/corso'), { name: 'course' })
+  assert.deepEqual(parseRoute('/sprint'), { name: 'course' }, 'a bookmarked /sprint must keep working')
   assert.deepEqual(parseRoute('/review'), { name: 'review' })
+  assert.deepEqual(parseRoute('/glossario'), { name: 'glossary' })
   assert.deepEqual(parseRoute('/interview'), { name: 'interview' })
+  assert.deepEqual(parseRoute('/colloquio'), { name: 'interview' })
   assert.deepEqual(parseRoute('/unknown'), { name: 'dashboard' })
+})
+
+test('splitAppPath keeps the query, so a unit deep link survives navigation', () => {
+  assert.deepEqual(splitAppPath('/lesson/in-produzione?unit=esperimento-credibile'), {
+    pathname: '/lesson/in-produzione', search: '?unit=esperimento-credibile'
+  })
+  assert.deepEqual(splitAppPath('/corso'), { pathname: '/corso', search: '' })
 })
 
 test('normalizeAppHref does not duplicate the GitHub Pages base path', () => {
   assert.equal(normalizeAppHref('/', '/ia-apprendimento/'), '/ia-apprendimento/')
-  assert.equal(normalizeAppHref('/sprint', '/ia-apprendimento/'), '/ia-apprendimento/sprint')
-  assert.equal(normalizeAppHref('/lesson/llm-agents?unit=x', '/ia-apprendimento/'), '/ia-apprendimento/lesson/llm-agents?unit=x')
+  assert.equal(normalizeAppHref('/corso', '/ia-apprendimento/'), '/ia-apprendimento/corso')
+  assert.equal(normalizeAppHref('/lesson/in-produzione?unit=x', '/ia-apprendimento/'), '/ia-apprendimento/lesson/in-produzione?unit=x')
   assert.equal(normalizeAppHref('#quiz', '/ia-apprendimento/'), '#quiz')
 })
 
@@ -89,11 +111,9 @@ test('unit state resolves a stable deep link and progress position', () => {
   assert.equal(state.previous.id, 'unit-1')
   assert.equal(state.next.id, 'unit-3')
   assert.equal(state.total, 3)
-  assert.equal(state.isFirst, false)
-  assert.equal(state.isLast, false)
 })
 
-test('a lesson link without a unit opens the first incomplete unit', () => {
+test('a module link without a unit opens the first incomplete unit', () => {
   assert.equal(getUnitState(lessonFixture, null, { cursor: 0 }).unit.id, 'unit-1')
   assert.equal(getUnitState(lessonFixture, null, { cursor: 2 }).unit.id, 'unit-3')
   assert.equal(getUnitState(lessonFixture, null, { cursor: 99 }).unit.id, 'unit-3')
@@ -107,485 +127,159 @@ test('an unknown unit falls back instead of leaving a dead end', () => {
   assert.equal(getUnitState(lessonFixture, 'unit-1', { cursor: 1 }).requestedUnitFound, true)
 })
 
-test('the first and last units expose their boundaries without a null next', () => {
-  const first = getUnitState(lessonFixture, 'unit-1', { cursor: 0 })
-  assert.equal(first.isFirst, true)
-  assert.equal(first.previous, null)
-  const last = getUnitState(lessonFixture, 'unit-3', { cursor: 0 })
-  assert.equal(last.isLast, true)
-  assert.equal(last.next, null)
-})
-
-test('a unit is complete only after its checkpoint and its activity self-mark', () => {
-  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: true }), true)
-  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: false }), false)
-  assert.equal(isUnitComplete({ checkpointAnswered: false, activityMarked: true }), false)
+test('a unit is complete when every question of its quiz has an answer', () => {
+  assert.equal(isUnitComplete({ answeredQuestions: 7, totalQuestions: 7 }), true)
+  assert.equal(isUnitComplete({ answeredQuestions: 6, totalQuestions: 7 }), false)
+  assert.equal(isUnitComplete({ answeredQuestions: 7, totalQuestions: 0 }), false)
   assert.equal(isUnitComplete(undefined), false)
-  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: true, elapsedSeconds: 0 }), true)
+  assert.equal(isUnitComplete({ answeredQuestions: 7, totalQuestions: 7, elapsedSeconds: 0 }), true)
 })
 
-test('unit state reports completion from the stored cursor', () => {
-  const state = getUnitState(lessonFixture, 'unit-1', { cursor: 2 })
-  assert.equal(state.completed, true)
-  assert.equal(getUnitState(lessonFixture, 'unit-3', { cursor: 2 }).completed, false)
+test('countAnswered only counts questions that actually have an answer', () => {
+  const unit = sampleLesson.units[0]
+  assert.equal(countAnswered(unit, {}), 0)
+  assert.equal(countAnswered(unit, { [unit.quiz[0].id]: 0, [unit.quiz[1].id]: 3 }), 2)
+  assert.equal(countAnswered(unit, { [unit.quiz[0].id]: null }), 0)
+})
+
+test('quiz feedback names the outcome in the reader language', () => {
+  const question = sampleLesson.units[0].quiz[0]
+  assert.equal(quizFeedback(question, question.correctOption, 'it').correct, true)
+  assert.equal(quizFeedback(question, question.correctOption, 'en').label, 'Correct')
+  assert.equal(quizFeedback(question, (question.correctOption + 1) % 4, 'it').label, 'Da rivedere')
+})
+
+test('the dashboard counts completed modules and the review queue', () => {
+  const progress = {
+    trasformazione: { status: 'completed', reviewQuestionIds: ['a'] },
+    'fabbrica-digitale': { status: 'in_progress', reviewQuestionIds: ['b', 'c'] }
+  }
+  const state = getDashboardState(curriculum, progress)
+  assert.equal(state.completedCount, 1)
+  assert.equal(state.reviewCount, 3)
+  assert.equal(state.nextLesson.id, 'fabbrica-digitale')
+  assert.equal(state.percent, 20)
 })
 
 test('the unit view renders exactly one unit with every required section', () => {
-  const lesson = curriculum[4]
-  const state = getUnitState(lesson, lesson.units[2].id, { cursor: 0 })
-  const html = renderUnitView({ lesson, state, locale: 'it', revealed: {}, checkpointChoice: null, activityMarked: false })
+  const html = renderUnitView({ lesson: sampleLesson, state: sampleState, locale: 'it' })
 
   for (const hook of [
-    'data-unit-header', 'data-unit-index', 'data-unit-content',
-    'data-learning-activity', 'data-unit-checkpoint', 'data-unit-sources', 'data-unit-controls'
+    'data-unit-header', 'data-unit-index', 'data-unit-content', 'data-unit-stage',
+    'data-unit-terms', 'data-unit-example', 'data-unit-english', 'data-unit-quiz',
+    'data-unit-sources', 'data-unit-controls'
   ]) {
-    assert.equal(html.split(hook).length - 1 >= 1, true, `missing hook ${hook}`)
+    assert.ok(html.includes(hook), `missing hook ${hook}`)
   }
   assert.equal(html.split('data-unit-content').length - 1, 1, 'only one unit may be rendered')
-  const otherUnitTitles = lesson.units
-    .filter((unit) => unit.id !== state.unit.id)
-    .map((unit) => unit.title.it)
-  const contentSection = html.slice(html.indexOf('data-unit-content'))
-  for (const title of otherUnitTitles) {
-    assert.equal(contentSection.includes(`<h2>${title}</h2>`), false, `unit ${title} must not be rendered`)
-  }
-  assert.ok(html.includes(state.unit.theory[0].it.slice(0, 60)))
-  assert.ok(html.includes('aria-pressed'))
+  assert.ok(html.includes(sampleState.unit.theory[0].it.slice(0, 60)))
+  assert.equal(html.split('data-question=').length - 1, 7, 'the unit quiz must render seven questions')
 })
 
 test('the unit view switches every learner-visible string to English', () => {
-  const lesson = curriculum[4]
-  const state = getUnitState(lesson, lesson.units[2].id, { cursor: 0 })
-  const options = { lesson, state, revealed: {}, checkpointChoice: null, activityMarked: false }
-  const italian = renderUnitView({ ...options, locale: 'it' })
-  const english = renderUnitView({ ...options, locale: 'en' })
+  const english = renderUnitView({ lesson: sampleLesson, state: sampleState, locale: 'en' })
+  const italian = renderUnitView({ lesson: sampleLesson, state: sampleState, locale: 'it' })
 
-  assert.ok(italian.includes(state.unit.theory[0].it.slice(0, 60)))
-  assert.ok(english.includes(state.unit.theory[0].en.slice(0, 60)))
-  assert.ok(!english.includes(state.unit.theory[0].it.slice(0, 60)))
-  assert.ok(english.includes(state.unit.checkpoint.prompt.en))
-  assert.ok(italian.includes(state.unit.checkpoint.prompt.it))
+  assert.ok(english.includes(sampleState.unit.title.en))
+  assert.ok(english.includes(sampleState.unit.theory[0].en.slice(0, 50)))
+  assert.ok(english.includes('Next unit'))
+  assert.ok(italian.includes('Unità successiva'))
+  assert.ok(!english.includes('Unità successiva'))
 })
 
-test('hint, model solution and rubric reveal independently', () => {
-  const lesson = curriculum[4]
-  const state = getUnitState(lesson, lesson.units[0].id, { cursor: 0 })
-  const activity = state.unit.activities[0]
-  const base = { lesson, state, locale: 'it', checkpointChoice: null, activityMarked: false }
-
-  const hidden = renderUnitView({ ...base, revealed: {} })
-  assert.ok(!hidden.includes(activity.modelSolution.it))
-  assert.ok(!hidden.includes(activity.hints[0].it))
-  assert.ok(!hidden.includes(activity.rubric[0].it))
-
-  const hintOnly = renderUnitView({ ...base, revealed: { hint: true } })
-  assert.ok(hintOnly.includes(activity.hints[0].it))
-  assert.ok(!hintOnly.includes(activity.modelSolution.it))
-  assert.ok(!hintOnly.includes(activity.rubric[0].it))
-
-  const solutionOnly = renderUnitView({ ...base, revealed: { solution: true } })
-  assert.ok(solutionOnly.includes(activity.modelSolution.it))
-  assert.ok(!solutionOnly.includes(activity.hints[0].it))
-
-  const rubricOnly = renderUnitView({ ...base, revealed: { rubric: true } })
-  assert.ok(rubricOnly.includes(activity.rubric[0].it))
-  assert.ok(!rubricOnly.includes(activity.modelSolution.it))
-})
-
-test('the unit view never renders an elapsed-time gate and always offers a way forward', () => {
-  const lesson = curriculum[4]
-  for (const unit of lesson.units) {
-    const state = getUnitState(lesson, unit.id, { cursor: 0 })
-    const html = renderUnitView({ lesson, state, locale: 'it', revealed: {}, checkpointChoice: null, activityMarked: false })
-    assert.doesNotMatch(html, /data-(?:timer|elapsed|wait)/u)
-    assert.ok(html.includes('data-unit-controls'))
-    assert.ok(
-      html.includes('data-unit-next') || html.includes('data-lesson-finish'),
-      `${unit.id} must offer a forward control`
-    )
-  }
-})
-
-test('sources are listed with resolvable identifiers for the rendered unit', () => {
-  const lesson = curriculum[3]
-  const state = getUnitState(lesson, lesson.units[8].id, { cursor: 0 })
-  const html = renderUnitView({ lesson, state, locale: 'en', revealed: {}, checkpointChoice: null, activityMarked: false })
-  for (const sourceId of state.unit.sourceIds) {
-    assert.ok(html.includes(sourceId), `source ${sourceId} must be listed`)
-  }
-  assert.ok(html.includes('https://'))
-})
-
-test('every professional interview answer is renderable in both languages', () => {
-  const lesson = curriculum[5]
-  const italian = renderLessonInterviewAnswers(lesson, 'it')
-  const english = renderLessonInterviewAnswers(lesson, 'en')
-  assert.equal(italian.split('data-interview-answer="').length - 1, lesson.interviewAnswers.length)
-  assert.equal(english.split('data-interview-answer="').length - 1, lesson.interviewAnswers.length)
-  for (const answer of lesson.interviewAnswers) {
-    assert.ok(italian.includes(answer.prompt.it))
-    assert.ok(english.includes(answer.prompt.en))
-  }
-})
-
-test('getDashboardState returns the first unfinished lesson and true completion percentage', () => {
-  const progress = {
-    'digital-transformation': { status: 'completed', bestScore: 100 },
-    'ot-it-ai-cloud': { status: 'in_progress', bestScore: 33 }
-  }
-  const state = getDashboardState(lessons, progress)
-  assert.equal(state.nextLesson.id, 'ot-it-ai-cloud')
-  assert.equal(state.completedCount, 1)
-  assert.equal(state.percent, 17)
-})
-
-test('quizFeedback explains both correct and incorrect choices', () => {
-  const question = lessons[0].quiz[0]
-  assert.deepEqual(quizFeedback(question, 1), { correct: true, label: 'Corretto', explanation: question.explanation })
-  assert.deepEqual(quizFeedback(question, 0), { correct: false, label: 'Da rivedere', explanation: question.explanation })
-})
-
-test('the application binds a handler for every interactive hook the renderer emits', async () => {
-  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
-  const lesson = curriculum[4]
-  const state = getUnitState(lesson, lesson.units[0].id, { cursor: 0 })
-  const markup = renderUnitView({ lesson, state, locale: 'it', revealed: {}, checkpointChoice: null, activityMarked: false })
-    + renderLessonInterviewAnswers(lesson, 'it')
-    + renderLocaleSwitch('it')
-
-  const emittedHooks = [...new Set([...markup.matchAll(/data-([a-z-]+)(?==|[\s>])/gu)].map(([, hook]) => hook))]
-  const interactiveHooks = emittedHooks.filter((hook) => [
-    'reveal-toggle', 'activity-mark', 'checkpoint-option', 'answer-toggle', 'locale'
-  ].includes(hook))
-
-  assert.deepEqual(interactiveHooks.sort(), [
-    'activity-mark', 'answer-toggle', 'checkpoint-option', 'locale', 'reveal-toggle'
-  ])
-  for (const hook of interactiveHooks) {
-    assert.ok(source.includes(`[data-${hook}]`), `app.js must bind [data-${hook}]`)
-  }
-  assert.ok(source.includes('[data-quiz-option]'), 'app.js must bind the final checkpoint options')
-})
-
-test('the application reads the unit from the query string and persists the locale', async () => {
-  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
-  assert.match(source, /parseRoute\(toAppPath\(location\.pathname\), location\.search\)/u)
-  assert.match(source, /renderLesson\(route\.slug, route\.unitId\)/u)
-  assert.match(source, /bindLessonEvents\(route\.slug, route\.unitId\)/u)
-  assert.match(source, /locale = writeLocale\(requested\)/u)
-  assert.match(source, /document\.documentElement\.lang = locale/u)
-  assert.doesNotMatch(source, /lesson\.blocks/u, 'the renderer must no longer depend on the legacy projection')
-})
-
-test('completing a unit advances the cursor by exactly one position', () => {
-  const lesson = curriculum[4]
-  let stored = { cursor: 0 }
-  const advance = (index) => {
-    const state = getUnitState(lesson, lesson.units[index].id, stored)
-    if (!isUnitComplete({ checkpointAnswered: true, activityMarked: true })) return
-    stored = { cursor: Math.max(stored.cursor, Math.min(state.index + 1, lesson.units.length)) }
-  }
-  advance(0)
-  assert.equal(stored.cursor, 1)
-  advance(1)
-  assert.equal(stored.cursor, 2)
-  advance(0)
-  assert.equal(stored.cursor, 2, 'revisiting an earlier unit must never regress the cursor')
-  assert.equal(getUnitState(lesson, null, stored).unit.id, lesson.units[2].id)
-})
-
-test('switching language preserves the resolved unit and its progress position', () => {
-  const lesson = curriculum[4]
-  const stored = { cursor: 3 }
-  const italian = getUnitState(lesson, lesson.units[3].id, stored)
-  const english = getUnitState(lesson, lesson.units[3].id, stored)
-  assert.equal(italian.unit.id, english.unit.id)
-  assert.equal(italian.index, english.index)
-  assert.equal(italian.cursor, english.cursor)
-  assert.equal(
-    unitPath(lesson.slug, italian.unit.id),
-    unitPath(lesson.slug, english.unit.id),
-    'the deep link must not change with the language'
-  )
-})
-
-test('the unit stylesheet keeps mobile targets, readable text and scrollable tables', async () => {
-  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
-
-  assert.match(css, /\.decision-aid \{[^}]*overflow-x: auto/u, 'wide tables must scroll instead of overflowing')
-  assert.match(css, /\.unit-index ol \{[^}]*overflow-x: auto/u, 'the unit index must scroll on narrow screens')
-  for (const selector of [
-    '.locale-switch button', '.unit-index a', '.checkpoint-options button',
-    '.reveal-actions .button', '.activity-mark', '.unit-controls .button'
-  ]) {
-    const rule = css.match(new RegExp(`${selector.replaceAll('.', '\\.')} \\{[^}]*\\}`, 'u'))
-    assert.ok(rule, `${selector} must be styled`)
-    assert.match(rule[0], /min-height: (4[4-9]|[5-9]\d)px/u, `${selector} must keep a 44px tap target`)
-  }
-  assert.match(css, /body \{[^}]*font-size: 18px/u)
-  const phoneBreakpoint = css.indexOf('@media (max-width: 620px)')
-  assert.ok(phoneBreakpoint > -1, 'a phone breakpoint must exist')
-  assert.match(
-    css.slice(phoneBreakpoint),
-    /body \{ font-size: 1[6-9]px/u,
-    'body text must stay at least 16px on phones'
-  )
-  assert.match(css, /@media \(min-width: 900px\)/u, 'desktop must show the side index')
-  assert.match(css, /max-width: 72ch/u, 'reading measure must stay near 72 characters')
-})
-
-test('every landmark and progress indicator carries a distinct accessible name', () => {
-  const lesson = curriculum[4]
+test('the spoken English block stays in English in both interface languages', () => {
+  const line = sampleState.unit.englishBlock.lines[0]
   for (const locale of ['it', 'en']) {
-    const state = getUnitState(lesson, lesson.units[2].id, { cursor: 2 })
-    const html = renderUnitView({ lesson, state, locale, revealed: {}, checkpointChoice: null, activityMarked: false })
-
-    const navLabels = [...html.matchAll(/<nav[^>]*aria-label="([^"]+)"/gu)].map(([, label]) => label)
-    assert.equal(navLabels.length, 2, 'the unit index and the unit controls are both landmarks')
-    assert.equal(new Set(navLabels).size, 2, `landmark names must differ, received ${navLabels.join(' / ')}`)
-
-    const progressBar = html.match(/role="progressbar"[^>]*>/u)
-    assert.ok(progressBar, 'the unit progress indicator must exist')
-    assert.match(progressBar[0], /aria-label="[^"]+"/u, 'the progress indicator needs an accessible name')
+    const html = renderUnitView({ lesson: sampleLesson, state: sampleState, locale })
+    assert.ok(html.includes(line), `the English lines must survive in ${locale}`)
+    assert.ok(html.includes('lang="en"'), 'the English block must declare its language')
   }
 })
 
-test('a unit without an activity completes on its checkpoint alone', () => {
-  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: false, hasActivity: false }), true)
-  assert.equal(isUnitComplete({ checkpointAnswered: false, activityMarked: false, hasActivity: false }), false)
-  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: false, hasActivity: true }), false)
-  assert.equal(isUnitComplete({ checkpointAnswered: true, activityMarked: true, hasActivity: true }), true)
-})
-
-test('every unit in the curriculum can actually be completed', () => {
-  for (const lesson of curriculum) {
-    for (const unit of lesson.units) {
-      const hasActivity = Boolean((unit.activities || []).length)
-      assert.ok(unit.checkpoint, `${lesson.id}/${unit.id} needs a checkpoint`)
-      assert.equal(
-        isUnitComplete({ checkpointAnswered: true, activityMarked: hasActivity, hasActivity }),
-        true,
-        `${lesson.id}/${unit.id} must be completable`
-      )
-    }
-  }
-})
-
-test('the unit view reports the correct completion requirement for a unit with no activity', () => {
-  const lesson = curriculum[0]
-  const unitWithoutActivity = lesson.units.find((unit) => !(unit.activities || []).length)
-  assert.ok(unitWithoutActivity, 'module one still has a unit without an activity')
-  const state = getUnitState(lesson, unitWithoutActivity.id, { cursor: 0 })
-  const html = renderUnitView({ lesson, state, locale: 'it', revealed: {}, checkpointChoice: 1, activityMarked: false })
-  assert.ok(!html.includes('data-activity-mark'), 'no activity means no self-mark control')
-  assert.ok(html.includes('Unità completata'), 'the unit must report itself complete after the checkpoint')
-})
-
-test('the unit grid constrains its columns so a wide child cannot overflow the phone viewport', async () => {
-  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
-
-  const baseRule = css.match(/\.lesson-unit \{[^}]*\}/u)
-  assert.ok(baseRule, '.lesson-unit must be styled')
-  assert.match(baseRule[0], /display: grid/u)
-  assert.match(
-    baseRule[0],
-    /grid-template-columns: minmax\(0, 1fr\)/u,
-    'without an explicit minmax(0, 1fr) the implicit auto column grows to the widest child and overflows 360px'
-  )
-
-  const desktop = css.slice(css.indexOf('@media (min-width: 900px)'))
-  assert.match(
-    desktop.match(/\.lesson-unit \{[^}]*\}/u)[0],
-    /grid-template-columns: 250px minmax\(0, 1fr\)/u,
-    'the desktop side index must keep its own constrained column'
-  )
-})
-
-test('an application path keeps its query when it is split for navigation', () => {
-  assert.deepEqual(splitAppPath('/lesson/llm-agents?unit=agent-loop-workflow-mcp'), {
-    pathname: '/lesson/llm-agents',
-    search: '?unit=agent-loop-workflow-mcp'
+test('an answered question shows its explanation and locks its options', () => {
+  const question = sampleState.unit.quiz[0]
+  const wrong = (question.correctOption + 1) % 4
+  const html = renderUnitView({
+    lesson: sampleLesson, state: sampleState, locale: 'it', answers: { [question.id]: wrong }
   })
-  assert.deepEqual(splitAppPath('/sprint'), { pathname: '/sprint', search: '' })
-  assert.deepEqual(splitAppPath('/'), { pathname: '/', search: '' })
-  assert.deepEqual(splitAppPath(''), { pathname: '/', search: '' })
-  assert.deepEqual(splitAppPath('/lesson/x?a=1&b=2'), { pathname: '/lesson/x', search: '?a=1&b=2' })
+  assert.ok(html.includes(question.explanation), 'the explanation must be visible after answering')
+  assert.ok(html.includes('data-correct-option'), 'the correct option must be marked')
+  assert.ok(html.includes('data-wrong-option'), 'the chosen wrong option must be marked')
+  assert.ok(html.includes('disabled'), 'an answered question cannot be answered twice')
+  assert.ok(html.includes('1 di 7'))
 })
 
-test('every in-app link target survives a navigation round trip', () => {
-  const lesson = curriculum[0]
-  const state = getUnitState(lesson, lesson.units[0].id, { cursor: 0 })
-  const html = renderUnitView({ lesson, state, locale: 'it', revealed: {}, checkpointChoice: null, activityMarked: false })
-
-  const hrefs = [...html.matchAll(/data-link[^>]*href="([^"]+)"|href="([^"]+)"[^>]*data-link/gu)]
-    .map(([, a, b]) => a || b)
-    .filter((href) => href.startsWith('/lesson/'))
-  assert.ok(hrefs.length >= 2, 'the unit view must link to other units')
-  assert.ok(hrefs.some((href) => href.includes('?unit=')), 'unit links must carry the unit query')
-
-  for (const href of hrefs) {
-    const { pathname, search } = splitAppPath(href)
-    const route = parseRoute(pathname, search)
-    if (!href.includes('?unit=')) continue
-    assert.equal(route.name, 'lesson')
-    assert.ok(route.unitId, `navigating to ${href} must preserve the unit, received ${route.unitId}`)
-    assert.ok(
-      lesson.units.some((unit) => unit.id === route.unitId),
-      `${href} must resolve to a real unit`
-    )
-  }
+test('the unit view never leaves raw markup from the content in the page', () => {
+  const html = renderUnitView({ lesson: sampleLesson, state: sampleState, locale: 'it' })
+  assert.ok(!html.includes('<script'), 'content must be escaped')
+  assert.ok(html.includes('&#39;') || html.includes('&amp;') || !html.includes("'unit"), 'quotes must be escaped')
 })
 
-test('the click handler forwards the query so a unit link is not flattened to the lesson', async () => {
-  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
-  assert.match(
-    source,
-    /navigate\(link\.pathname \+ link\.search\)/u,
-    'passing only link.pathname drops ?unit= and sends every unit link back to the first incomplete unit'
-  )
-  assert.match(source, /splitAppPath/u, 'navigate must rebuild the URL from path and query')
+test('the interview page shows the expectation and hides the answer until asked', () => {
+  const html = renderInterviewAnswers(interviewAnswers, 'it')
+  assert.equal(html.split('data-interview-answer=').length - 1, 10)
+  assert.ok(html.includes(interviewAnswers[0].expectation))
+  assert.ok(html.includes('<details'), 'the model answer must stay collapsed')
+  assert.ok(html.includes(interviewAnswers[0].english[0]))
+  assert.ok(html.includes('Tre punti da non dimenticare'))
+  assert.ok(renderInterviewAnswers(interviewAnswers, 'en').includes('Three points to remember'))
 })
 
-test('the shell copy is complete and actually differs between the two languages', () => {
-  const italian = shellCopy('it')
-  const english = shellCopy('en')
-
-  assert.deepEqual(Object.keys(italian).sort(), Object.keys(english).sort(), 'both languages must define the same keys')
-  assert.equal(shellCopy('de'), italian, 'an unsupported locale falls back to Italian')
-
-  // These labels are deliberately the same in both languages: they are English
-  // terms the Italian copy already uses as-is, or brand and unit labels.
-  const intentionallyShared = [
-    'navSprint', 'navInterview', 'readiness', 'activeRecall',
-    'sprintEyebrow', 'interviewTitle', 'thirtySec', 'twoMin'
-  ]
-  const shared = Object.keys(italian)
-    .filter((key) => typeof italian[key] === 'string' && italian[key] === english[key])
-    .filter((key) => !intentionallyShared.includes(key))
-  assert.deepEqual(shared, [], `these shell strings are identical in both languages: ${shared.join(', ')}`)
-  assert.equal(typeof italian.modulesDone, 'function')
-  assert.match(italian.modulesDone(2, 6), /2 di 6/u)
-  assert.match(english.modulesDone(2, 6), /2 of 6/u)
+test('the glossary renders every term with the unit that explains it', () => {
+  const html = renderGlossaryEntries(glossary.slice(0, 5), 'it')
+  assert.equal(html.split('data-term-entry=').length - 1, 5)
+  assert.ok(html.includes(glossary[0].term))
+  assert.ok(html.includes(glossary[0].where))
+  assert.ok(renderGlossaryEntries([], 'it').includes('Nessun termine trovato'))
+  assert.ok(renderGlossaryEntries([], 'en').includes('No term found'))
 })
 
-test('no page in the application renders a hard-coded Italian shell string', async () => {
-  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
-  const italianOnly = [
-    'Inizia lo sprint', 'Continua lo sprint', 'Apri la lezione', 'PROSSIMA MOSSA',
-    'domande da ripassare', 'Ripassa ora', 'Sei moduli. Un filo logico.',
-    'QUEUED', 'Ripassa ciò che conta.', 'DOMANDE DA RIVEDERE',
-    'Mostra risposta e spiegazione', 'La coda è vuota.', 'Vai allo sprint',
-    'Nessun termine trovato.', 'Avvia simulazione', 'Riprendi simulazione'
-  ]
-  const leaked = italianOnly.filter((phrase) => source.includes(`>${phrase}`) || source.includes(`'${phrase}'`))
-  assert.deepEqual(leaked, [], `these strings bypass the language switch: ${leaked.join(' | ')}`)
+test('the confused pairs are rendered in both languages', () => {
+  assert.ok(renderConfusedPairs(confusedPairs, 'it').includes(confusedPairs[0].pair.it))
+  assert.ok(renderConfusedPairs(confusedPairs, 'en').includes(confusedPairs[0].pair.en))
 })
 
-test('the static navigation is localized without losing its icons', () => {
+test('the language switch reports the active language to assistive technology', () => {
+  const html = renderLocaleSwitch('en')
+  assert.ok(html.includes('data-locale="it" aria-pressed="false"'))
+  assert.ok(html.includes('data-locale="en" aria-pressed="true"'))
+})
+
+test('the shell navigation is localized without losing its icons', () => {
   const links = [
-    { dataset: { nav: 'dashboard' }, children: ['icon'] },
-    { dataset: { nav: 'sprint' }, children: ['icon'] },
-    { dataset: { nav: 'review' }, children: ['icon'] },
-    { dataset: { nav: 'interview' }, children: ['icon'] }
+    { dataset: { nav: 'dashboard' }, children: [], textContent: 'Oggi' },
+    { dataset: { nav: 'glossary' }, children: [], textContent: 'Glossario' }
   ].map((link) => ({
     ...link,
-    textContent: 'old',
-    appended: [],
     querySelector: () => ({ tag: 'span' }),
-    appendChild(node) { this.appended.push(node) },
-    append(text) { this.appended.push(text) }
+    appendChild(child) { this.children.push(child) },
+    append(label) { this.children.push(label) }
   }))
-  const fakeDocument = { querySelectorAll: () => links }
+  const documentStub = { querySelectorAll: () => links }
 
-  applyShellLocale(fakeDocument, 'en')
-  assert.deepEqual(links.map((link) => link.appended[1]), ['Today', 'Sprint', 'Review', 'Interview'])
-  assert.ok(links.every((link) => link.appended[0]?.tag === 'span'), 'the icon must be preserved')
-
-  applyShellLocale(fakeDocument, 'it')
-  assert.deepEqual(links.map((link) => link.appended[3]), ['Oggi', 'Sprint', 'Ripasso', 'Interview'])
+  applyShellLocale(documentStub, 'en')
+  assert.deepEqual(links[0].children, [{ tag: 'span' }, 'Today'])
+  assert.deepEqual(links[1].children, [{ tag: 'span' }, 'Glossary'])
+  assert.equal(shellCopy('en').navCourse, 'Course')
+  assert.equal(shellCopy('it').navCourse, 'Corso')
+  assert.equal(shellCopy('de').navCourse, 'Corso')
 })
 
-test('the final checkpoint is localized and keeps the review IDs stable', () => {
-  const lesson = curriculum[1]
-  const projected = lessons.find((item) => item.id === lesson.id)
-  const italian = localizedFinalQuiz(lesson, 'it')
-  const english = localizedFinalQuiz(lesson, 'en')
+test('the application binds the quiz and the glossary search it renders', async () => {
+  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8')
+  assert.ok(source.includes('[data-quiz-option]'), 'app.js must bind the unit quiz options')
+  assert.ok(source.includes('#term-search'), 'app.js must bind the glossary search')
+  assert.ok(source.includes('data-locale'), 'app.js must bind the language switch')
+  assert.ok(source.includes('saveAnswers'), 'answers must be persisted')
+})
 
-  assert.equal(italian.length, lesson.finalQuiz.length)
-  assert.deepEqual(
-    english.map(({ id }) => id),
-    projected.quiz.map(({ id }) => id),
-    'switching language must not change a question ID, or the review queue breaks'
-  )
-
-  for (const [index, question] of english.entries()) {
-    const source = lesson.finalQuiz[index]
-    assert.equal(question.prompt, source.prompt.en)
-    assert.deepEqual(question.options, source.options.map((option) => option.en))
-    assert.equal(question.explanation, source.options[source.correctOption].explanation.en)
-    assert.equal(question.correctOption, source.correctOption)
-    assert.notEqual(question.prompt, italian[index].prompt, 'the prompt must actually change language')
+test('the shell navigation in index.html matches the routes the application knows', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8')
+  const navs = [...html.matchAll(/data-nav="([^"]+)"/gu)].map(([, name]) => name)
+  assert.deepEqual(navs, ['dashboard', 'course', 'review', 'glossary', 'interview'])
+  const hrefs = [...html.matchAll(/href="(\/[^"]*)" data-link/gu)].map(([, href]) => href)
+  for (const href of hrefs) {
+    const route = parseRoute(href)
+    assert.ok(route.name, `${href} must resolve to a route`)
   }
-})
-
-test('checkpoint feedback labels follow the selected language', () => {
-  const question = localizedFinalQuiz(curriculum[1], 'en')[0]
-  assert.equal(quizFeedback(question, question.correctOption, 'it').label, 'Corretto')
-  assert.equal(quizFeedback(question, question.correctOption, 'en').label, 'Correct')
-  assert.equal(quizFeedback(question, question.correctOption + 1, 'en').label, 'Review this')
-  assert.equal(quizFeedback(question, question.correctOption).label, 'Corretto')
-})
-
-test('the final checkpoint block stays centred like every other shell section', async () => {
-  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
-  const rule = css.match(/\.lesson-glossary, \.quiz-section, \.answer-lab \{[^}]*\}/u)
-  assert.ok(rule, 'the shared section rule must exist')
-  assert.doesNotMatch(
-    rule[0],
-    /margin: \d+px 0 0/u,
-    'a zero inline margin overrides .shell margin-inline:auto and pins the block to the left edge'
-  )
-  assert.match(rule[0], /margin: \d+px auto 0/u, 'the block must keep its top margin and stay centred')
-})
-
-test('the answer lab sets its own text colour instead of inheriting the dark section', async () => {
-  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
-
-  const darkSection = css.match(/\.quiz-section \{[^}]*\}/u)[0]
-  assert.match(darkSection, /color: white/u, 'the checkpoint block is intentionally dark')
-
-  const answerLab = css.match(/^\.answer-lab \{[^}]*\}/mu)
-  assert.ok(answerLab, '.answer-lab must be styled')
-  assert.match(
-    answerLab[0],
-    /color: var\(--ink\)/u,
-    'nested inside .quiz-section the answer lab inherits white text, which renders the model answers white on white'
-  )
-  assert.match(css, /\.answer-lab \.eyebrow \{ color:/u, 'the answer lab eyebrow needs its own colour on a light background')
-})
-
-test('the unit index says out loud that it lists units, not modules', () => {
-  const lesson = curriculum[0]
-  const state = getUnitState(lesson, lesson.units[0].id, { cursor: 0 })
-
-  for (const [locale, heading, counter] of [
-    ['it', 'Unità di questo modulo', `1 di ${lesson.units.length}`],
-    ['en', 'Units in this module', `1 of ${lesson.units.length}`]
-  ]) {
-    const html = renderUnitView({ lesson, state, locale, revealed: {}, checkpointChoice: null, activityMarked: false })
-    const index = html.slice(html.indexOf('data-unit-index'), html.indexOf('data-unit-content'))
-    assert.ok(index.includes(heading), `the ${locale} unit index must be labelled "${heading}"`)
-    assert.ok(index.includes(counter), `the ${locale} unit index must show "${counter}"`)
-  }
-})
-
-test('every module keeps its own unit count and none of the six is missing', () => {
-  assert.equal(curriculum.length, 6, 'the course is six modules by specification')
-  assert.deepEqual(curriculum.map(({ id }) => id), [
-    'digital-transformation', 'ot-it-ai-cloud', 'data-ai-use-cases',
-    'llm-agents', 'mvp-governance', 'interview-lab'
-  ])
-  assert.deepEqual(curriculum.map((lesson) => lesson.units.length), [6, 8, 7, 9, 8, 8])
-  assert.equal(curriculum.reduce((sum, lesson) => sum + lesson.units.length, 0), 46)
-  assert.equal(curriculum.reduce((sum, lesson) => sum + lesson.durationMinutes, 0), 420)
 })

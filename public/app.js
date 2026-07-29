@@ -1,20 +1,25 @@
-import { allGlossary, curriculum, interviewQuestions, lessons } from './content.js?v=9'
-import { calculateScore, readProgress, saveProgress, updateLessonProgress } from './learning.js?v=9'
 import {
-  getDashboardState, getUnitState, isUnitComplete, normalizeAppHref, parseRoute,
-  quizFeedback, readLocale, selectLocale, splitAppPath, unitPath, writeLocale
-} from './ui.js?v=9'
-import { applyShellLocale, localizedFinalQuiz, renderLessonInterviewAnswers, renderLocaleSwitch, renderUnitView, shellCopy } from './render.js?v=9'
-import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=9'
+  confusedPairs, curriculum, glossary, interviewAnswers, questionById, stages
+} from './content.js?v=10'
+import {
+  MASTERY_THRESHOLD, readAnswers, readProgress, saveAnswers, saveProgress, scoreLesson, updateLessonProgress
+} from './learning.js?v=10'
+import {
+  countAnswered, getDashboardState, getUnitState, isUnitComplete, normalizeAppHref, parseRoute,
+  readLocale, selectLocale, splitAppPath, unitPath, writeLocale
+} from './ui.js?v=10'
+import {
+  applyShellLocale, renderConfusedPairs, renderGlossaryEntries, renderInterviewAnswers,
+  renderLocaleSwitch, renderUnitView, shellCopy
+} from './render.js?v=10'
+import { captureAuthCallback, isSyncConfigured, readSession, requestMagicLink, signOut, syncAllProgress } from './sync.js?v=10'
 
 const main = document.querySelector('#main')
 const toast = document.querySelector('#toast')
 const BASE_PATH = new URL('.', import.meta.url).pathname
 let progress = readProgress()
-let quizAnswers = {}
+let answers = readAnswers()
 let locale = readLocale()
-let unitInteractions = {}
-let interviewTimer = null
 let syncDelay = null
 
 restoreRedirectedRoute()
@@ -46,9 +51,10 @@ function render() {
   document.querySelectorAll('[data-nav]').forEach((item) => item.classList.toggle('active', item.dataset.nav === route.name))
   renderLocaleControl()
   applyShellLocale(document, locale)
-  if (route.name === 'sprint') main.innerHTML = renderSprint()
+  if (route.name === 'course') main.innerHTML = renderCourse()
   else if (route.name === 'lesson') main.innerHTML = renderLesson(route.slug, route.unitId)
   else if (route.name === 'review') main.innerHTML = renderReview()
+  else if (route.name === 'glossary') main.innerHTML = renderGlossary()
   else if (route.name === 'interview') main.innerHTML = renderInterview()
   else if (route.name === 'login') main.innerHTML = renderLogin()
   else main.innerHTML = renderDashboard()
@@ -81,42 +87,35 @@ function restoreRedirectedRoute() {
 }
 
 function renderDashboard() {
-  const state = getDashboardState(lessons, progress)
+  const state = getDashboardState(curriculum, progress)
   const hasStarted = Object.keys(progress).length > 0
   const copy = shellCopy(locale)
-  const lessonTitle = selectLocale(curriculum.find((item) => item.id === state.nextLesson.id)?.title, locale)
+  const nextLesson = state.nextLesson
   return `
     <section class="hero shell">
       <div class="hero-copy">
         <p class="eyebrow">${copy.heroEyebrow}</p>
         <h1>${copy.heroTitle}</h1>
         <p class="lead">${copy.heroLead}</p>
-        <a class="button primary" href="/sprint" data-link>${hasStarted ? copy.heroCtaContinue : copy.heroCtaStart} <span>→</span></a>
+        <a class="button primary" href="/corso" data-link>${hasStarted ? copy.heroCtaContinue : copy.heroCtaStart} <span>→</span></a>
       </div>
-      <div class="signal-map" aria-label="${copy.signalPathLabel}">
-        <span class="signal-label">SIGNAL PATH</span>
-        <div class="signal-node live"><b>01</b><span>Shop floor</span></div>
-        <div class="signal-line"></div>
-        <div class="signal-node"><b>02</b><span>Data context</span></div>
-        <div class="signal-line"></div>
-        <div class="signal-node"><b>03</b><span>AI insight</span></div>
-        <div class="signal-line"></div>
-        <div class="signal-node"><b>04</b><span>Human action</span></div>
-      </div>
+      <ol class="stage-map" aria-label="${copy.stagesLabel}">
+        ${stages.map((stage) => `<li><b>${stage.number}</b><span>${escapeHtml(stage[locale] || stage.it)}</span></li>`).join('')}
+      </ol>
     </section>
     <section class="shell focus-grid">
       <article class="focus-card next-card">
         <p class="eyebrow">${copy.nextMove}</p>
-        <div class="module-number">${String(state.nextLesson.order).padStart(2, '0')}</div>
-        <h2>${lessonTitle}</h2>
-        <p>${state.nextLesson.englishTitle}</p>
-        <div class="meta-row"><span>${state.nextLesson.durationMinutes} min</span><span>IT + EN</span></div>
-        <a class="text-link" href="/lesson/${state.nextLesson.slug}" data-link>${copy.openLesson} →</a>
+        <div class="module-number">${String(nextLesson.moduleNumber).padStart(2, '0')}</div>
+        <h2>${escapeHtml(selectLocale(nextLesson.title, locale))}</h2>
+        <p>${escapeHtml(selectLocale(nextLesson.summary, locale))}</p>
+        <div class="meta-row"><span>${nextLesson.durationMinutes} min</span><span>${nextLesson.units.length} ${copy.unitsLabel}</span></div>
+        <a class="text-link" href="${unitPath(nextLesson.slug)}" data-link>${copy.openLesson} →</a>
       </article>
       <article class="focus-card progress-card">
         <p class="eyebrow">${copy.readiness}</p>
         <div class="progress-orbit" style="--progress:${state.percent * 3.6}deg"><span><b>${state.percent}%</b>${copy.ready}</span></div>
-        <p>${copy.modulesDone(state.completedCount, lessons.length)}</p>
+        <p>${copy.modulesDone(state.completedCount, curriculum.length)}</p>
       </article>
       <article class="focus-card review-card">
         <p class="eyebrow">${copy.activeRecall}</p>
@@ -127,23 +126,21 @@ function renderDashboard() {
     </section>`
 }
 
-function renderSprint() {
-  const state = getDashboardState(lessons, progress)
+function renderCourse() {
+  const state = getDashboardState(curriculum, progress)
   const copy = shellCopy(locale)
-  return `<section class="shell page-head"><p class="eyebrow">${copy.sprintEyebrow}</p><h1>${copy.sprintTitle}</h1><p class="lead">${copy.sprintLead}</p>
+  return `<section class="shell page-head"><p class="eyebrow">${copy.courseEyebrow}</p><h1>${copy.courseTitle}</h1><p class="lead">${copy.courseLead}</p>
     <div class="overall-progress"><span style="width:${state.percent}%"></span></div><small>${state.percent}% ${copy.completed}</small></section>
-    <section class="shell module-list">${lessons.map((lesson) => {
+    <section class="shell module-list">${curriculum.map((lesson) => {
       const item = progress[lesson.id]
       const completed = item?.status === 'completed'
       const active = state.nextLesson.id === lesson.id
-      const source = curriculum.find((entry) => entry.id === lesson.id)
-      const title = selectLocale(source?.title, locale)
-      const subtitle = locale === 'en' ? selectLocale(source?.title, 'it') : lesson.englishTitle
+      const title = escapeHtml(selectLocale(lesson.title, locale))
       const status = completed ? `${item.bestScore}% ${copy.statusBest}` : active ? copy.statusNext : copy.statusOpen
-      return `<article class="module-row ${completed ? 'completed' : ''} ${active ? 'current' : ''}">
-        <div class="module-index">${completed ? '✓' : String(lesson.order).padStart(2, '0')}</div>
-        <div class="module-copy"><div class="module-topline"><span>${lesson.durationMinutes} MIN</span><span>${status}</span></div><h2>${title}</h2><p>${subtitle}</p></div>
-        <a class="button ${active ? 'primary' : 'secondary'}" href="/lesson/${lesson.slug}" data-link aria-label="${copy.openLesson}: ${title}">${copy.openLesson} <span>→</span></a>
+      return `<article class="module-row ${completed ? 'completed' : ''} ${active ? 'current' : ''}" data-module="${lesson.id}">
+        <div class="module-index">${completed ? '✓' : String(lesson.moduleNumber).padStart(2, '0')}</div>
+        <div class="module-copy"><div class="module-topline"><span>${lesson.durationMinutes} MIN · ${lesson.units.length} ${copy.unitsLabel.toUpperCase()}</span><span>${status}</span></div><h2>${title}</h2><p>${escapeHtml(selectLocale(lesson.summary, locale))}</p></div>
+        <a class="button ${active ? 'primary' : 'secondary'}" href="${unitPath(lesson.slug)}" data-link aria-label="${copy.openLesson}: ${title}">${copy.openLesson} <span>→</span></a>
       </article>`
     }).join('')}</section>`
 }
@@ -153,44 +150,20 @@ function renderLesson(slug, unitId) {
   if (!lesson) return renderNotFound()
   const stored = progress[lesson.id]
   progress = updateLessonProgress(progress, lesson.id, {
-    status: stored?.status || 'in_progress',
+    status: stored?.status === 'completed' ? 'completed' : 'in_progress',
     cursor: stored?.cursor || 0
   })
   saveProgress(progress)
 
   const state = getUnitState(lesson, unitId, progress[lesson.id])
-  const interaction = readInteraction(lesson.id, state.unit.id)
+  const answered = countAnswered(state.unit, answers)
   return renderUnitView({
     lesson,
     state,
     locale,
-    revealed: interaction.revealed,
-    checkpointChoice: interaction.checkpointChoice,
-    activityMarked: interaction.activityMarked
-  }) + renderFinalCheckpoint(lesson, state)
-}
-
-function interactionKey(lessonId, unitId) {
-  return `${lessonId}:${unitId}`
-}
-
-function readInteraction(lessonId, unitId) {
-  const key = interactionKey(lessonId, unitId)
-  unitInteractions[key] ||= { revealed: {}, checkpointChoice: null, activityMarked: false }
-  return unitInteractions[key]
-}
-
-function renderFinalCheckpoint(lesson, state) {
-  if (!state.isLast) return ''
-  const quiz = localizedFinalQuiz(lesson, locale)
-  const heading = locale === 'en' ? 'Final checkpoint' : 'Checkpoint finale'
-  const helper = locale === 'en'
-    ? 'Answer without returning to the text. Every miss enters your review queue.'
-    : 'Rispondi senza tornare al testo. Ogni errore entra nella coda di ripasso.'
-  return `<section class="quiz-section shell" id="final-checkpoint"><p class="eyebrow">${heading}</p><h2>${selectLocale(lesson.title, locale)}</h2><p>${helper}</p>
-    <div class="quiz-list">${quiz.map((question, questionIndex) => `<fieldset class="quiz-card" data-question="${question.id}"><legend><span>Q${questionIndex + 1}</span>${question.prompt}</legend><div class="quiz-options">${question.options.map((option, optionIndex) => `<button type="button" data-quiz-option="${optionIndex}" data-lesson="${lesson.id}" data-question-id="${question.id}">${option}</button>`).join('')}</div><div class="feedback" data-feedback aria-live="polite"></div></fieldset>`).join('')}</div>
-    <div class="quiz-summary" data-quiz-summary><span>${locale === 'en' ? `Answer all ${quiz.length} questions to see your score.` : `Completa le ${quiz.length} domande per vedere il risultato.`}</span></div>
-    ${renderLessonInterviewAnswers(lesson, locale)}</section>`
+    answers,
+    unitComplete: isUnitComplete({ answeredQuestions: answered, totalQuestions: state.unit.quiz.length })
+  })
 }
 
 function renderLocaleControl() {
@@ -209,168 +182,123 @@ function bindLocaleControl() {
 
 function renderReview() {
   const copy = shellCopy(locale)
-  const reviewIds = new Set(Object.values(progress).flatMap((item) => item.reviewQuestionIds || []))
-  const reviewQuestions = curriculum
-    .flatMap((lesson) => localizedFinalQuiz(lesson, locale).map((question) => ({ ...question, lessonTitle: selectLocale(lesson.title, locale) })))
-    .filter((item) => reviewIds.has(item.id))
+  const reviewIds = [...new Set(Object.values(progress).flatMap((item) => item.reviewQuestionIds || []))]
+  const reviewQuestions = reviewIds.map(questionById).filter(Boolean)
   return `<section class="shell page-head"><p class="eyebrow">${copy.activeRecall}</p><h1>${copy.reviewTitle}</h1><p class="lead">${copy.reviewLead}</p></section>
-    <section class="shell review-layout"><div><div class="section-label"><span>${copy.questionsLabel}</span><b>${reviewQuestions.length}</b></div>${reviewQuestions.length ? reviewQuestions.map((item) => `<article class="review-question"><small>${item.lessonTitle}</small><h2>${item.prompt}</h2><details><summary>${copy.showAnswer}</summary><p><b>${item.options[item.correctOption]}</b></p><p>${item.explanation}</p></details></article>`).join('') : `<div class="empty-state"><b>${copy.emptyQueue}</b><p>${copy.emptyQueueHint}</p><a href="/sprint" data-link class="text-link">${copy.goToSprint} →</a></div>`}</div>
-      <div class="glossary-panel"><label for="term-search">${copy.glossaryLabel}</label><input id="term-search" type="search" placeholder="${copy.glossaryPlaceholder}" autocomplete="off"><div data-term-list>${renderTerms(allGlossary)}</div></div></section>`
+    <section class="shell review-layout"><div>
+      <div class="section-label"><span>${copy.questionsLabel}</span><b>${reviewQuestions.length}</b></div>
+      ${reviewQuestions.length
+        ? reviewQuestions.map((item) => {
+          const lesson = curriculum.find((entry) => entry.id === item.lessonId)
+          return `<article class="review-question" data-review-question="${escapeHtml(item.id)}">
+            <small>${escapeHtml(selectLocale(lesson?.title, locale))}</small>
+            <h2>${escapeHtml(item.prompt)}</h2>
+            <details><summary>${copy.showAnswer}</summary><p><b>${escapeHtml(item.options[item.correctOption])}</b></p><p>${escapeHtml(item.explanation)}</p>
+            <a class="text-link" href="${unitPath(lesson?.slug, item.unitId)}" data-link>${copy.openLesson} →</a></details>
+          </article>`
+        }).join('')
+        : `<div class="empty-state"><b>${copy.emptyQueue}</b><p>${copy.emptyQueueHint}</p><a href="/corso" data-link class="text-link">${copy.goToCourse} →</a></div>`}
+    </div>
+    <aside class="glossary-panel">
+      <div class="section-label"><span>${copy.confusedTitle}</span></div>
+      ${renderConfusedPairs(confusedPairs, locale)}
+    </aside></section>`
 }
 
-function renderTerms(terms) {
-  return terms.map((item) => `<article class="term-row"><code>${item.english}</code><b>${item.italian}</b><p>${item.definition}</p></article>`).join('') || `<p class="empty-inline">${shellCopy(locale).noTerms}</p>`
+function renderGlossary() {
+  const copy = shellCopy(locale)
+  return `<section class="shell page-head"><p class="eyebrow">${copy.glossaryEyebrow}</p><h1>${copy.glossaryTitle}</h1><p class="lead">${copy.glossaryLead}</p></section>
+    <section class="shell glossary-page">
+      <label for="term-search">${copy.glossaryLabel}</label>
+      <input id="term-search" type="search" placeholder="${copy.glossaryPlaceholder}" autocomplete="off">
+      <p class="terms-count" data-terms-count>${escapeHtml(copy.termsCount(glossary.length))}</p>
+      <div data-term-list>${renderGlossaryEntries(glossary, locale)}</div>
+    </section>`
 }
 
 function renderInterview() {
   const copy = shellCopy(locale)
-  return `<section class="interview-hero"><div class="shell"><p class="eyebrow">${copy.interviewEyebrow}</p><h1>${copy.interviewTitle}</h1><p>${copy.interviewLead}</p><div class="timer"><span data-timer>20:00</span><button class="button primary" data-timer-toggle>${copy.startSimulation}</button></div></div></section>
-    <section class="shell interview-list">${interviewQuestions.map((item, index) => `<article class="interview-card"><div class="question-number">${String(index + 1).padStart(2, '0')}</div><div><small>${item.topic}</small><h2>${item.prompt}</h2><div class="interview-actions"><button type="button" data-model-toggle="${index}-short">${copy.thirtySec}</button><button type="button" data-model-toggle="${index}-long">${copy.twoMin}</button></div><div class="model-answer" data-model="${index}-short" hidden><p>${item.short}</p></div><div class="model-answer" data-model="${index}-long" hidden><p>${item.long}</p></div></div></article>`).join('')}</section>`
+  return `<section class="interview-hero"><div class="shell"><p class="eyebrow">${copy.interviewEyebrow}</p><h1>${copy.interviewTitle}</h1><p>${copy.interviewLead}</p></div></section>
+    ${renderInterviewAnswers(interviewAnswers, locale)}`
 }
 
 function renderLogin() {
   const session = readSession()
   const configured = isSyncConfigured()
-  return `<section class="auth-page shell"><div class="auth-copy"><p class="eyebrow">CROSS-DEVICE PROGRESS</p><h1>Riprendi esattamente<br>dove eri rimasto.</h1><p>Il progresso locale funziona già. Collega Gmail per sincronizzare automaticamente telefono e PC.</p><ul><li>Magic link, nessuna password</li><li>Dati isolati con Row Level Security</li><li>Il punteggio migliore non regredisce</li></ul></div><div class="auth-card">${session ? `<span class="auth-status">● SINCRONIZZAZIONE ATTIVA</span><h2>Dispositivo collegato</h2><p>Il tuo progresso verrà unito al cloud quando sei online.</p><button class="button secondary" data-signout>Disconnetti</button>` : `<span class="auth-status ${configured ? '' : 'muted'}">${configured ? '● READY' : '○ SETUP NECESSARIO'}</span><h2>Accedi con Gmail</h2><form data-login-form><label for="email">Indirizzo email</label><input id="email" name="email" type="email" placeholder="nome@gmail.com" required ${configured ? '' : 'disabled'}><button class="button primary" type="submit" ${configured ? '' : 'disabled'}>Invia magic link</button></form>${configured ? '<p class="fine-print">Apri il link ricevuto sul dispositivo che vuoi collegare.</p>' : '<div class="setup-note"><b>L’app resta utilizzabile.</b><p>Inserisci URL e anon key di Supabase in <code>public/config.js</code> per attivare il sync.</p></div>'}`}</div></section>`
+  return `<section class="auth-page shell"><div class="auth-copy"><p class="eyebrow">PROGRESSO SU PIÙ DISPOSITIVI</p><h1>Riprendi esattamente<br>dove eri rimasto.</h1><p>Il progresso locale funziona già. Collega Gmail per sincronizzare automaticamente telefono e PC.</p><ul><li>Magic link, nessuna password</li><li>Dati isolati con Row Level Security</li><li>Il punteggio migliore non regredisce</li></ul></div><div class="auth-card">${session ? `<span class="auth-status">● SINCRONIZZAZIONE ATTIVA</span><h2>Dispositivo collegato</h2><p>Il tuo progresso verrà unito al cloud quando sei online.</p><button class="button secondary" data-signout>Disconnetti</button>` : `<span class="auth-status ${configured ? '' : 'muted'}">${configured ? '● PRONTO' : '○ SETUP NECESSARIO'}</span><h2>Accedi con Gmail</h2><form data-login-form><label for="email">Indirizzo email</label><input id="email" name="email" type="email" placeholder="nome@gmail.com" required ${configured ? '' : 'disabled'}><button class="button primary" type="submit" ${configured ? '' : 'disabled'}>Invia magic link</button></form>${configured ? '<p class="fine-print">Apri il link ricevuto sul dispositivo che vuoi collegare.</p>' : '<div class="setup-note"><b>L’app resta utilizzabile.</b><p>Inserisci URL e publishable key di Supabase in <code>public/config.js</code> per attivare la sincronizzazione.</p></div>'}`}</div></section>`
 }
 
 function renderNotFound() {
-  return '<section class="shell empty-page"><p class="eyebrow">404</p><h1>Questa lezione non esiste.</h1><a href="/sprint" data-link class="button primary">Torna allo sprint</a></section>'
+  return '<section class="shell empty-page"><p class="eyebrow">404</p><h1>Questo modulo non esiste.</h1><a href="/corso" data-link class="button primary">Torna al corso</a></section>'
 }
 
 function bindPageEvents(route) {
   if (route.name === 'lesson') bindLessonEvents(route.slug, route.unitId)
-  if (route.name === 'review') document.querySelector('#term-search')?.addEventListener('input', filterTerms)
-  if (route.name === 'interview') bindInterviewEvents()
+  if (route.name === 'glossary') document.querySelector('#term-search')?.addEventListener('input', filterTerms)
   if (route.name === 'login') bindLoginEvents()
 }
 
 function bindLessonEvents(slug, unitId) {
   const lesson = curriculum.find((item) => item.slug === slug)
   if (!lesson) return
-  const projected = lessons.find((item) => item.id === lesson.id)
   const state = getUnitState(lesson, unitId, progress[lesson.id])
-  const interaction = readInteraction(lesson.id, state.unit.id)
 
   if (state.requestedUnitFound === false && state.unit) {
     history.replaceState({}, '', normalizeAppHref(unitPath(lesson.slug, state.unit.id), BASE_PATH))
   }
 
-  document.querySelectorAll('[data-reveal-toggle]').forEach((button) => button.addEventListener('click', () => {
-    const panel = button.dataset.revealToggle
-    interaction.revealed = { ...interaction.revealed, [panel]: !interaction.revealed[panel] }
-    render()
+  document.querySelectorAll('[data-quiz-option]').forEach((button) => button.addEventListener('click', () => {
+    answerQuestion(lesson, state, button.dataset.questionId, Number(button.dataset.quizOption))
   }))
-
-  document.querySelector('[data-activity-mark]')?.addEventListener('click', () => {
-    interaction.activityMarked = !interaction.activityMarked
-    commitUnitCompletion(lesson, state, interaction)
-    render()
-  })
-
-  document.querySelectorAll('[data-checkpoint-option]').forEach((button) => button.addEventListener('click', () => {
-    interaction.checkpointChoice = Number(button.dataset.checkpointOption)
-    commitUnitCompletion(lesson, state, interaction)
-    render()
-  }))
-
-  document.querySelectorAll('[data-answer-toggle]').forEach((button) => button.addEventListener('click', () => {
-    const panel = document.querySelector(`[data-answer="${button.dataset.answerToggle}"]`)
-    if (!panel) return
-    panel.hidden = !panel.hidden
-    button.setAttribute('aria-pressed', String(!panel.hidden))
-  }))
-
-  document.querySelectorAll('[data-quiz-option]').forEach((button) => button.addEventListener('click', () => answerQuestion(lesson, projected, button)))
 }
 
-function commitUnitCompletion(lesson, state, interaction) {
-  const complete = isUnitComplete({
-    checkpointAnswered: Number.isInteger(interaction.checkpointChoice),
-    activityMarked: interaction.activityMarked,
-    hasActivity: (state.unit.activities || []).length > 0
+function answerQuestion(lesson, state, questionId, selected) {
+  if (Number.isInteger(answers[questionId])) return
+  answers = { ...answers, [questionId]: selected }
+  saveAnswers(answers)
+  commitLessonProgress(lesson, state)
+  render()
+}
+
+/**
+ * Progress moves on two levels: the cursor advances when a unit is fully
+ * answered, and the module is completed when every question of every unit has an
+ * answer and the score clears the mastery threshold.
+ */
+function commitLessonProgress(lesson, state) {
+  const unitComplete = isUnitComplete({
+    answeredQuestions: countAnswered(state.unit, answers),
+    totalQuestions: state.unit.quiz.length
   })
-  if (!complete) return
-  const currentCursor = progress[lesson.id]?.cursor || 0
-  const cursor = Math.max(currentCursor, Math.min(state.index + 1, lesson.units.length))
-  if (cursor === currentCursor) return
+  const score = scoreLesson(lesson, answers)
+  const storedCursor = progress[lesson.id]?.cursor || 0
+  const cursor = unitComplete ? Math.max(storedCursor, state.index + 1) : storedCursor
+  const passed = score.complete && score.percent >= MASTERY_THRESHOLD
+
   progress = updateLessonProgress(progress, lesson.id, {
-    status: progress[lesson.id]?.status === 'completed' ? 'completed' : 'in_progress',
-    cursor
+    status: passed ? 'completed' : 'in_progress',
+    cursor,
+    bestScore: score.complete ? score.percent : (progress[lesson.id]?.bestScore || 0),
+    reviewQuestionIds: score.missed,
+    replaceReviewQuestionIds: true
   })
   saveProgress(progress)
+  if (score.complete) {
+    showToast(locale === 'en'
+      ? `Module score: ${score.percent}% (${score.correct}/${score.total})`
+      : `Punteggio del modulo: ${score.percent}% (${score.correct}/${score.total})`)
+  }
   scheduleProgressSync()
-}
-
-function answerQuestion(lesson, projected, button) {
-  const quiz = localizedFinalQuiz(lesson, locale)
-  const question = quiz.find((item) => item.id === button.dataset.questionId)
-  const selected = Number(button.dataset.quizOption)
-  quizAnswers[lesson.id] ||= {}
-  quizAnswers[lesson.id][question.id] = selected
-  const card = button.closest('[data-question]')
-  card.querySelectorAll('button').forEach((option, index) => {
-    option.disabled = true
-    option.classList.toggle('selected-correct', index === question.correctOption)
-    option.classList.toggle('selected-wrong', index === selected && selected !== question.correctOption)
-  })
-  const feedback = quizFeedback(question, selected, locale)
-  const feedbackBox = card.querySelector('[data-feedback]')
-  feedbackBox.className = `feedback visible ${feedback.correct ? 'correct' : 'wrong'}`
-  feedbackBox.innerHTML = `<b>${feedback.label}</b><p>${feedback.explanation}</p>`
-  updateQuizSummary(lesson, projected, quiz)
-}
-
-function updateQuizSummary(lesson, projected, quiz) {
-  const answers = quizAnswers[lesson.id] || {}
-  const answeredQuestions = quiz.filter((question) => answers[question.id] !== undefined)
-  if (answeredQuestions.length < quiz.length) return
-  const results = quiz.map((question) => answers[question.id] === question.correctOption)
-  const score = calculateScore(results)
-  const missed = quiz.filter((question) => answers[question.id] !== question.correctOption).map((question) => question.id)
-  const passed = score.percent >= projected.masteryThreshold
-  progress = updateLessonProgress(progress, lesson.id, { status: passed ? 'completed' : 'in_progress', cursor: Math.max(progress[lesson.id]?.cursor || 0, lesson.units.length), bestScore: score.percent, reviewQuestionIds: missed, replaceReviewQuestionIds: true })
-  saveProgress(progress)
-  document.querySelector('[data-quiz-summary]').innerHTML = `<div><b>${score.percent}%</b><span>${passed ? (locale === 'en' ? 'Competence achieved' : 'Competenza acquisita') : (locale === 'en' ? 'Review and try again' : 'Ripassa e riprova')}</span></div><p>${score.correct}/${score.total} ${locale === 'en' ? 'correct answers · threshold' : 'risposte corrette · soglia'} ${projected.masteryThreshold}%</p>${passed ? `<a class="button primary" href="${nextLessonPath(projected)}" data-link>${locale === 'en' ? 'Continue' : 'Continua'} <span>→</span></a>` : `<a class="button secondary" href="/review" data-link>${locale === 'en' ? 'Open the review' : 'Apri il ripasso'}</a>`}`
-  syncProgressQuietly()
-}
-
-function nextLessonPath(lesson) {
-  const next = lessons.find((item) => item.order === lesson.order + 1)
-  return next ? unitPath(next.slug) : '/interview'
 }
 
 function filterTerms(event) {
   const query = event.target.value.trim().toLocaleLowerCase('it')
-  const filtered = allGlossary.filter((item) => `${item.english} ${item.italian} ${item.definition}`.toLocaleLowerCase('it').includes(query))
-  document.querySelector('[data-term-list]').innerHTML = renderTerms(filtered)
-}
-
-function bindInterviewEvents() {
-  document.querySelectorAll('[data-model-toggle]').forEach((button) => button.addEventListener('click', () => {
-    const model = document.querySelector(`[data-model="${button.dataset.modelToggle}"]`)
-    model.hidden = !model.hidden
-    button.classList.toggle('active', !model.hidden)
-  }))
-  document.querySelector('[data-timer-toggle]')?.addEventListener('click', toggleTimer)
-}
-
-function toggleTimer(event) {
-  const display = document.querySelector('[data-timer]')
-  if (interviewTimer) {
-    clearInterval(interviewTimer)
-    interviewTimer = null
-    event.target.textContent = shellCopy(locale).resumeSimulation
-    return
-  }
-  let remaining = display.dataset.remaining ? Number(display.dataset.remaining) : 1200
-  event.target.textContent = shellCopy(locale).pauseSimulation
-  interviewTimer = setInterval(() => {
-    remaining -= 1
-    display.dataset.remaining = remaining
-    display.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`
-    if (remaining <= 0) { clearInterval(interviewTimer); interviewTimer = null; event.target.textContent = shellCopy(locale).restartSimulation; showToast(shellCopy(locale).timeOver) }
-  }, 1000)
+  const filtered = glossary.filter((entry) => (
+    `${entry.term} ${entry.italian} ${selectLocale(entry.definition, locale)}`.toLocaleLowerCase('it').includes(query)
+  ))
+  document.querySelector('[data-term-list]').innerHTML = renderGlossaryEntries(filtered, locale)
+  const count = document.querySelector('[data-terms-count]')
+  if (count) count.textContent = shellCopy(locale).termsCount(filtered.length)
 }
 
 function bindLoginEvents() {
@@ -387,7 +315,7 @@ function bindLoginEvents() {
 
 async function syncOnLoad() {
   try { progress = await syncAllProgress(progress); saveProgress(progress); render() }
-  catch { updateSyncLabel('Sync non disponibile') }
+  catch { updateSyncLabel('Sincronizzazione non disponibile') }
 }
 
 async function syncProgressQuietly() {
@@ -402,13 +330,18 @@ function scheduleProgressSync() {
 
 function updateSyncLabel(forced) {
   const label = document.querySelector('[data-sync-label]')
-  if (label) label.textContent = forced || (readSession() ? 'Sync attivo' : 'Solo dispositivo')
+  if (label) label.textContent = forced || (readSession() ? 'Sincronizzazione attiva' : 'Solo dispositivo')
 }
 
 function showToast(message) {
   toast.textContent = message
   toast.classList.add('visible')
   setTimeout(() => toast.classList.remove('visible'), 4000)
+}
+
+function escapeHtml(value) {
+  const escapes = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+  return String(value ?? '').replace(/[&<>"']/gu, (character) => escapes[character])
 }
 
 function registerServiceWorker() {

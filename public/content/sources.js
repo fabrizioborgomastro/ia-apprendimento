@@ -1,7 +1,26 @@
-const accessedAt = '2026-07-28'
+const accessedAt = '2026-07-29'
 
-/** @type {Record<string, import('../types.js').CurriculumSource>} */
+/**
+ * Sources cited by course version 2. The course keeps them at the foot of each
+ * unit instead of quoting them line by line, so this list stays short: only what
+ * a unit actually leans on.
+ * @type {Record<string, import('../types.js').CurriculumSource>}
+ */
 export const sources = {
+  'pmi-state-of-ai': {
+    title: 'The State of AI at PMI',
+    organization: 'Philip Morris International',
+    type: 'primary',
+    url: 'https://www.pmi.com/sustainability/case-studies-and-market-stories/the-state-of-ai-at-pmi',
+    accessedAt
+  },
+  'pmi-information-technology': {
+    title: 'Areas of Work: Information Technology',
+    organization: 'Philip Morris International',
+    type: 'primary',
+    url: 'https://www.pmi.com/careers/areas-of-work/information-technology',
+    accessedAt
+  },
   'isa-95': {
     title: 'ISA-95 Series of Standards: Enterprise-Control System Integration',
     organization: 'International Society of Automation',
@@ -9,18 +28,25 @@ export const sources = {
     url: 'https://www.isa.org/standards-and-publications/isa-standards/isa-95-standard',
     accessedAt
   },
+  'isa-iec-62443': {
+    title: 'ISA/IEC 62443: Industrial Automation and Control Systems Security',
+    organization: 'International Society of Automation',
+    type: 'primary',
+    url: 'https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards',
+    accessedAt
+  },
+  'isa-18-alarm-management': {
+    title: 'ISA-18 Series of Standards: Alarm Management',
+    organization: 'International Society of Automation',
+    type: 'primary',
+    url: 'https://www.isa.org/standards-and-publications/isa-standards/isa-18-series-of-standards',
+    accessedAt
+  },
   'nist-sp-800-82-r3': {
     title: 'NIST SP 800-82 Rev. 3: Guide to Operational Technology (OT) Security',
     organization: 'National Institute of Standards and Technology',
     type: 'primary',
     url: 'https://csrc.nist.gov/pubs/sp/800/82/r3/final',
-    accessedAt
-  },
-  'opc-ua-part-1': {
-    title: 'OPC Unified Architecture - Part 1: Overview and Concepts',
-    organization: 'OPC Foundation',
-    type: 'primary',
-    url: 'https://reference.opcfoundation.org/specs/OPC-10000-1/full',
     accessedAt
   },
   'nist-ai-rmf-1-0': {
@@ -31,214 +57,80 @@ export const sources = {
     accessedAt
   },
   'nist-ai-600-1': {
-    title: 'Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile',
+    title: 'AI RMF Generative Artificial Intelligence Profile',
     organization: 'National Institute of Standards and Technology',
     type: 'primary',
     url: 'https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf',
     accessedAt
   },
-  'nist-sp-800-61-r3': {
-    title: 'NIST SP 800-61 Rev. 3: Incident Response Recommendations and Considerations for Cybersecurity Risk Management',
+  'nist-cybersecurity-framework': {
+    title: 'NIST Cybersecurity Framework',
     organization: 'National Institute of Standards and Technology',
     type: 'primary',
-    url: 'https://csrc.nist.gov/pubs/sp/800/61/r3/final',
-    publicationDate: '2025-04-03',
+    url: 'https://www.nist.gov/cyberframework',
+    accessedAt
+  },
+  'nist-engineering-statistics': {
+    title: 'NIST/SEMATECH e-Handbook of Statistical Methods',
+    organization: 'National Institute of Standards and Technology',
+    type: 'primary',
+    url: 'https://www.itl.nist.gov/div898/handbook/',
+    accessedAt
+  },
+  'cisa-industrial-control-systems': {
+    title: 'Industrial Control Systems',
+    organization: 'Cybersecurity and Infrastructure Security Agency',
+    type: 'primary',
+    url: 'https://www.cisa.gov/topics/industrial-control-systems',
+    accessedAt
+  },
+  'aws-mlops-planning': {
+    title: 'Planning for Successful MLOps',
+    organization: 'Amazon Web Services',
+    type: 'primary',
+    url: 'https://docs.aws.amazon.com/prescriptive-guidance/latest/ml-operations-planning/introduction.html',
+    accessedAt
+  },
+  'azure-landing-zone': {
+    title: 'Azure Landing Zones',
+    organization: 'Microsoft',
+    type: 'primary',
+    url: 'https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/',
+    accessedAt
+  },
+  'microsoft-ai-readiness': {
+    title: 'Organizational Readiness for AI Agents',
+    organization: 'Microsoft',
+    type: 'primary',
+    url: 'https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/organization-people-readiness-plan',
+    accessedAt
+  },
+  'microsoft-adoption-change': {
+    title: 'Define a Strategy for Adoption and Change Management',
+    organization: 'Microsoft',
+    type: 'primary',
+    url: 'https://learn.microsoft.com/en-us/dynamics365/guidance/implementation-guide/implementation-strategy-define-strategy-adoption-change-management',
+    accessedAt
+  },
+  'sap-what-is-mes': {
+    title: 'What is a Manufacturing Execution System (MES)?',
+    organization: 'SAP',
+    type: 'primary',
+    url: 'https://www.sap.com/resources/what-is-mes',
+    accessedAt
+  },
+  'scrum-guide': {
+    title: 'The Scrum Guide',
+    organization: 'Scrum.org',
+    type: 'primary',
+    url: 'https://www.scrum.org/resources/scrum-guide',
     accessedAt
   },
   'eu-ai-act': {
-    title: 'Regulation (EU) 2024/1689 (Artificial Intelligence Act)',
+    title: 'Regulation (EU) 2024/1689 laying down harmonised rules on artificial intelligence',
     organization: 'European Union',
     type: 'primary',
-    url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689',
-    accessedAt
-  },
-  'ec-industry-5-0': {
-    title: 'Industry 5.0',
-    organization: 'European Commission',
-    type: 'primary',
-    url: 'https://research-and-innovation.ec.europa.eu/research-area/industrial-research-and-innovation/industry-50_en',
-    accessedAt
-  },
-  'attention-is-all-you-need': {
-    title: 'Attention Is All You Need',
-    organization: 'arXiv',
-    type: 'primary',
-    url: 'https://arxiv.org/abs/1706.03762',
-    accessedAt
-  },
-  'retrieval-augmented-generation': {
-    title: 'Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks',
-    organization: 'arXiv',
-    type: 'primary',
-    url: 'https://arxiv.org/abs/2005.11401',
-    accessedAt
-  },
-  'routellm': {
-    title: 'RouteLLM: Learning to Route LLMs with Preference Data',
-    organization: 'arXiv',
-    type: 'primary',
-    url: 'https://arxiv.org/abs/2406.18665',
-    publicationDate: '2024-06-26',
-    accessedAt
-  },
-  'autogen-multi-agent': {
-    title: 'AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation',
-    organization: 'arXiv',
-    type: 'primary',
-    url: 'https://arxiv.org/abs/2308.08155',
-    publicationDate: '2023-08-16',
-    accessedAt
-  },
-  'agentbench': {
-    title: 'AgentBench: Evaluating LLMs as Agents',
-    organization: 'arXiv',
-    type: 'primary',
-    url: 'https://arxiv.org/abs/2308.03688',
-    publicationDate: '2023-08-07',
-    accessedAt
-  },
-  'mcp-specification': {
-    title: 'Model Context Protocol Specification, Protocol Revision 2026-07-28',
-    organization: 'Model Context Protocol',
-    type: 'primary',
-    url: 'https://modelcontextprotocol.io/specification/2026-07-28',
-    publicationDate: '2026-07-28',
-    accessedAt
-  },
-  'pmi-operations': {
-    title: 'Operations',
-    organization: 'Philip Morris International',
-    type: 'primary',
-    url: 'https://www.pmi.com/careers/areas-of-work/operations',
-    accessedAt
-  },
-  'pmi-product-reliability': {
-    title: 'Product reliability',
-    organization: 'Philip Morris International',
-    type: 'primary',
-    url: 'https://www.pmi.com/sustainability/integrated-report-2020/innovating-for-better-products/product-reliability',
-    accessedAt
-  },
-  'pmi-annual-report-2025': {
-    title: 'Philip Morris International 2025 Annual Report',
-    organization: 'Philip Morris International',
-    type: 'primary',
-    url: 'https://www.pmi.com/content/dam/pmicom/global/docs/investor_relation/pmi-2025-annual-report.pdf',
-    accessedAt
-  },
-  'pmi-value-report-2025': {
-    title: 'Philip Morris International Value Report 2025',
-    organization: 'Philip Morris International',
-    type: 'primary',
-    url: 'https://www.pmi.com/content/dam/pmicom/global/docs/pmi-sustainability/pmi-value-report-2025.pdf',
-    accessedAt
-  },
-  'oecd-digital-transformation-definitions': {
-    title: "How's Life in the Digital Age? - OECD Definition of the Digital Transformation",
-    organization: 'Organisation for Economic Co-operation and Development',
-    type: 'primary',
-    url: 'https://www.oecd.org/en/publications/how-s-life-in-the-digital-age_9789264311800-en/full-report/component-3.html',
-    accessedAt
-  },
-  'nist-manufacturing-kpi-procedure': {
-    title: 'Procedure for Developing Key Performance Indicators for Sustainable Manufacturing',
-    organization: 'National Institute of Standards and Technology',
-    type: 'primary',
-    url: 'https://www.nist.gov/publications/procedure-developing-key-performance-indicators-sustainable-manufacturing',
-    accessedAt
-  },
-  'nist-manufacturing-kpi-hierarchy': {
-    title: 'A Hierarchical Structure of Key Performance Indicators for Operation Improvement in Production Systems',
-    organization: 'National Institute of Standards and Technology',
-    type: 'primary',
-    url: 'https://www.nist.gov/publications/hierarchical-structure-key-performance-indicators-operation-improvement-production',
-    accessedAt
-  },
-  'nist-manufacturing-performance-baselines': {
-    title: 'ASTM E60.13 Standards for Manufacturing Performance and Baselines',
-    organization: 'National Institute of Standards and Technology',
-    type: 'primary',
-    url: 'https://www.nist.gov/el/systems-integration-division-73400/manufacturing-circular-economy/standards-work/astm-e6013',
-    accessedAt
-  },
-  'doe-manufacturing-baseline-normalization': {
-    title: 'Energy Intensity Indicators Methodology, Caveats, and Cautions',
-    organization: 'United States Department of Energy',
-    type: 'primary',
-    url: 'https://www.energy.gov/cmei/energy-intensity-indicators-methodology-caveats-and-cautions',
-    accessedAt
-  },
-  'toyota-way-genchi-genbutsu': {
-    title: 'The Toyota Way 2001 - Genchi Genbutsu',
-    organization: 'Toyota Motor Corporation',
-    type: 'primary',
-    url: 'https://www.toyota-global.com/company/history_of_toyota/75years/text/leaping_forward_as_a_global_corporation/chapter4/section7/item4.html',
-    accessedAt
-  },
-  'lean-enterprise-gemba': {
-    title: 'Gemba - What Does It Mean?',
-    organization: 'Lean Enterprise Institute',
-    type: 'educational',
-    url: 'https://www.lean.org/lexicon-terms/gemba/',
-    accessedAt,
-    verifiedAgainst: ['toyota-way-genchi-genbutsu']
-  },
-  'uk-government-stakeholder-mapping': {
-    title: 'Stakeholder Mapping',
-    organization: 'UK Government Analysis Function',
-    type: 'primary',
-    url: 'https://analysisfunction.civilservice.gov.uk/policy-store/stakeholder-mapping/',
-    accessedAt
-  },
-  'ahrq-raci-chart': {
-    title: 'Appendix A. RACI Chart',
-    organization: 'Agency for Healthcare Research and Quality',
-    type: 'primary',
-    url: 'https://www.ahrq.gov/patient-safety/settings/hospital/resource/pressureinjury/guide/apa.html',
-    accessedAt
-  },
-  'isa-18-alarm-management': {
-    title: 'ISA-18 Series of Standards: Alarm Management',
-    organization: 'International Society of Automation',
-    type: 'primary',
-    url: 'https://www.isa.org/standards-and-publications/isa-standards/isa-18-series-of-standards',
-    accessedAt
-  },
-  'isa-iec-62443': {
-    title: 'ISA/IEC 62443 Series of Standards: Industrial Automation and Control Systems Security',
-    organization: 'International Society of Automation',
-    type: 'primary',
-    url: 'https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards',
-    accessedAt
-  },
-  'ni-4-20ma-current-loop': {
-    title: '4-20 mA Current Loop Fundamentals, System Design, and Setup',
-    organization: 'National Instruments',
-    type: 'primary',
-    url: 'https://www.ni.com/en/shop/data-acquisition/fundamentals--system-design--and-setup-for-the-4-to-20-ma-curren.html',
-    accessedAt
-  },
-  'nist-sp-500-341': {
-    title: 'NIST SP 500-341: SATE VI Report - Bug Injection and Collection',
-    organization: 'National Institute of Standards and Technology',
-    type: 'primary',
-    url: 'https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=936867',
-    publicationDate: '2023-06',
-    accessedAt
-  },
-  'nist-condition-monitoring-maintenance': {
-    title: 'Simulation-Based Approach to Assess Condition Monitoring-Enabled Maintenance in Manufacturing',
-    organization: 'National Institute of Standards and Technology',
-    type: 'primary',
-    url: 'https://www.nist.gov/publications/simulation-based-approach-assess-condition-monitoring-enabled-maintenance-manufacturing',
-    publicationDate: '2024-01-08',
-    accessedAt
-  },
-  'nist-prediction-uncertainty': {
-    title: 'NIST/SEMATECH e-Handbook of Statistical Methods: Prediction',
-    organization: 'National Institute of Standards and Technology',
-    type: 'primary',
-    url: 'https://www.itl.nist.gov/div898/handbook/pmd/section1/pmd132.htm',
+    url: 'https://eur-lex.europa.eu/eli/reg/2024/1689/oj',
     accessedAt
   }
 }

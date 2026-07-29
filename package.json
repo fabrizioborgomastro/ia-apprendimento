@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node tools/server.mjs",
     "build": "node tools/validate.mjs",
-    "lint": "node --check public/app.js && node --check public/learning.js && node --check public/content.js && node --check public/ui.js && node --check public/sync.js && node --check public/sw.js && node --check public/types.js && node --check public/render.js && node --check public/content/index.js && node --check public/content/schema.js && node --check public/content/sources.js && node --check public/content/module-1-transformation.js && node --check public/content/module-2-architecture.js && node --check public/content/module-3-data-ai.js && node --check public/content/module-4-llm-agents.js && node --check public/content/module-5-mvp-governance.js && node --check public/content/module-6-interview-lab.js",
+    "lint": "node --check public/app.js && node --check public/learning.js && node --check public/content.js && node --check public/ui.js && node --check public/sync.js && node --check public/sw.js && node --check public/types.js && node --check public/render.js && node --check public/content/index.js && node --check public/content/schema.js && node --check public/content/sources.js && node --check public/content/glossary.js && node --check public/content/interview.js && node --check public/content/modulo-1-trasformazione.js && node --check public/content/modulo-2-fabbrica-digitale.js && node --check public/content/modulo-3-scegliere-strumento.js && node --check public/content/modulo-4-in-produzione.js && node --check public/content/modulo-5-governare-scalare.js",
     "test": "node --test tests/*.test.mjs",
     "test:e2e": "node tests/e2e.mjs"
   }

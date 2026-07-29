@@ -6,7 +6,7 @@ import { parseRoute } from '../public/ui.js'
 const publicUrl = (file) => new URL(`../public/${file}`, import.meta.url)
 const read = (file) => readFile(publicUrl(file), 'utf8')
 
-const RELEASE_VERSION = 9
+const RELEASE_VERSION = 10
 
 test('the service worker declares the current release cache and cleans older ones', async () => {
   const sw = await read('sw.js')
@@ -57,7 +57,7 @@ test('every versioned entry URL agrees with the release version', async () => {
       `${file} mixes asset versions: ${versions.join(', ')}`
     )
   }
-  assert.match(html, /<script type="module" src="\.\/app\.js\?v=9"><\/script>/u)
+  assert.match(html, /<script type="module" src="\.\/app\.js\?v=10"><\/script>/u)
 })
 
 test('the application shell exposes the language switch and a focusable main region', async () => {
@@ -87,26 +87,26 @@ test('the GitHub Pages fallback preserves a unit deep link through the redirect'
     return replaced
   }
 
-  const deepLink = '/ia-apprendimento/lesson/mvp-governance'
-  const query = '?unit=discovery-baseline-riskiest-assumption'
+  const deepLink = '/ia-apprendimento/lesson/in-produzione'
+  const query = '?unit=mvp-prototipo-pilota'
   const target = runFallback(deepLink, query)
   assert.ok(target, 'the fallback must produce a redirect target')
 
   const restored = new URL(target).searchParams.get('route')
-  assert.equal(restored, '/lesson/mvp-governance?unit=discovery-baseline-riskiest-assumption',
+  assert.equal(restored, '/lesson/in-produzione?unit=mvp-prototipo-pilota',
     'path and query must survive the GitHub Pages fallback')
 
   const [routePath, routeSearch] = restored.split('?')
   const route = parseRoute(routePath, `?${routeSearch}`)
   assert.deepEqual(route, {
     name: 'lesson',
-    slug: 'mvp-governance',
-    unitId: 'discovery-baseline-riskiest-assumption'
+    slug: 'in-produzione',
+    unitId: 'mvp-prototipo-pilota'
   })
 
-  const plain = new URL(runFallback('/ia-apprendimento/sprint')).searchParams.get('route')
-  assert.equal(plain, '/sprint')
-  assert.deepEqual(parseRoute(plain), { name: 'sprint' })
+  const plain = new URL(runFallback('/ia-apprendimento/corso')).searchParams.get('route')
+  assert.equal(plain, '/corso')
+  assert.deepEqual(parseRoute(plain), { name: 'course' })
 })
 
 test('the application restores the redirected route before rendering', async () => {

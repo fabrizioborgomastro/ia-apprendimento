@@ -46,9 +46,10 @@ export function parseRoute(pathname, search = '') {
     const query = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
     return { name: 'lesson', slug: decodeURIComponent(lessonMatch[1]), unitId: query.get('unit') || null }
   }
-  if (path === '/sprint') return { name: 'sprint' }
-  if (path === '/review') return { name: 'review' }
-  if (path === '/interview') return { name: 'interview' }
+  if (path === '/corso' || path === '/sprint') return { name: 'course' }
+  if (path === '/review' || path === '/ripasso') return { name: 'review' }
+  if (path === '/glossario' || path === '/glossary') return { name: 'glossary' }
+  if (path === '/interview' || path === '/colloquio') return { name: 'interview' }
   if (path === '/login') return { name: 'login' }
   return { name: 'dashboard' }
 }
@@ -61,15 +62,20 @@ export function normalizeAppHref(href, basePath) {
 }
 
 /**
- * A unit is complete when its checkpoint has been answered and, where the unit
- * actually has an activity, that activity has been self-marked. Units that ship
- * no activity would otherwise be impossible to complete. Elapsed time is never a
- * condition. `hasActivity` defaults to true so an omitted flag stays strict.
+ * A unit is complete when every question of its quiz has been answered. Right or
+ * wrong does not matter for completion: a wrong answer teaches through its
+ * explanation and joins the review queue. Elapsed time is never a condition.
  */
 export function isUnitComplete(unitState) {
-  if (!unitState?.checkpointAnswered) return false
-  const hasActivity = unitState.hasActivity ?? true
-  return hasActivity ? Boolean(unitState.activityMarked) : true
+  const total = Number(unitState?.totalQuestions)
+  const answered = Number(unitState?.answeredQuestions)
+  if (!Number.isFinite(total) || total <= 0) return false
+  return Number.isFinite(answered) && answered >= total
+}
+
+/** How many questions of a unit have an answer recorded. */
+export function countAnswered(unit, answers = {}) {
+  return (unit?.quiz || []).filter((question) => Number.isInteger(answers[question.id])).length
 }
 
 /**

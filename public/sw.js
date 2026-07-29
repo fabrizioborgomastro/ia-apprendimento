@@ -1,12 +1,13 @@
-const CACHE = 'ai-sprint-v9'
+const CACHE = 'ai-sprint-v10'
 const ASSETS = [
-  './', './index.html', './styles.css?v=9', './manifest.webmanifest', './icon.svg', './icon-maskable.svg',
-  './config.js?v=9', './app.js?v=9', './learning.js?v=9', './ui.js?v=9', './render.js?v=9',
-  './sync.js?v=9', './types.js', './content.js?v=9',
+  './', './index.html', './styles.css?v=10', './manifest.webmanifest', './icon.svg', './icon-maskable.svg',
+  './config.js?v=10', './app.js?v=10', './learning.js?v=10', './ui.js?v=10', './render.js?v=10',
+  './sync.js?v=10', './types.js', './content.js?v=10',
   './content/index.js', './content/schema.js', './content/sources.js',
-  './content/module-1-transformation.js', './content/module-2-architecture.js',
-  './content/module-3-data-ai.js', './content/module-4-llm-agents.js',
-  './content/module-5-mvp-governance.js', './content/module-6-interview-lab.js'
+  './content/glossary.js', './content/interview.js',
+  './content/modulo-1-trasformazione.js', './content/modulo-2-fabbrica-digitale.js',
+  './content/modulo-3-scegliere-strumento.js', './content/modulo-4-in-produzione.js',
+  './content/modulo-5-governare-scalare.js'
 ]
 
 self.addEventListener('install', (event) => event.waitUntil(

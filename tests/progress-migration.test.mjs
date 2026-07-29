@@ -3,9 +3,13 @@ import assert from 'node:assert/strict'
 import { CONTENT_VERSION } from '../public/content/schema.js'
 import { mergeProgress, migrateLessonProgress } from '../public/learning.js'
 import { deserializeProgress, serializeProgress } from '../public/sync.js'
+import { curriculum } from '../public/content.js'
+
+const lesson = curriculum[0]
+const unitCount = lesson.units.length
 
 const legacy = {
-  lessonId: 'llm-agents',
+  lessonId: 'trasformazione',
   status: 'in_progress',
   cursor: 2,
   bestScore: 40,
@@ -13,50 +17,34 @@ const legacy = {
   updatedAt: '2026-07-28T10:00:00.000Z'
 }
 
-test('legacy incomplete cursor maps proportionally to new units', () => {
-  const migrated = migrateLessonProgress(legacy, { units: Array(9).fill({}) }, 5)
+test('a cursor that still fits the new course is kept as it is', () => {
+  const migrated = migrateLessonProgress(legacy, lesson)
 
-  assert.equal(migrated.cursor, 4)
+  assert.equal(migrated.cursor, 2)
   assert.equal(migrated.contentVersion, CONTENT_VERSION)
 })
 
-test('completed legacy progress stays completed with its best score', () => {
-  const migrated = migrateLessonProgress(
-    { ...legacy, status: 'completed', bestScore: 90 },
-    { units: Array(9).fill({}) },
-    5
-  )
+test('completed progress stays completed with its best score', () => {
+  const migrated = migrateLessonProgress({ ...legacy, status: 'completed', bestScore: 90 }, lesson)
 
   assert.equal(migrated.status, 'completed')
   assert.equal(migrated.bestScore, 90)
 })
 
-test('negative legacy cursor clamps to the first new unit', () => {
-  const migrated = migrateLessonProgress({ ...legacy, cursor: -3 }, { units: Array(9).fill({}) }, 5)
-
-  assert.equal(migrated.cursor, 0)
+test('a negative cursor clamps to the first unit', () => {
+  assert.equal(migrateLessonProgress({ ...legacy, cursor: -3 }, lesson).cursor, 0)
 })
 
-test('over-range legacy cursor clamps to the final new unit', () => {
-  const migrated = migrateLessonProgress({ ...legacy, cursor: 99 }, { units: Array(9).fill({}) }, 5)
+test('a cursor from a longer module clamps to the end of the new one', () => {
+  const migrated = migrateLessonProgress({ ...legacy, cursor: 99, status: 'completed', bestScore: 90 }, lesson)
 
-  assert.equal(migrated.cursor, 8)
-})
-
-test('completed sentinel cursor clamps without regressing completion or score', () => {
-  const migrated = migrateLessonProgress(
-    { ...legacy, cursor: 5, status: 'completed', bestScore: 90 },
-    { units: Array(9).fill({}) },
-    5
-  )
-
-  assert.equal(migrated.cursor, 8)
+  assert.equal(migrated.cursor, unitCount)
   assert.equal(migrated.status, 'completed')
   assert.equal(migrated.bestScore, 90)
 })
 
-test('version-aware merge migrates a legacy cursor before selecting the newest progress', () => {
-  const localLegacy = { ...legacy, cursor: 2, updatedAt: '2026-07-28T11:00:00.000Z' }
+test('version-aware merge migrates before selecting the newest progress', () => {
+  const localLegacy = { ...legacy, cursor: 12, updatedAt: '2026-07-28T11:00:00.000Z' }
   const remoteCurrent = {
     ...legacy,
     cursor: 3,
@@ -64,20 +52,20 @@ test('version-aware merge migrates a legacy cursor before selecting the newest p
     updatedAt: '2026-07-28T10:00:00.000Z'
   }
 
-  const merged = mergeProgress(localLegacy, remoteCurrent, { units: Array(9).fill({}) })
+  const merged = mergeProgress(localLegacy, remoteCurrent, lesson)
 
-  assert.equal(merged.cursor, 4)
+  assert.equal(merged.cursor, unitCount, 'the stale cursor must be clamped, not trusted')
   assert.equal(merged.contentVersion, CONTENT_VERSION)
 })
 
 test('Supabase progress rows preserve the content version in both directions', () => {
   const progress = {
-    lessonId: 'llm-agents', status: 'in_progress', cursor: 4, bestScore: 80,
-    reviewQuestionIds: ['llm-q1'], updatedAt: '2026-07-28T10:00:00.000Z', contentVersion: 2
+    lessonId: 'trasformazione', status: 'in_progress', cursor: 4, bestScore: 80,
+    reviewQuestionIds: ['m1u1-q1'], updatedAt: '2026-07-28T10:00:00.000Z', contentVersion: CONTENT_VERSION
   }
 
   const row = serializeProgress(progress)
 
-  assert.equal(row.content_version, 2)
+  assert.equal(row.content_version, CONTENT_VERSION)
   assert.deepEqual(deserializeProgress(row), progress)
 })

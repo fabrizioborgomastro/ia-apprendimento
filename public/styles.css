@@ -225,7 +225,7 @@ details.reveal summary { cursor: pointer; min-height: 44px; display: flex; align
 
 @media (min-width: 900px) {
   .lesson-unit { grid-template-columns: 250px minmax(0, 1fr); align-items: start; }
-  .unit-header, .unit-controls, .worked-example, .learning-activity, .unit-checkpoint, .unit-sources, .unit-content { grid-column: 2; }
+  .unit-header, .unit-controls, .unit-content, .unit-terms, .unit-example, .unit-english, .unit-quiz, .unit-sources { grid-column: 2; }
   .unit-index { grid-column: 1; grid-row: 1 / span 8; position: sticky; top: 96px; }
   .unit-index-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
 .unit-index-title b { color: var(--blueprint); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0; }
@@ -236,7 +236,85 @@ details.reveal summary { cursor: pointer; min-height: 44px; display: flex; align
 
 @media (max-width: 420px) {
   .lesson-unit { padding-block: 22px 74px; gap: 16px; }
-  .unit-content, .worked-example, .learning-activity, .unit-checkpoint, .unit-sources, .unit-artifact { padding: 18px 15px; }
+  .unit-content, .unit-terms, .unit-example, .unit-english, .unit-quiz, .unit-sources { padding: 18px 15px; }
   .locale-switch button { padding: 0 10px; min-width: 44px; }
   .decision-aid table { font-size: .86rem; }
+}
+
+/* Course version 2: the unit is one page with always the same seven sections. */
+.unit-stage { margin: 0; color: var(--blueprint); background: var(--teal-soft); border-radius: 10px; padding: 10px 14px; }
+.unit-stage b, .unit-objective b { font-family: 'IBM Plex Mono', monospace; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+
+.unit-terms, .unit-example, .unit-english, .unit-quiz { background: var(--white); border: 1px solid var(--steel); border-radius: var(--radius); padding: 24px; }
+.unit-terms h3, .unit-example h3 { margin-top: 0; }
+.unit-terms table, .example-table table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+.unit-terms th, .unit-terms td, .example-table th, .example-table td { border: 1px solid var(--steel); padding: 9px 11px; text-align: left; vertical-align: top; }
+.unit-terms thead th, .example-table thead th { background: var(--mist); font-family: 'IBM Plex Mono', monospace; font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; }
+.unit-terms code { color: var(--teal); }
+.unit-terms tbody th { font-weight: 600; white-space: nowrap; }
+.example-table { overflow-x: auto; margin-bottom: 16px; }
+.example-steps { max-width: 72ch; padding-left: 22px; }
+.example-steps li { margin-bottom: 8px; }
+.example-takeaway { max-width: 72ch; border-left: 3px solid var(--orange); background: var(--orange-soft); border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 0; }
+
+.unit-english { background: var(--blueprint); color: var(--white); }
+.unit-english .eyebrow { color: #74c9d3; }
+.english-lines { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; max-width: 72ch; }
+.english-lines li { border-left: 3px solid var(--orange); padding: 8px 0 8px 14px; font-size: 1.05rem; }
+.english-why { max-width: 72ch; color: rgba(255,255,255,.72); font-size: .92rem; margin: 18px 0 0; }
+.english-why b { color: var(--white); }
+
+.unit-quiz .quiz-helper { color: var(--muted); margin: 4px 0 0; }
+.unit-quiz .quiz-progress { font-family: 'IBM Plex Mono', monospace; font-size: .76rem; color: var(--teal); margin: 4px 0 18px; }
+.unit-quiz .quiz-card { border: 1px solid var(--steel); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+.unit-quiz .quiz-card legend { font-family: Sora, sans-serif; padding: 0 8px; max-width: 66ch; }
+.unit-quiz .quiz-card legend span { color: var(--orange); margin-right: 10px; font: 600 .7rem 'IBM Plex Mono', monospace; }
+.unit-quiz .quiz-options button { border: 1px solid var(--steel); background: var(--white); color: var(--ink); }
+.unit-quiz .quiz-options button:not(:disabled):hover { background: var(--mist); }
+.unit-quiz .quiz-options button[data-correct-option] { border-color: var(--teal); background: var(--teal-soft); }
+.unit-quiz .quiz-options button[data-wrong-option] { border-color: var(--danger); background: #fdecea; }
+.unit-quiz .quiz-options button:disabled { opacity: 1; cursor: default; }
+.unit-quiz .feedback { margin-top: 14px; border-radius: 10px; padding: 12px 16px; background: var(--mist); }
+.unit-quiz .feedback.correct { border-left: 3px solid var(--teal); }
+.unit-quiz .feedback.wrong { border-left: 3px solid var(--danger); }
+.unit-quiz .feedback p { margin: 4px 0 0; max-width: 72ch; }
+
+/* Dashboard: the seven steps replace the old signal path. */
+.stage-map { list-style: none; margin: 0; padding: 30px; display: grid; gap: 12px; background: var(--blueprint); border-radius: 28px 4px 28px 28px; color: var(--white); box-shadow: var(--shadow); }
+.stage-map li { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 14px; font-size: .96rem; }
+.stage-map b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); font-family: 'IBM Plex Mono', monospace; font-size: .82rem; }
+.stage-map li:last-child b { background: var(--orange); border-color: var(--orange); color: var(--blueprint); }
+
+/* Glossary page and the confused pairs panel. */
+.glossary-page { padding-bottom: 90px; }
+.glossary-page label { font: 600 .7rem 'IBM Plex Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+.glossary-page input { width: min(460px, 100%); min-height: 48px; border: 1px solid var(--steel); border-radius: 9px; padding: 10px 13px; margin: 10px 0 6px; background: var(--white); color: var(--ink); }
+.terms-count { font-family: 'IBM Plex Mono', monospace; font-size: .76rem; color: var(--teal); margin: 0 0 18px; }
+.glossary-page [data-term-list] { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.glossary-page .term-row { background: var(--white); border: 1px solid var(--steel); border-radius: 12px; padding: 16px; }
+.glossary-page .term-row b { color: var(--ink); }
+.glossary-page .term-row p { color: var(--muted); }
+.glossary-page .term-row small { font-family: 'IBM Plex Mono', monospace; color: var(--teal); font-size: .7rem; }
+.glossary-page .empty-inline { color: var(--muted); }
+.confused-pairs { display: grid; gap: 12px; }
+.confused-pair { border-top: 1px solid rgba(255,255,255,.14); padding-top: 12px; }
+.confused-pair:first-child { border-top: 0; padding-top: 0; }
+.confused-pair b { display: block; color: var(--white); }
+.confused-pair p { margin: 4px 0 0; color: rgba(255,255,255,.68); font-size: .9rem; }
+
+/* Interview page: expectation visible, answer on request. */
+.interview-body h2 { font-size: 1.25rem; margin: 0 0 10px; max-width: 66ch; }
+.interview-expectation { color: var(--muted); max-width: 72ch; }
+.interview-reveal summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--blueprint); font-weight: 700; }
+.interview-reveal h3 { font-size: .95rem; margin: 18px 0 8px; color: var(--teal); }
+.interview-italian { max-width: 72ch; }
+.interview-reveal .english-lines li { border-left-color: var(--teal); }
+.interview-reveal .english-lines { color: var(--ink); }
+.interview-mistake { max-width: 72ch; border-left: 3px solid var(--danger); background: #fdecea; border-radius: 0 10px 10px 0; padding: 10px 14px; }
+.interview-reveal .key-points { max-width: 72ch; padding-left: 22px; }
+
+@media (max-width: 700px) {
+  .stage-map { padding: 22px; }
+  .unit-terms table, .example-table table { font-size: .86rem; }
+  .glossary-page [data-term-list] { grid-template-columns: 1fr; }
 }
