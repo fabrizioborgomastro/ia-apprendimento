@@ -6,7 +6,7 @@ import { parseRoute } from '../public/ui.js'
 const publicUrl = (file) => new URL(`../public/${file}`, import.meta.url)
 const read = (file) => readFile(publicUrl(file), 'utf8')
 
-const RELEASE_VERSION = 5
+const RELEASE_VERSION = 6
 
 test('the service worker declares the current release cache and cleans older ones', async () => {
   const sw = await read('sw.js')
@@ -57,7 +57,7 @@ test('every versioned entry URL agrees with the release version', async () => {
       `${file} mixes asset versions: ${versions.join(', ')}`
     )
   }
-  assert.match(html, /<script type="module" src="\.\/app\.js\?v=5"><\/script>/u)
+  assert.match(html, /<script type="module" src="\.\/app\.js\?v=6"><\/script>/u)
 })
 
 test('the application shell exposes the language switch and a focusable main region', async () => {
@@ -194,4 +194,21 @@ test('the manifest points at icons that exist and stays installable', async () =
     assert.ok(icon.sizes, `${src} must declare its sizes`)
   }
   assert.ok(manifest.start_url, 'the manifest needs a start URL')
+})
+
+test('a new release takes control instead of leaving the previous cache active', async () => {
+  const sw = await read('sw.js')
+  assert.match(
+    sw,
+    /self\.skipWaiting\(\)/u,
+    'without skipWaiting the new worker stays in waiting and the old cache keeps serving offline'
+  )
+  assert.match(
+    sw,
+    /self\.clients\.claim\(\)/u,
+    'without clients.claim the open tabs stay on the previous worker'
+  )
+  const activate = sw.match(/addEventListener\('activate'[\s\S]*?\)\)\n/u)
+  assert.ok(activate, 'the activate handler must exist')
+  assert.match(activate[0], /caches\.delete\(key\)/u, 'activation must still delete superseded caches')
 })

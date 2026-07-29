@@ -379,3 +379,23 @@ test('the unit view reports the correct completion requirement for a unit with n
   assert.ok(!html.includes('data-activity-mark'), 'no activity means no self-mark control')
   assert.ok(html.includes('Unità completata'), 'the unit must report itself complete after the checkpoint')
 })
+
+test('the unit grid constrains its columns so a wide child cannot overflow the phone viewport', async () => {
+  const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8')
+
+  const baseRule = css.match(/\.lesson-unit \{[^}]*\}/u)
+  assert.ok(baseRule, '.lesson-unit must be styled')
+  assert.match(baseRule[0], /display: grid/u)
+  assert.match(
+    baseRule[0],
+    /grid-template-columns: minmax\(0, 1fr\)/u,
+    'without an explicit minmax(0, 1fr) the implicit auto column grows to the widest child and overflows 360px'
+  )
+
+  const desktop = css.slice(css.indexOf('@media (min-width: 900px)'))
+  assert.match(
+    desktop.match(/\.lesson-unit \{[^}]*\}/u)[0],
+    /grid-template-columns: 250px minmax\(0, 1fr\)/u,
+    'the desktop side index must keep its own constrained column'
+  )
+})

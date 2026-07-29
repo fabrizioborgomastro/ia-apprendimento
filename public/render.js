@@ -1,4 +1,4 @@
-import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=5'
+import { isUnitComplete, selectLocale, unitPath } from './ui.js?v=6'
 import { sources } from './content/index.js'
 
 const COPY = {

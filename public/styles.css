@@ -156,7 +156,7 @@ code, .eyebrow, small, .module-topline, .lesson-kicker, .activity-label { font-f
 .locale-switch button[aria-pressed="true"] { background: var(--blueprint); color: #fff; }
 .locale-switch button:focus-visible, .lesson-unit button:focus-visible, .lesson-unit a:focus-visible, .locale-switch button:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
 
-.lesson-unit { padding-block: 30px 78px; display: grid; gap: 22px; }
+.lesson-unit { padding-block: 30px 78px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
 .unit-header { display: grid; gap: 10px; }
 .unit-kicker { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; margin: 0; }
 .unit-header h1 { font-size: clamp(1.75rem, 5vw, 2.9rem); margin: 0; }
